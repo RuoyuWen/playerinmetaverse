@@ -1,4 +1,4 @@
-/* 基础样式重置和变量 */
+/* Cyberpunk Metaverse Theme - Base Reset and Variables */
 * {
     margin: 0;
     padding: 0;
@@ -6,18 +6,32 @@
 }
 
 :root {
-    --primary-color: #6366f1;
-    --secondary-color: #8b5cf6;
-    --accent-color: #06b6d4;
-    --text-primary: #1f2937;
-    --text-secondary: #6b7280;
-    --background: #ffffff;
-    --surface: #f9fafb;
-    --border: #e5e7eb;
-    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-    --gradient: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-    --font-primary: 'Inter', system-ui, -apple-system, sans-serif;
+    /* Cyberpunk Color Palette */
+    --primary-color: #00ffff;
+    --secondary-color: #ff00ff;
+    --accent-color: #ffff00;
+    --neon-blue: #00d4ff;
+    --neon-pink: #ff0080;
+    --neon-green: #00ff88;
+    --neon-purple: #8000ff;
+    
+    /* Dark Theme Colors */
+    --bg-primary: #0a0a0a;
+    --bg-secondary: #111111;
+    --bg-tertiary: #1a1a1a;
+    --text-primary: #ffffff;
+    --text-secondary: #cccccc;
+    --text-muted: #888888;
+    
+    /* Effects */
+    --shadow-neon: 0 0 20px;
+    --shadow-lg: 0 20px 40px rgba(0, 255, 255, 0.2);
+    --gradient-cyber: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    --gradient-bg: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+    --font-primary: 'Inter', 'Orbitron', monospace, sans-serif;
+    
+    /* Animations */
+    --glow-animation: glow 2s ease-in-out infinite alternate;
 }
 
 html {
@@ -28,7 +42,29 @@ body {
     font-family: var(--font-primary);
     line-height: 1.6;
     color: var(--text-primary);
-    background-color: var(--background);
+    background: var(--bg-primary);
+    background-image: 
+        radial-gradient(circle at 25% 25%, #00ffff22 0%, transparent 50%),
+        radial-gradient(circle at 75% 75%, #ff00ff22 0%, transparent 50%),
+        linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+    background-attachment: fixed;
+    overflow-x: hidden;
+}
+
+/* Glowing text animation */
+@keyframes glow {
+    from { text-shadow: 0 0 5px var(--primary-color), 0 0 10px var(--primary-color); }
+    to { text-shadow: 0 0 10px var(--primary-color), 0 0 20px var(--primary-color), 0 0 30px var(--primary-color); }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px) rotateY(0deg); }
+    50% { transform: translateY(-20px) rotateY(180deg); }
 }
 
 .container {
@@ -37,16 +73,27 @@ body {
     padding: 0 2rem;
 }
 
-/* 导航栏 */
+/* Navigation - Cyberpunk Style */
 .navbar {
     position: fixed;
     top: 0;
     width: 100%;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid var(--border);
+    background: rgba(10, 10, 10, 0.95);
+    backdrop-filter: blur(15px);
+    border-bottom: 2px solid var(--primary-color);
     z-index: 1000;
     transition: all 0.3s ease;
+}
+
+.navbar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--gradient-cyber);
+    animation: pulse 2s infinite;
 }
 
 .nav-container {
@@ -62,10 +109,12 @@ body {
 .nav-logo a {
     font-size: 1.5rem;
     font-weight: 700;
-    background: var(--gradient);
+    background: var(--gradient-cyber);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     text-decoration: none;
+    text-shadow: 0 0 10px var(--primary-color);
+    animation: glow 2s ease-in-out infinite alternate;
 }
 
 .nav-menu {
@@ -75,14 +124,17 @@ body {
 
 .nav-link {
     text-decoration: none;
-    color: var(--text-primary);
+    color: var(--text-secondary);
     font-weight: 500;
-    transition: color 0.3s ease;
+    transition: all 0.3s ease;
     position: relative;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .nav-link:hover {
     color: var(--primary-color);
+    text-shadow: 0 0 10px var(--primary-color);
 }
 
 .nav-link::after {
@@ -92,8 +144,9 @@ body {
     left: 0;
     width: 0;
     height: 2px;
-    background: var(--gradient);
+    background: var(--gradient-cyber);
     transition: width 0.3s ease;
+    box-shadow: 0 0 10px var(--primary-color);
 }
 
 .nav-link:hover::after {
@@ -109,16 +162,37 @@ body {
 .bar {
     width: 25px;
     height: 3px;
-    background: var(--text-primary);
+    background: var(--primary-color);
     margin: 3px 0;
     transition: 0.3s;
+    box-shadow: 0 0 10px var(--primary-color);
 }
 
-/* 英雄区域 */
+/* Hero Section - Cyberpunk */
 .hero {
     padding: 120px 0 80px;
-    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    background: var(--gradient-bg);
+    position: relative;
     overflow: hidden;
+}
+
+.hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: 
+        linear-gradient(90deg, transparent 0%, var(--primary-color)22 50%, transparent 100%),
+        repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 98px,
+            var(--primary-color)22 100px
+        );
+    opacity: 0.1;
+    animation: pulse 4s infinite;
 }
 
 .hero-container {
@@ -129,6 +203,8 @@ body {
     grid-template-columns: 1fr 1fr;
     gap: 4rem;
     align-items: center;
+    position: relative;
+    z-index: 2;
 }
 
 .hero-title {
@@ -136,12 +212,14 @@ body {
     font-weight: 700;
     line-height: 1.2;
     margin-bottom: 1.5rem;
+    color: var(--text-primary);
 }
 
 .highlight {
-    background: var(--gradient);
+    background: var(--gradient-cyber);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    animation: glow 2s ease-in-out infinite alternate;
 }
 
 .hero-subtitle {
@@ -167,63 +245,101 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+}
+
+.btn:hover::before {
+    left: 100%;
 }
 
 .btn-primary {
-    background: var(--gradient);
-    color: white;
-    box-shadow: var(--shadow);
+    background: var(--gradient-cyber);
+    color: var(--bg-primary);
+    border: 2px solid var(--primary-color);
+    box-shadow: 0 0 20px var(--primary-color);
 }
 
 .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
+    box-shadow: 0 0 30px var(--primary-color);
 }
 
 .btn-secondary {
-    background: white;
+    background: transparent;
     color: var(--primary-color);
     border: 2px solid var(--primary-color);
+    box-shadow: 0 0 20px var(--primary-color);
 }
 
 .btn-secondary:hover {
     background: var(--primary-color);
-    color: white;
+    color: var(--bg-primary);
+    box-shadow: 0 0 30px var(--primary-color);
 }
 
 .hero-image {
     display: flex;
     justify-content: center;
     align-items: center;
+    position: relative;
 }
 
 .floating-card {
     width: 200px;
     height: 200px;
-    background: white;
+    background: var(--bg-secondary);
+    border: 2px solid var(--primary-color);
     border-radius: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: var(--shadow-lg);
+    box-shadow: 
+        0 0 20px var(--primary-color),
+        inset 0 0 20px rgba(0, 255, 255, 0.1);
     animation: float 6s ease-in-out infinite;
+    position: relative;
+    overflow: hidden;
+}
+
+.floating-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent, var(--primary-color)22, transparent);
+    animation: pulse 3s infinite;
 }
 
 .floating-card i {
     font-size: 4rem;
-    background: var(--gradient);
+    background: var(--gradient-cyber);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    animation: glow 2s ease-in-out infinite alternate;
+    position: relative;
+    z-index: 2;
 }
 
-@keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-20px); }
-}
-
-/* 通用区域样式 */
+/* Section Styles */
 section {
     padding: 80px 0;
+    position: relative;
 }
 
 .section-title {
@@ -232,6 +348,9 @@ section {
     text-align: center;
     margin-bottom: 3rem;
     position: relative;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 2px;
 }
 
 .section-title::after {
@@ -242,13 +361,31 @@ section {
     transform: translateX(-50%);
     width: 60px;
     height: 4px;
-    background: var(--gradient);
+    background: var(--gradient-cyber);
     border-radius: 2px;
+    box-shadow: 0 0 10px var(--primary-color);
 }
 
-/* 关于我 */
+/* About Section */
 .about {
-    background: var(--surface);
+    background: var(--bg-secondary);
+    position: relative;
+}
+
+.about::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 50px,
+        var(--primary-color)11 52px
+    );
+    opacity: 0.05;
 }
 
 .about-content {
@@ -256,6 +393,8 @@ section {
     grid-template-columns: 2fr 1fr;
     gap: 4rem;
     align-items: center;
+    position: relative;
+    z-index: 2;
 }
 
 .about-text p {
@@ -272,6 +411,11 @@ section {
 
 .stat {
     text-align: center;
+    padding: 1rem;
+    border: 1px solid var(--primary-color);
+    border-radius: 10px;
+    background: rgba(0, 255, 255, 0.05);
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
 }
 
 .stat-number {
@@ -279,11 +423,14 @@ section {
     font-size: 2rem;
     font-weight: 700;
     color: var(--primary-color);
+    text-shadow: 0 0 10px var(--primary-color);
 }
 
 .stat-label {
     font-size: 0.9rem;
     color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .about-image {
@@ -294,20 +441,43 @@ section {
 .image-placeholder {
     width: 250px;
     height: 250px;
-    background: var(--gradient);
+    background: var(--gradient-bg);
+    border: 2px solid var(--primary-color);
     border-radius: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: var(--shadow-lg);
+    box-shadow: 
+        0 0 30px var(--primary-color),
+        inset 0 0 30px rgba(0, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.image-placeholder::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent, var(--primary-color)22, transparent);
+    animation: pulse 4s infinite;
 }
 
 .image-placeholder i {
     font-size: 5rem;
-    color: white;
+    color: var(--primary-color);
+    animation: glow 2s ease-in-out infinite alternate;
+    position: relative;
+    z-index: 2;
 }
 
-/* 技能 */
+/* Skills Section */
+.skills {
+    background: var(--bg-primary);
+}
+
 .skills-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -315,37 +485,60 @@ section {
 }
 
 .skill-card {
-    background: white;
+    background: var(--bg-secondary);
     padding: 2rem;
     border-radius: 12px;
+    border: 1px solid var(--primary-color);
     text-align: center;
-    box-shadow: var(--shadow);
-    transition: transform 0.3s ease;
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.skill-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.1), transparent);
+    transition: left 0.5s;
+}
+
+.skill-card:hover::before {
+    left: 100%;
 }
 
 .skill-card:hover {
     transform: translateY(-5px);
+    box-shadow: 0 0 30px var(--primary-color);
 }
 
 .skill-icon {
     width: 80px;
     height: 80px;
-    background: var(--gradient);
+    background: var(--gradient-cyber);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     margin: 0 auto 1rem;
+    box-shadow: 0 0 20px var(--primary-color);
 }
 
 .skill-icon i {
     font-size: 2rem;
-    color: white;
+    color: var(--bg-primary);
 }
 
 .skill-card h3 {
     font-size: 1.25rem;
     margin-bottom: 0.5rem;
+    color: var(--primary-color);
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .skill-card p {
@@ -353,9 +546,9 @@ section {
     font-size: 0.9rem;
 }
 
-/* 项目 */
+/* Projects Section */
 .projects {
-    background: var(--surface);
+    background: var(--bg-secondary);
 }
 
 .projects-grid {
@@ -365,38 +558,58 @@ section {
 }
 
 .project-card {
-    background: white;
+    background: var(--bg-primary);
     border-radius: 12px;
+    border: 1px solid var(--primary-color);
     overflow: hidden;
-    box-shadow: var(--shadow);
-    transition: transform 0.3s ease;
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+    transition: all 0.3s ease;
+    position: relative;
 }
 
 .project-card:hover {
     transform: translateY(-5px);
+    box-shadow: 0 0 30px var(--primary-color);
 }
 
 .project-image {
     height: 200px;
-    background: var(--surface);
+    background: var(--gradient-bg);
     display: flex;
     align-items: center;
     justify-content: center;
+    border-bottom: 1px solid var(--primary-color);
+    position: relative;
+    overflow: hidden;
+}
+
+.project-image::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent 30%, var(--primary-color)11 50%, transparent 70%);
+    animation: pulse 3s infinite;
 }
 
 .project-placeholder {
     width: 80px;
     height: 80px;
-    background: var(--gradient);
+    background: var(--gradient-cyber);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
+    box-shadow: 0 0 20px var(--primary-color);
+    position: relative;
+    z-index: 2;
 }
 
 .project-placeholder i {
     font-size: 2rem;
-    color: white;
+    color: var(--bg-primary);
 }
 
 .project-content {
@@ -406,6 +619,9 @@ section {
 .project-content h3 {
     font-size: 1.25rem;
     margin-bottom: 0.5rem;
+    color: var(--primary-color);
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .project-content p {
@@ -421,14 +637,22 @@ section {
 }
 
 .tag {
-    background: var(--primary-color);
-    color: white;
+    background: var(--gradient-cyber);
+    color: var(--bg-primary);
     padding: 0.25rem 0.75rem;
     border-radius: 20px;
     font-size: 0.8rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 0 10px var(--primary-color);
 }
 
-/* 联系 */
+/* Contact Section */
+.contact {
+    background: var(--bg-primary);
+}
+
 .contact-content {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -439,6 +663,9 @@ section {
 .contact-info h3 {
     font-size: 1.5rem;
     margin-bottom: 1rem;
+    color: var(--primary-color);
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .contact-info p {
@@ -456,24 +683,36 @@ section {
     display: flex;
     align-items: center;
     gap: 1rem;
+    padding: 0.75rem;
+    border: 1px solid var(--primary-color);
+    border-radius: 8px;
+    background: rgba(0, 255, 255, 0.05);
+    transition: all 0.3s ease;
+}
+
+.contact-method:hover {
+    box-shadow: 0 0 15px var(--primary-color);
+    background: rgba(0, 255, 255, 0.1);
 }
 
 .contact-method i {
     width: 40px;
     height: 40px;
-    background: var(--gradient);
+    background: var(--gradient-cyber);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
+    color: var(--bg-primary);
+    box-shadow: 0 0 15px var(--primary-color);
 }
 
 .contact-form {
-    background: white;
+    background: var(--bg-secondary);
     padding: 2rem;
     border-radius: 12px;
-    box-shadow: var(--shadow);
+    border: 1px solid var(--primary-color);
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
 }
 
 .form-group {
@@ -484,23 +723,45 @@ section {
 .form-group textarea {
     width: 100%;
     padding: 12px;
-    border: 1px solid var(--border);
+    border: 1px solid var(--primary-color);
     border-radius: 8px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
     font-family: inherit;
-    transition: border-color 0.3s ease;
+    transition: all 0.3s ease;
 }
 
 .form-group input:focus,
 .form-group textarea:focus {
     outline: none;
     border-color: var(--primary-color);
+    box-shadow: 0 0 15px var(--primary-color);
+    background: rgba(0, 255, 255, 0.05);
 }
 
-/* 页脚 */
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+    color: var(--text-muted);
+}
+
+/* Footer */
 .footer {
-    background: var(--text-primary);
-    color: white;
+    background: var(--bg-primary);
+    color: var(--text-primary);
     padding: 2rem 0;
+    border-top: 2px solid var(--primary-color);
+    position: relative;
+}
+
+.footer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--gradient-cyber);
+    animation: pulse 2s infinite;
 }
 
 .footer-content {
@@ -517,33 +778,36 @@ section {
 .social-links a {
     width: 40px;
     height: 40px;
-    background: var(--gradient);
+    background: var(--gradient-cyber);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
+    color: var(--bg-primary);
     text-decoration: none;
-    transition: transform 0.3s ease;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 15px var(--primary-color);
 }
 
 .social-links a:hover {
     transform: scale(1.1);
+    box-shadow: 0 0 25px var(--primary-color);
 }
 
-/* 响应式设计 */
+/* Responsive Design */
 @media (max-width: 768px) {
     .nav-menu {
         position: fixed;
         left: -100%;
         top: 70px;
         flex-direction: column;
-        background-color: white;
+        background: rgba(10, 10, 10, 0.98);
         width: 100%;
         text-align: center;
         transition: 0.3s;
-        box-shadow: var(--shadow);
+        box-shadow: 0 0 20px var(--primary-color);
         padding: 2rem 0;
+        border-bottom: 2px solid var(--primary-color);
     }
 
     .nav-menu.active {
@@ -571,6 +835,7 @@ section {
 
     .about-stats {
         justify-content: center;
+        flex-wrap: wrap;
     }
 
     .contact-content {
@@ -605,5 +870,10 @@ section {
     .about-stats {
         flex-direction: column;
         gap: 1rem;
+    }
+
+    .skill-card,
+    .project-card {
+        margin: 0 1rem;
     }
 } 

@@ -36,11 +36,11 @@ navLinks.forEach(link => {
 window.addEventListener('scroll', () => {
     const navbar = document.querySelector('.navbar');
     if (window.scrollY > 50) {
-        navbar.style.background = 'rgba(255, 255, 255, 0.98)';
-        navbar.style.backdropFilter = 'blur(15px)';
+        navbar.style.background = 'rgba(10, 10, 10, 0.98)';
+        navbar.style.boxShadow = '0 0 30px rgba(0, 255, 255, 0.3)';
     } else {
-        navbar.style.background = 'rgba(255, 255, 255, 0.95)';
-        navbar.style.backdropFilter = 'blur(10px)';
+        navbar.style.background = 'rgba(10, 10, 10, 0.95)';
+        navbar.style.boxShadow = 'none';
     }
 });
 
@@ -60,9 +60,12 @@ function smoothScrollTo(targetId) {
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
         e.preventDefault();
-        const targetId = this.getAttribute('href').slice(1);
-        if (targetId) {
-            smoothScrollTo(targetId);
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+            target.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
         }
     });
 });
@@ -309,4 +312,194 @@ function createThemeToggle() {
 }
 
 // Initialize theme toggle
-// createThemeToggle(); 
+// createThemeToggle();
+
+// Cyborg text typing effect
+function typeWriter(element, text, speed = 100) {
+    let i = 0;
+    element.innerHTML = '';
+    
+    function type() {
+        if (i < text.length) {
+            element.innerHTML += text.charAt(i);
+            i++;
+            setTimeout(type, speed);
+        }
+    }
+    type();
+}
+
+// Page load completion effects
+document.addEventListener('DOMContentLoaded', function() {
+    // Add hero title typing effect
+    const heroTitle = document.querySelector('.hero-title');
+    if (heroTitle) {
+        const originalText = heroTitle.textContent;
+        setTimeout(() => {
+            typeWriter(heroTitle, originalText, 80);
+        }, 500);
+    }
+    
+    // Add skill card entrance animation
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.animation = 'fadeInUp 0.6s ease-out forwards';
+                entry.target.style.opacity = '1';
+            }
+        });
+    }, observerOptions);
+    
+    // Observe all card elements
+    document.querySelectorAll('.skill-card, .project-card').forEach(card => {
+        card.style.opacity = '0';
+        observer.observe(card);
+    });
+});
+
+// Add cursor glow effect
+document.addEventListener('mousemove', (e) => {
+    const cursor = document.querySelector('.cursor-glow');
+    if (!cursor) {
+        const glow = document.createElement('div');
+        glow.className = 'cursor-glow';
+        glow.style.cssText = `
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            background: radial-gradient(circle, rgba(0,255,255,0.3), transparent);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transition: all 0.1s ease;
+        `;
+        document.body.appendChild(glow);
+    }
+    
+    const glow = document.querySelector('.cursor-glow');
+    glow.style.left = e.clientX - 10 + 'px';
+    glow.style.top = e.clientY - 10 + 'px';
+});
+
+// Add scroll parallax effect
+window.addEventListener('scroll', () => {
+    const scrolled = window.pageYOffset;
+    const parallax = document.querySelector('.hero');
+    if (parallax) {
+        const speed = scrolled * 0.5;
+        parallax.style.transform = `translateY(${speed}px)`;
+    }
+});
+
+// Add button quantum effect
+document.querySelectorAll('.btn').forEach(btn => {
+    btn.addEventListener('mouseenter', function() {
+        this.style.transform = 'translateY(-2px) scale(1.05)';
+        this.style.boxShadow = '0 0 40px var(--primary-color)';
+    });
+    
+    btn.addEventListener('mouseleave', function() {
+        this.style.transform = 'translateY(0) scale(1)';
+        this.style.boxShadow = '0 0 20px var(--primary-color)';
+    });
+});
+
+// Add code rain background effect (optional)
+function createMatrixRain() {
+    const canvas = document.createElement('canvas');
+    canvas.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: -1;
+        opacity: 0.1;
+    `;
+    document.body.appendChild(canvas);
+    
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    
+    const characters = '01ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+    const fontSize = 14;
+    const columns = canvas.width / fontSize;
+    const drops = [];
+    
+    for (let i = 0; i < columns; i++) {
+        drops[i] = 1;
+    }
+    
+    function draw() {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        ctx.fillStyle = '#00ffff';
+        ctx.font = fontSize + 'px monospace';
+        
+        for (let i = 0; i < drops.length; i++) {
+            const text = characters[Math.floor(Math.random() * characters.length)];
+            ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+            
+            if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                drops[i] = 0;
+            }
+            drops[i]++;
+        }
+    }
+    
+    setInterval(draw, 35);
+}
+
+// Uncomment the next line to enable code rain effect
+// createMatrixRain();
+
+// CSS animation keyframes (added via JavaScript)
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    @keyframes glitchText {
+        0%, 100% { 
+            transform: translate(0);
+            filter: hue-rotate(0deg);
+        }
+        20% { 
+            transform: translate(-2px, 2px);
+            filter: hue-rotate(90deg);
+        }
+        40% { 
+            transform: translate(-2px, -2px);
+            filter: hue-rotate(180deg);
+        }
+        60% { 
+            transform: translate(2px, 2px);
+            filter: hue-rotate(270deg);
+        }
+        80% { 
+            transform: translate(2px, -2px);
+            filter: hue-rotate(360deg);
+        }
+    }
+    
+    .hero-title:hover {
+        animation: glitchText 0.3s ease-in-out;
+    }
+`;
+document.head.appendChild(style); 
