@@ -308,6 +308,8 @@ p {
     filter: drop-shadow(0 0 15px rgba(0, 212, 255, 0.5));
     position: relative;
     font-family: var(--font-cyber);
+    white-space: nowrap;
+    overflow: visible;
 }
 
 .nav-logo a::before {
@@ -1347,6 +1349,12 @@ section {
 
 /* Enhanced Responsive Design */
 @media (max-width: 768px) {
+    .nav-logo a {
+        font-size: 1.8rem;
+        white-space: nowrap;
+        overflow: visible;
+    }
+    
     .nav-menu {
         position: fixed;
         left: -100%;
@@ -1462,6 +1470,12 @@ section {
 }
 
 @media (max-width: 480px) {
+    .nav-logo a {
+        font-size: 1.6rem;
+        white-space: nowrap;
+        overflow: visible;
+    }
+    
     .container {
         padding: 0 1rem;
     }
@@ -1670,17 +1684,25 @@ section {
     line-height: 1.7;
 }
 
-/* Active Navigation Link */
+/* Active Navigation Link - Enhanced */
 .nav-link.active {
     color: var(--primary-color);
-    text-shadow: 0 0 20px var(--primary-color);
-    background: rgba(157, 78, 221, 0.25);
-    transform: translateY(-3px) scale(1.05);
+    text-shadow: 0 0 25px var(--primary-color), 0 0 50px var(--secondary-color);
+    background: linear-gradient(135deg, rgba(157, 78, 221, 0.4), rgba(0, 212, 255, 0.3));
+    transform: translateY(-5px) scale(1.1);
     animation: var(--neon-glow) 2s ease-in-out infinite;
+    border: 2px solid rgba(0, 212, 255, 0.5);
+    box-shadow: 
+        0 0 30px rgba(157, 78, 221, 0.4),
+        inset 0 0 20px rgba(0, 212, 255, 0.2);
 }
 
 .nav-link.active::after {
-    width: 90%;
+    width: 100%;
+    height: 6px;
+    background: var(--gradient-cyber);
+    box-shadow: 0 0 25px var(--secondary-color);
+    animation: var(--cyber-pulse) 2s ease-in-out infinite;
 }
 
 /* Contact Info Enhanced */
@@ -1773,6 +1795,12 @@ section {
 
 /* Extra small screens - for very small devices */
 @media (max-width: 360px) {
+    .nav-logo a {
+        font-size: 1.4rem;
+        white-space: nowrap;
+        overflow: visible;
+    }
+    
     .hero-title {
         font-size: 1.8rem;
         white-space: nowrap;
