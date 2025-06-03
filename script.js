@@ -1,11 +1,11 @@
-// 移动端导航菜单切换
+// Mobile navigation menu toggle
 const navToggle = document.getElementById('nav-toggle');
 const navMenu = document.getElementById('nav-menu');
 
 navToggle.addEventListener('click', () => {
     navMenu.classList.toggle('active');
     
-    // 汉堡菜单动画
+    // Hamburger menu animation
     const bars = navToggle.querySelectorAll('.bar');
     bars.forEach((bar, index) => {
         if (navMenu.classList.contains('active')) {
@@ -19,7 +19,7 @@ navToggle.addEventListener('click', () => {
     });
 });
 
-// 点击导航链接时关闭移动端菜单
+// Close mobile menu when clicking navigation links
 const navLinks = document.querySelectorAll('.nav-link');
 navLinks.forEach(link => {
     link.addEventListener('click', () => {
@@ -32,7 +32,7 @@ navLinks.forEach(link => {
     });
 });
 
-// 滚动时导航栏效果
+// Navbar effect on scroll
 window.addEventListener('scroll', () => {
     const navbar = document.querySelector('.navbar');
     if (window.scrollY > 50) {
@@ -44,11 +44,11 @@ window.addEventListener('scroll', () => {
     }
 });
 
-// 平滑滚动到目标区域
+// Smooth scroll to target section
 function smoothScrollTo(targetId) {
     const targetElement = document.getElementById(targetId);
     if (targetElement) {
-        const offsetTop = targetElement.offsetTop - 70; // 考虑导航栏高度
+        const offsetTop = targetElement.offsetTop - 70; // Account for navbar height
         window.scrollTo({
             top: offsetTop,
             behavior: 'smooth'
@@ -56,7 +56,7 @@ function smoothScrollTo(targetId) {
     }
 }
 
-// 为所有内部链接添加平滑滚动
+// Add smooth scrolling to all internal links
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
         e.preventDefault();
@@ -67,55 +67,55 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     });
 });
 
-// 联系表单处理
+// Contact form handling
 const contactForm = document.querySelector('.contact-form');
 if (contactForm) {
     contactForm.addEventListener('submit', function(e) {
         e.preventDefault();
         
-        // 获取表单数据
+        // Get form data
         const formData = new FormData(this);
         const name = this.querySelector('input[type="text"]').value;
         const email = this.querySelector('input[type="email"]').value;
         const message = this.querySelector('textarea').value;
         
-        // 简单的表单验证
+        // Simple form validation
         if (!name || !email || !message) {
-            showNotification('请填写所有必填字段', 'error');
+            showNotification('Please fill in all required fields', 'error');
             return;
         }
         
         if (!isValidEmail(email)) {
-            showNotification('请输入有效的邮箱地址', 'error');
+            showNotification('Please enter a valid email address', 'error');
             return;
         }
         
-        // 模拟发送邮件
-        showNotification('正在发送消息...', 'info');
+        // Simulate sending email
+        showNotification('Sending message...', 'info');
         
-        // 这里应该连接到后端API或邮件服务
+        // This should connect to a backend API or email service
         setTimeout(() => {
-            showNotification('消息发送成功！我会尽快回复您。', 'success');
+            showNotification('Message sent successfully! I will get back to you soon.', 'success');
             this.reset();
         }, 2000);
     });
 }
 
-// 邮箱验证函数
+// Email validation function
 function isValidEmail(email) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
 }
 
-// 通知消息显示
+// Show notification messages
 function showNotification(message, type = 'info') {
-    // 移除已存在的通知
+    // Remove existing notification
     const existingNotification = document.querySelector('.notification');
     if (existingNotification) {
         existingNotification.remove();
     }
     
-    // 创建新通知
+    // Create new notification
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
     notification.innerHTML = `
@@ -123,7 +123,7 @@ function showNotification(message, type = 'info') {
         <button class="notification-close">&times;</button>
     `;
     
-    // 添加样式
+    // Add styles
     notification.style.cssText = `
         position: fixed;
         top: 20px;
@@ -141,7 +141,7 @@ function showNotification(message, type = 'info') {
         animation: slideIn 0.3s ease;
     `;
     
-    // 添加动画
+    // Add animation
     const style = document.createElement('style');
     style.textContent = `
         @keyframes slideIn {
@@ -162,13 +162,13 @@ function showNotification(message, type = 'info') {
     
     document.body.appendChild(notification);
     
-    // 关闭按钮事件
+    // Close button event
     const closeBtn = notification.querySelector('.notification-close');
     closeBtn.addEventListener('click', () => {
         notification.remove();
     });
     
-    // 自动移除
+    // Auto remove
     setTimeout(() => {
         if (notification.parentNode) {
             notification.remove();
@@ -176,7 +176,7 @@ function showNotification(message, type = 'info') {
     }, 5000);
 }
 
-// 数字动画效果
+// Number animation effect
 function animateNumbers() {
     const stats = document.querySelectorAll('.stat-number');
     stats.forEach(stat => {
@@ -195,7 +195,7 @@ function animateNumbers() {
     });
 }
 
-// 当统计区域进入视窗时触发动画
+// Trigger animation when stats section enters viewport
 const observerOptions = {
     threshold: 0.5,
     rootMargin: '0px 0px -50px 0px'
@@ -210,13 +210,13 @@ const observer = new IntersectionObserver((entries) => {
     });
 }, observerOptions);
 
-// 观察统计区域
+// Observe stats section
 const statsSection = document.querySelector('.about-stats');
 if (statsSection) {
     observer.observe(statsSection);
 }
 
-// 卡片悬停效果增强
+// Enhanced card hover effects
 document.querySelectorAll('.skill-card, .project-card').forEach(card => {
     card.addEventListener('mouseenter', function() {
         this.style.transform = 'translateY(-10px) scale(1.02)';
@@ -229,9 +229,9 @@ document.querySelectorAll('.skill-card, .project-card').forEach(card => {
     });
 });
 
-// 页面加载完成后的初始化
+// Page load initialization
 document.addEventListener('DOMContentLoaded', function() {
-    // 添加页面加载动画
+    // Add page load animation
     document.body.style.opacity = '0';
     document.body.style.transform = 'translateY(20px)';
     
@@ -241,7 +241,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.body.style.transform = 'translateY(0)';
     }, 100);
     
-    // 为所有链接添加活跃状态
+    // Set active link based on current section
     const currentSection = window.location.hash.slice(1) || 'home';
     const activeLink = document.querySelector(`a[href="#${currentSection}"]`);
     if (activeLink) {
@@ -249,7 +249,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// 滚动时更新活跃导航链接
+// Update active navigation link on scroll
 window.addEventListener('scroll', () => {
     const sections = document.querySelectorAll('section');
     const navLinks = document.querySelectorAll('.nav-link');
@@ -271,7 +271,7 @@ window.addEventListener('scroll', () => {
     });
 });
 
-// 主题切换功能（可选）
+// Theme toggle functionality (optional)
 function createThemeToggle() {
     const themeToggle = document.createElement('button');
     themeToggle.innerHTML = '🌙';
@@ -308,5 +308,5 @@ function createThemeToggle() {
     document.body.appendChild(themeToggle);
 }
 
-// 初始化主题切换
+// Initialize theme toggle
 // createThemeToggle(); 
