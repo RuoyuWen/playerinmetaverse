@@ -1,0 +1,51 @@
+# 系统文件
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 临时文件
+*.tmp
+*.temp
+*.log
+
+# 编辑器文件
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Windows系统目录
+My Documents/
+Documents/
+AppData/
+ProgramData/
+
+# 游戏文件
+*/Paradox Interactive/
+*/shadercache/
+*.scache
+
+# 腾讯文件
+*/Tencent Files/
+*/QQ/
+*/WeChat/
+
+# 浏览器缓存
+Cache/
+cache/
+temp/
+
+# 其他不需要的目录
+node_modules/
+*.zip
+*.rar
+*.7z
+
+# 只保留网站相关文件
+# 我们需要：
+# - index.html
+# - styles.css
+# - script.js
+# - README.md
+# - CNAME
+# - assets/ (如果有的话) 
