@@ -1,6 +1,7 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import Optional, List
 import uvicorn
@@ -42,7 +43,8 @@ if ENVIRONMENT == "production":
     allowed_origins = [
         "https://playerinmetaverse.tech",
         "https://chi-frontend.onrender.com",
-        "https://chi-backend.onrender.com"
+        "https://chi-backend.onrender.com",
+        "https://chi-backend-git.onrender.com"
     ]
 else:
     allowed_origins = ["*"]
@@ -66,14 +68,180 @@ class ChatResponse(BaseModel):
     session_id: str
     timestamp: str
 
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
 async def root():
+    """返回一个简单的HTML界面"""
+    html_content = """
+    <!DOCTYPE html>
+    <html lang="zh-CN">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Inner Child Chatbot - 内在小孩疗愈聊天机器人</title>
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body {
+                font-family: 'Microsoft YaHei', 'Segoe UI', sans-serif;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+                padding: 20px;
+                line-height: 1.6;
+            }
+            .container {
+                max-width: 800px;
+                margin: 0 auto;
+                background: white;
+                border-radius: 20px;
+                box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+                overflow: hidden;
+            }
+            .header {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 40px 30px;
+                text-align: center;
+            }
+            .header h1 { font-size: 2.5rem; margin-bottom: 10px; font-weight: 300; }
+            .header p { font-size: 1.1rem; opacity: 0.9; }
+            .content { padding: 40px 30px; }
+            .status { background: #e7f3ff; padding: 20px; border-radius: 10px; margin-bottom: 30px; }
+            .api-section { background: #f8f9fa; padding: 25px; border-radius: 15px; margin: 20px 0; }
+            .endpoint { background: #2d3748; color: #e2e8f0; padding: 15px; border-radius: 10px; margin: 10px 0; font-family: monospace; }
+            .button { 
+                background: #6366f1; color: white; padding: 12px 24px; border-radius: 25px; 
+                text-decoration: none; display: inline-block; margin: 10px 5px; transition: all 0.3s;
+            }
+            .button:hover { background: #4f46e5; transform: translateY(-2px); }
+            .demo-form { background: #f0f4f8; padding: 25px; border-radius: 15px; margin-top: 20px; }
+            .form-group { margin-bottom: 15px; }
+            .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+            .form-group input, .form-group textarea { 
+                width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; 
+            }
+            .chat-response { background: #e8f5e8; padding: 15px; border-radius: 10px; margin-top: 15px; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>🌟 Inner Child Chatbot</h1>
+                <p>内在小孩疗愈聊天机器人 - AI驱动的心理治疗辅助工具</p>
+            </div>
+            
+            <div class="content">
+                <div class="status">
+                    <h3>🎉 服务状态：在线运行</h3>
+                    <p>您的Inner Child Chatbot API现在完全可用！用户可以通过API接口或下方的简单界面体验功能。</p>
+                </div>
+                
+                <div class="api-section">
+                    <h3>📋 API 端点</h3>
+                    <div class="endpoint">GET /health - 健康检查</div>
+                    <div class="endpoint">GET /api/config - API配置</div>
+                    <div class="endpoint">GET /api/mbti-types - MBTI类型列表</div>
+                    <div class="endpoint">POST /api/chat - 聊天对话</div>
+                    <div class="endpoint">POST /api/upload-documents - 文档上传</div>
+                    
+                    <a href="/health" class="button" target="_blank">测试健康检查</a>
+                    <a href="/api/config" class="button" target="_blank">查看API配置</a>
+                    <a href="/api/mbti-types" class="button" target="_blank">查看MBTI数据</a>
+                    <a href="/docs" class="button" target="_blank">API文档</a>
+                </div>
+                
+                <div class="demo-form">
+                    <h3>💬 快速聊天测试</h3>
+                    <p>输入您的OpenAI API密钥和消息来测试聊天功能：</p>
+                    <div class="form-group">
+                        <label>OpenAI API 密钥:</label>
+                        <input type="password" id="apiKey" placeholder="sk-your-api-key-here" />
+                    </div>
+                    <div class="form-group">
+                        <label>消息:</label>
+                        <textarea id="message" rows="3" placeholder="请输入您想说的话..."></textarea>
+                    </div>
+                    <button onclick="sendMessage()" class="button">发送消息</button>
+                    <div id="response" class="chat-response" style="display: none;"></div>
+                </div>
+                
+                <div class="api-section">
+                    <h3>🔗 相关链接</h3>
+                    <a href="https://playerinmetaverse.tech/chi" class="button">项目展示页</a>
+                    <a href="https://platform.openai.com/api-keys" class="button" target="_blank">获取API密钥</a>
+                    <a href="https://github.com/RuoyuWen/playerinmetaverse" class="button" target="_blank">GitHub源码</a>
+                </div>
+            </div>
+        </div>
+        
+        <script>
+            async function sendMessage() {
+                const apiKey = document.getElementById('apiKey').value;
+                const message = document.getElementById('message').value;
+                const responseDiv = document.getElementById('response');
+                
+                if (!apiKey) {
+                    alert('请输入OpenAI API密钥');
+                    return;
+                }
+                
+                if (!message) {
+                    alert('请输入消息');
+                    return;
+                }
+                
+                responseDiv.style.display = 'block';
+                responseDiv.innerHTML = '正在发送消息...';
+                
+                try {
+                    const response = await fetch('/api/chat', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            message: message,
+                            api_key: apiKey,
+                            session_id: 'demo-session'
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        responseDiv.innerHTML = `
+                            <strong>AI回复:</strong><br>
+                            ${data.response}<br><br>
+                            <small>会话ID: ${data.session_id} | 时间: ${data.timestamp}</small>
+                        `;
+                    } else {
+                        responseDiv.innerHTML = `<strong>错误:</strong> ${data.detail}`;
+                    }
+                } catch (error) {
+                    responseDiv.innerHTML = `<strong>错误:</strong> ${error.message}`;
+                }
+            }
+        </script>
+    </body>
+    </html>
+    """
+    return html_content
+
+@app.get("/api")
+async def api_info():
+    """API信息端点"""
     return {
         "message": "Inner Child Chatbot API",
         "version": "1.0.0",
         "status": "running",
         "environment": ENVIRONMENT,
-        "backend_available": True
+        "backend_available": True,
+        "endpoints": {
+            "health": "/health",
+            "config": "/api/config", 
+            "mbti_types": "/api/mbti-types",
+            "chat": "/api/chat",
+            "upload": "/api/upload-documents",
+            "docs": "/docs"
+        }
     }
 
 @app.get("/health")
