@@ -234,15 +234,7 @@ document.querySelectorAll('.skill-card, .project-card').forEach(card => {
 
 // Page load initialization
 document.addEventListener('DOMContentLoaded', function() {
-    // Add page load animation
-    document.body.style.opacity = '0';
-    document.body.style.transform = 'translateY(20px)';
-    
-    setTimeout(() => {
-        document.body.style.transition = 'all 0.6s ease';
-        document.body.style.opacity = '1';
-        document.body.style.transform = 'translateY(0)';
-    }, 100);
+    // Removed page load animation - content shows immediately
     
     // Set active link based on current section
     const currentSection = window.location.hash.slice(1) || 'home';
@@ -331,14 +323,7 @@ function typeWriter(element, text, speed = 100) {
 
 // Page load completion effects
 document.addEventListener('DOMContentLoaded', function() {
-    // Add hero title typing effect
-    const heroTitle = document.querySelector('.hero-title');
-    if (heroTitle) {
-        const originalText = heroTitle.textContent;
-        setTimeout(() => {
-            typeWriter(heroTitle, originalText, 80);
-        }, 500);
-    }
+    // Removed hero title typing effect - text shows immediately
     
     // Add skill card entrance animation
     const observerOptions = {
