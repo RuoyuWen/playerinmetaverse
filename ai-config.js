@@ -37,15 +37,15 @@ const AI_CONFIG = {
     // 对话历史管理
     maxHistoryLength: 20,       // 保留的对话轮数（用户+助手 = 2轮）
 
-    // UI文本配置
+    // UI text configuration
     ui: {
-        welcomeMessage: "您好！我是Ruoyu的AI助手，很高兴为您服务！🌟 有什么我可以帮助您的吗？",
-        errorMessage: "抱歉，AI助手暂时无法回应。请检查API Key或稍后重试。",
+        welcomeMessage: "Hello! I'm an AI assistant, happy to help you! 🌟 What can I assist you with today?",
+        errorMessage: "Sorry, the AI assistant is temporarily unavailable. Please check your API Key or try again later.",
         apiKeyPlaceholder: "sk-proj-...",
-        sendButtonText: "发送",
-        typingText: "AI正在思考中...",
-        userLabel: "您",
-        assistantLabel: "AI助手"
+        sendButtonText: "Send",
+        typingText: "AI is thinking...",
+        userLabel: "You",
+        assistantLabel: "AI Assistant"
     }
 };
 

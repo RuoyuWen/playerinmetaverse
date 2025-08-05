@@ -74,7 +74,7 @@ class AIChat {
         if (!message) return;
 
         if (!this.apiKey) {
-            this.showError('请先输入API Key！');
+            this.showError('Please enter your API Key first!');
             return;
         }
 
@@ -184,8 +184,8 @@ class AIChat {
         contentDiv.className = 'message-content';
         
         // 使用配置文件中的错误消息或默认消息
-        const finalErrorMessage = errorMessage || this.config.ui?.errorMessage || '抱歉，AI助手暂时无法回应。请检查API Key或稍后重试。';
-        contentDiv.innerHTML = `<strong>❌ 错误:</strong> ${finalErrorMessage}`;
+        const finalErrorMessage = errorMessage || this.config.ui?.errorMessage || 'Sorry, the AI assistant is temporarily unavailable. Please check your API Key or try again later.';
+        contentDiv.innerHTML = `<strong>❌ Error:</strong> ${finalErrorMessage}`;
         
         messageDiv.appendChild(contentDiv);
         this.chatContainer.appendChild(messageDiv);

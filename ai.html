@@ -189,26 +189,26 @@
             <div class="ai-container">
                 <!-- API Key Setup -->
                 <div class="security-warning">
-                    <h3><i class="fas fa-key"></i> API Key 设置</h3>
-                    <p>💡 请输入您的OpenAI API Key来开始对话</p>
-                    <p>🔒 API Key仅保存在您的浏览器本地，不会上传到服务器</p>
-                    <p>⚠️ 注意：直接在前端使用API key存在安全风险，建议仅用于个人测试</p>
+                    <h3><i class="fas fa-key"></i> API Key Setup</h3>
+                    <p>💡 Please enter your OpenAI API Key to start chatting</p>
+                    <p>🔒 API Key is only stored locally in your browser and won't be uploaded to the server</p>
+                    <p>⚠️ Note: Using API key directly in frontend has security risks, recommended for personal testing only</p>
                     <label for="api-key">OpenAI API Key:</label>
                     <input type="password" id="api-key" class="api-key-input" placeholder="" />
                     <small style="color: #888; font-size: 0.9em; margin-top: 0.5rem; display: block;">
-                        💡 获取API Key: 访问 <a href="https://platform.openai.com/api-keys" target="_blank" style="color: var(--secondary-color);">OpenAI API Keys</a>
+                        💡 Get API Key: Visit <a href="https://platform.openai.com/api-keys" target="_blank" style="color: var(--secondary-color);">OpenAI API Keys</a>
                     </small>
                 </div>
 
                 <!-- Chat Container -->
                 <div class="chat-container" id="chat-container">
-                    <!-- 欢迎消息将通过JavaScript从配置文件中加载 -->
+                    <!-- Welcome message will be loaded from config file via JavaScript -->
                 </div>
 
                 <!-- Typing Indicator -->
                 <div class="typing-indicator" id="typing-indicator">
                     <i class="fas fa-robot"></i>
-                    <span id="typing-text">AI正在思考中...</span>
+                    <span id="typing-text">AI is thinking...</span>
                     <div class="typing-dots">
                         <div class="typing-dot"></div>
                         <div class="typing-dot"></div>
@@ -221,12 +221,12 @@
                     <textarea 
                         id="chat-input" 
                         class="chat-input" 
-                        placeholder="输入您的问题..." 
+                        placeholder="Enter your question..." 
                         rows="2"
                     ></textarea>
                     <button id="send-btn" class="send-btn">
                         <i class="fas fa-paper-plane"></i>
-                        发送
+                        Send
                     </button>
                 </div>
             </div>
