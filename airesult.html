@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Task Results | Ruoyu Wen</title>
+    <meta name="description" content="AI Task Results - View all recorded answers">
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .results-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            border: 1px solid rgba(157, 78, 221, 0.3);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 20px 40px rgba(157, 78, 221, 0.1);
+        }
+
+        .results-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .results-header h1 {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+            font-weight: 700 !important;
+            font-size: 2.2rem !important;
+            color: var(--text-color);
+            margin-bottom: 1rem;
+            text-shadow: 0 0 20px rgba(157, 78, 221, 0.6) !important;
+        }
+
+        .results-header p {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+            font-weight: 400 !important;
+            font-size: 1.1rem !important;
+            color: var(--text-color);
+            opacity: 0.9;
+        }
+
+        .results-grid {
+            display: grid;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .result-card {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            padding: 1.5rem;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        .result-card:hover {
+            border-color: rgba(0, 212, 255, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .result-id {
+            font-weight: 600;
+            color: var(--primary-color);
+            font-size: 1.1rem;
+        }
+
+        .result-timestamp {
+            font-size: 0.9rem;
+            color: var(--text-color);
+            opacity: 0.7;
+        }
+
+        .result-task {
+            background: linear-gradient(135deg, rgba(157, 78, 221, 0.2), rgba(0, 212, 255, 0.1));
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-color);
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+
+        .result-answer {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--secondary-color);
+            text-align: center;
+            padding: 1rem;
+            background: rgba(0, 212, 255, 0.1);
+            border-radius: 10px;
+            border: 2px solid rgba(0, 212, 255, 0.3);
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-color);
+            opacity: 0.7;
+        }
+
+        .no-results i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: var(--primary-color);
+        }
+
+        .clear-results-btn {
+            background: linear-gradient(135deg, #ff6b35, #f7931e);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            padding: 0.75rem 2rem;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-weight: 500;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        .clear-results-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(255, 107, 53, 0.4);
+        }
+
+        .stats-section {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 165, 0, 0.3);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .stats-title {
+            font-weight: 600;
+            font-size: 1.2rem;
+            color: var(--text-color);
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 1rem;
+            background: rgba(157, 78, 221, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(157, 78, 221, 0.2);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-color);
+            opacity: 0.8;
+        }
+
+        .back-links {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(157, 78, 221, 0.2);
+        }
+
+        .back-links a {
+            color: var(--secondary-color);
+            text-decoration: none;
+            margin: 0 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .back-links a:hover {
+            color: var(--primary-color);
+            text-shadow: 0 0 10px rgba(157, 78, 221, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <a href="index.html">Ruoyu Wen</a>
+            </div>
+            <div class="nav-menu" id="nav-menu">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="about.html" class="nav-link">About</a>
+                <a href="education.html" class="nav-link">Education</a>
+                <a href="research.html" class="nav-link">Research</a>
+                <a href="experience.html" class="nav-link">Experience</a>
+            </div>
+            <div class="nav-toggle" id="nav-toggle">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Results Section -->
+    <section class="section-padding">
+        <div class="container">
+            <div class="results-container">
+                <div class="results-header">
+                    <h1>📊 AI Task Results</h1>
+                    <p>View all recorded answers from AI chat tasks</p>
+                </div>
+
+                <!-- Statistics Section -->
+                <div class="stats-section" id="stats-section">
+                    <h3 class="stats-title">📈 Statistics</h3>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-number" id="total-responses">0</span>
+                            <span class="stat-label">Total Responses</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number" id="gift-tasks">0</span>
+                            <span class="stat-label">Gift Selection Tasks</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number" id="restaurant-tasks">0</span>
+                            <span class="stat-label">Restaurant Selection Tasks</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results Grid -->
+                <div class="results-grid" id="results-grid">
+                    <!-- Results will be populated by JavaScript -->
+                </div>
+
+                <!-- No Results Message -->
+                <div class="no-results" id="no-results" style="display: none;">
+                    <i class="fas fa-inbox"></i>
+                    <h3>No Results Yet</h3>
+                    <p>Complete some AI chat tasks to see results here!</p>
+                </div>
+
+                <!-- Back Links -->
+                <div class="back-links">
+                    <a href="ai.html"><i class="fas fa-arrow-left"></i> AI Chat 1</a>
+                    <a href="ai1.html"><i class="fas fa-arrow-left"></i> AI Chat 2</a>
+                    <button class="clear-results-btn" onclick="clearAllResults()" id="clear-btn" style="display: none;">
+                        <i class="fas fa-trash"></i> Clear All Results
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <p>&copy; 2024 Ruoyu Wen. Game Researcher & Designer | PhD in Human Computer Interaction 🌸</p>
+                <div class="social-links">
+                    <a href="mailto:ruoyu.wen.game@gmail.com" target="_blank" title="Email"><i class="fas fa-envelope"></i></a>
+                    <a href="https://scholar.google.com/citations?hl=en&user=TssKzFIAAAAJ&view_op=list_works&gmla=AH8HC4wssodHVoe9Ljll41vco9U7EA7ci1rWTxxfNSe7ZuuxjEwwNOrata7GzhiOgbnk-d_iRrOM-ILMs3B2445j" target="_blank" title="Google Scholar"><i class="fas fa-graduation-cap"></i></a>
+                    <a href="https://www.linkedin.com/in/ruoyu-wen-53344419a/?locale=en_US" target="_blank" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                    <a href="https://wrychristian.itch.io/" target="_blank" title="Portfolio"><i class="fas fa-gamepad"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        // Load and display results
+        function loadResults() {
+            const results = JSON.parse(localStorage.getItem('airesults') || '[]');
+            const resultsGrid = document.getElementById('results-grid');
+            const noResults = document.getElementById('no-results');
+            const clearBtn = document.getElementById('clear-btn');
+            
+            // Update statistics
+            const totalResponses = results.length;
+            const giftTasks = results.filter(r => r.task === 'gift_selection').length;
+            const restaurantTasks = results.filter(r => r.task === 'restaurant_selection').length;
+            
+            document.getElementById('total-responses').textContent = totalResponses;
+            document.getElementById('gift-tasks').textContent = giftTasks;
+            document.getElementById('restaurant-tasks').textContent = restaurantTasks;
+            
+            if (results.length === 0) {
+                noResults.style.display = 'block';
+                resultsGrid.style.display = 'none';
+                clearBtn.style.display = 'none';
+            } else {
+                noResults.style.display = 'none';
+                resultsGrid.style.display = 'grid';
+                clearBtn.style.display = 'inline-block';
+                
+                // Sort results by timestamp (newest first)
+                results.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                
+                resultsGrid.innerHTML = results.map(result => {
+                    const date = new Date(result.timestamp).toLocaleString();
+                    const taskName = result.task === 'gift_selection' ? '🎁 Gift Selection' : '🍽️ Restaurant Selection';
+                    const source = result.id.endsWith('ai') ? 'AI Chat 1' : 'AI Chat 2';
+                    
+                    return `
+                        <div class="result-card">
+                            <div class="result-header">
+                                <span class="result-id">${result.id}</span>
+                                <span class="result-timestamp">${date}</span>
+                            </div>
+                            <div class="result-task">${taskName} • ${source}</div>
+                            <div class="result-answer">Answer: ${result.answer}</div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+        
+        function clearAllResults() {
+            if (confirm('Are you sure you want to clear all results? This action cannot be undone.')) {
+                localStorage.removeItem('airesults');
+                loadResults();
+            }
+        }
+        
+        // Load results when page loads
+        document.addEventListener('DOMContentLoaded', loadResults);
+        
+        // Refresh results every 5 seconds in case user has multiple tabs open
+        setInterval(loadResults, 5000);
+    </script>
+</body>
+</html>

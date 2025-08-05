@@ -24,6 +24,10 @@ class AI1Chat {
         this.typingIndicator = document.getElementById('typing-indicator');
         this.typingText = document.getElementById('typing-text');
         this.apiKeyInput = document.getElementById('api-key');
+        this.taskSection = document.getElementById('task-section');
+        this.taskInput = document.getElementById('task-answer');
+        this.submitBtn = document.getElementById('submit-task');
+        this.taskHint = document.getElementById('task-hint');
     }
 
     bindEvents() {
@@ -45,6 +49,18 @@ class AI1Chat {
             this.chatInput.style.height = 'auto';
             this.chatInput.style.height = this.chatInput.scrollHeight + 'px';
         });
+
+        // Task-related event listeners
+        this.taskInput.addEventListener('input', (e) => {
+            const value = e.target.value.toUpperCase();
+            if (['A', 'B', 'C', 'D', 'E'].includes(value)) {
+                this.submitBtn.style.display = 'block';
+            } else {
+                this.submitBtn.style.display = 'none';
+            }
+        });
+
+        this.submitBtn.addEventListener('click', () => this.submitTask());
     }
 
     loadApiKey() {
@@ -92,6 +108,18 @@ class AI1Chat {
             // Call OpenAI API
             const response = await this.callOpenAI(message);
             this.addMessage(response, 'assistant');
+            
+            // Increment conversation rounds AFTER successful AI response
+            this.conversationRounds++;
+            console.log(`🍽️ AI1 Round ${this.conversationRounds} completed`);
+            
+            // Check if task should be enabled after AI responds
+            if (this.conversationRounds >= 3 && !this.taskEnabled) {
+                console.log('✅ AI1: 3 rounds reached - enabling restaurant task!');
+                setTimeout(() => {
+                    this.enableTask();
+                }, 500); // Small delay to ensure message is displayed first
+            }
         } catch (error) {
             console.error('AI Chat Error:', error);
             this.showError('Sorry, the AI assistant is temporarily unavailable. Please check your API Key or try again later.');
@@ -222,9 +250,100 @@ class AI1Chat {
             .replace(/`(.*?)`/g, '<code style="background: rgba(0,0,0,0.3); padding: 2px 4px; border-radius: 3px;">$1</code>')
             .replace(/\n/g, '<br>');
     }
+
+    enableTask() {
+        console.log('🍽️ Enabling restaurant task - 3 rounds completed!');
+        
+        this.taskEnabled = true;
+        
+        if (this.taskInput) {
+            this.taskInput.disabled = false;
+            this.taskInput.placeholder = 'Enter A, B, C, D, or E';
+            // Add visual indication that task is now enabled
+            this.taskInput.style.borderColor = '#9d4edd';
+            this.taskInput.style.opacity = '1';
+            this.taskInput.style.background = 'rgba(0, 0, 0, 0.3)';
+            this.taskInput.style.boxShadow = '0 0 10px rgba(157, 78, 221, 0.3)';
+        }
+        
+        // Hide the hint message
+        if (this.taskHint) {
+            this.taskHint.style.display = 'none';
+        }
+        
+        // Add a message about task activation
+        this.addMessage('🎯 Excellent! After our conversation, you can now complete the restaurant selection task below:', 'assistant');
+        this.scrollToBottom();
+    }
+
+    submitTask() {
+        const answer = this.taskInput.value.toUpperCase();
+        if (!['A', 'B', 'C', 'D', 'E'].includes(answer)) {
+            alert('Please enter a valid choice: A, B, C, D, or E');
+            return;
+        }
+
+        // Generate unique ID and record the result
+        const resultId = this.generateUniqueId();
+        const result = {
+            id: resultId + 'ai1',
+            answer: answer,
+            timestamp: new Date().toISOString(),
+            task: 'restaurant_selection'
+        };
+
+        // Save to localStorage
+        const existingResults = JSON.parse(localStorage.getItem('airesults') || '[]');
+        existingResults.push(result);
+        localStorage.setItem('airesults', JSON.stringify(existingResults));
+
+        // Disable task section and show confirmation
+        this.taskInput.disabled = true;
+        this.submitBtn.disabled = true;
+        this.submitBtn.textContent = 'Submitted ✓';
+        
+        this.addMessage(`✅ Task completed! Your answer "${answer}" has been recorded with ID: ${result.id}`, 'assistant');
+        
+        // Show link to results page
+        setTimeout(() => {
+            this.addMessage('📊 View all results at: <a href="airesult.html" target="_blank" style="color: var(--secondary-color);">Results Page</a>', 'assistant');
+        }, 1000);
+    }
+
+    generateUniqueId() {
+        // Generate 6-digit sequential ID
+        const existingResults = JSON.parse(localStorage.getItem('airesults') || '[]');
+        return String(existingResults.length + 1).padStart(6, '0');
+    }
 }
 
 // Initialize AI Chat when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    new AI1Chat();
+    window.ai1ChatInstance = new AI1Chat();
 });
+
+// Test function to simulate 3 conversation rounds for AI1
+window.simulateThreeRoundsAI1 = function() {
+    console.log('AI1: Simulating 3 conversation rounds...');
+    if (window.ai1ChatInstance) {
+        // Simulate 3 rounds
+        window.ai1ChatInstance.conversationRounds = 3;
+        window.ai1ChatInstance.addMessage('Simulated User: Hello', 'user');
+        window.ai1ChatInstance.addMessage('Simulated AI: Hi there!', 'assistant');
+        window.ai1ChatInstance.addMessage('Simulated User: How are you?', 'user');
+        window.ai1ChatInstance.addMessage('Simulated AI: I\'m doing well, thanks!', 'assistant');
+        window.ai1ChatInstance.addMessage('Simulated User: Great!', 'user');
+        window.ai1ChatInstance.addMessage('Simulated AI: Is there anything I can help you with?', 'assistant');
+        
+        // Check if task should be enabled
+        console.log(`AI1 After simulation: rounds=${window.ai1ChatInstance.conversationRounds}, taskEnabled=${window.ai1ChatInstance.taskEnabled}`);
+        if (window.ai1ChatInstance.conversationRounds >= 3 && !window.ai1ChatInstance.taskEnabled) {
+            console.log('AI1 Enabling task after simulation!');
+            setTimeout(() => {
+                window.ai1ChatInstance.enableTask();
+            }, 500);
+        }
+    } else {
+        console.error('AI1 Chat instance not found!');
+    }
+};
