@@ -135,6 +135,12 @@ class AIChat {
         const message = this.chatInput.value.trim();
         if (!message) return;
 
+        // Check if chat is disabled after task submission
+        if (this.chatInput.disabled) {
+            this.showError('Chat has been disabled after task submission.');
+            return;
+        }
+
         if (!this.apiKey) {
             this.showError('Please enter your API Key first!');
             return;
@@ -339,6 +345,9 @@ class AIChat {
             timestamp: new Date().toISOString()
         }));
         
+        console.log('📝 Chat history being saved:', chatHistory);
+        console.log('💬 Total messages:', this.messages.length);
+        
         const result = {
             id: resultId + 'ai',
             answer: answer,
@@ -349,10 +358,14 @@ class AIChat {
             taskType: 'AI Chat 1'
         };
 
+        console.log('📊 Complete result object:', result);
+
         // Save to localStorage
         const existingResults = JSON.parse(localStorage.getItem('airesults') || '[]');
         existingResults.push(result);
         localStorage.setItem('airesults', JSON.stringify(existingResults));
+        
+        console.log('💾 Saved to localStorage. All results:', existingResults);
 
         // Disable task section and show confirmation
         this.taskInput.disabled = true;

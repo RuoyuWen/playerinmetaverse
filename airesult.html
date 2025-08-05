@@ -382,7 +382,13 @@
             const results = JSON.parse(localStorage.getItem('airesults') || '[]');
             const result = results[index];
             
+            console.log('🔍 Attempting to download chat record. Index:', index);
+            console.log('📋 All results:', results);
+            console.log('📄 Selected result:', result);
+            console.log('💬 Chat history:', result?.chatHistory);
+            
             if (!result || !result.chatHistory || result.chatHistory.length === 0) {
+                console.log('❌ No chat history found!');
                 alert('No chat history available for this result.');
                 return;
             }
