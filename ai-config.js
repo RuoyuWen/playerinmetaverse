@@ -5,7 +5,7 @@
 
 const AI_CONFIG = {
     // OpenAI模型配置
-    model: 'gpt-4o', // 最新的GPT-4模型，也可以使用 'gpt-4-turbo'
+    model: 'gpt-4.1', // 最新的GPT-4模型，也可以使用 'gpt-4-turbo'
     
     // 系统提示词 - 在这里自定义AI助手的行为
     systemPrompt: `你是Ruoyu Wen的个人AI助手，一个友好、专业且有帮助的助手。
@@ -39,7 +39,7 @@ const AI_CONFIG = {
 
     // UI text configuration
     ui: {
-        welcomeMessage: "Hello! I'm an AI assistant, happy to help you! 🌟 What can I assist you with today?",
+        welcomeMessage: "Hello! I'm an AI assistant, happy to help you! 🌟 I am going to assist you in this task?",
         errorMessage: "Sorry, the AI assistant is temporarily unavailable. Please check your API Key or try again later.",
         apiKeyPlaceholder: "sk-proj-...",
         sendButtonText: "Send",
