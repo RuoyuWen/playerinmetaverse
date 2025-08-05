@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Settings | Ruoyu Wen</title>
-    <meta name="description" content="AI Settings - Configure AI chat assistants">
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
+        /* General container styles */
         .settings-container {
-            max-width: 1200px;
+            max-width: 1000px;
             margin: 0 auto;
             padding: 2rem;
             background: rgba(0, 0, 0, 0.3);
@@ -18,274 +18,192 @@
             border: 1px solid rgba(157, 78, 221, 0.3);
             backdrop-filter: blur(20px);
             box-shadow: 0 20px 40px rgba(157, 78, 221, 0.1);
+            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
         }
-
         .settings-header {
             text-align: center;
             margin-bottom: 2rem;
         }
-
         .settings-header h1 {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-            font-weight: 700 !important;
-            font-size: 2.2rem !important;
-            color: var(--text-color);
-            margin-bottom: 1rem;
-            text-shadow: 0 0 20px rgba(157, 78, 221, 0.6) !important;
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-shadow: 0 0 20px rgba(157, 78, 221, 0.6);
         }
-
         .settings-header p {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-            font-weight: 400 !important;
-            font-size: 1.1rem !important;
-            color: var(--text-color);
+            font-size: 1.1rem;
             opacity: 0.9;
+            margin-top: 0.5rem;
         }
-
         .settings-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr;
             gap: 2rem;
-            margin-bottom: 2rem;
         }
-
-        .config-section {
+        @media (min-width: 768px) {
+            .settings-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        .ai-config-card {
             background: rgba(0, 0, 0, 0.2);
             border-radius: 15px;
             border: 1px solid rgba(0, 212, 255, 0.2);
             padding: 1.5rem;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            flex-direction: column;
         }
-
-        .config-section h3 {
-            color: var(--primary-color);
-            font-weight: 600;
-            font-size: 1.3rem;
+        .ai-config-card h3 {
+            color: var(--secondary-color);
+            font-size: 1.5rem;
             margin-bottom: 1.5rem;
             text-align: center;
-            border-bottom: 1px solid rgba(157, 78, 221, 0.3);
-            padding-bottom: 0.5rem;
         }
-
         .form-group {
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem;
         }
-
-        .form-label {
+        .form-group label {
             display: block;
-            color: var(--text-color);
-            font-weight: 500;
-            font-size: 0.9rem;
             margin-bottom: 0.5rem;
+            font-weight: 500;
+            font-size: 0.95rem;
+            color: var(--primary-color);
         }
-
-        .form-input, .form-select, .form-textarea {
+        .form-group select,
+        .form-group input[type="number"],
+        .form-group textarea {
             width: 100%;
-            padding: 0.75rem;
-            background: rgba(0, 0, 0, 0.3);
+            padding: 0.8rem;
+            background: rgba(0, 0, 0, 0.4);
             border: 1px solid rgba(157, 78, 221, 0.3);
             border-radius: 8px;
             color: var(--text-color);
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Inter', sans-serif;
             font-size: 0.9rem;
-            transition: all 0.3s ease;
-        }
-
-        .form-textarea {
-            min-height: 150px;
             resize: vertical;
-            font-family: 'Source Code Pro', 'Consolas', 'Monaco', monospace;
-            line-height: 1.5;
+            box-sizing: border-box;
         }
-
-        .form-input:focus, .form-select:focus, .form-textarea:focus {
+        .form-group select:focus,
+        .form-group input[type="number"]:focus,
+        .form-group textarea:focus {
             outline: none;
             border-color: var(--primary-color);
-            box-shadow: 0 0 20px rgba(157, 78, 221, 0.3);
+            box-shadow: 0 0 15px rgba(157, 78, 221, 0.4);
         }
-
-        .form-range {
-            width: 100%;
-            height: 6px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 3px;
-            outline: none;
+        .form-group textarea {
+            min-height: 120px;
+        }
+        .slider-group {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .slider-group input[type="range"] {
+            flex-grow: 1;
             -webkit-appearance: none;
+            width: 100%;
+            height: 8px;
+            background: rgba(157, 78, 221, 0.3);
+            border-radius: 5px;
+            outline: none;
+            opacity: 0.7;
+            transition: opacity .2s;
         }
-
-        .form-range::-webkit-slider-thumb {
+        .slider-group input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
             width: 20px;
             height: 20px;
-            background: var(--primary-color);
             border-radius: 50%;
-            cursor: pointer;
-            box-shadow: 0 0 10px rgba(157, 78, 221, 0.5);
-        }
-
-        .range-value {
-            display: inline-block;
-            margin-left: 0.5rem;
-            color: var(--secondary-color);
-            font-weight: 600;
-            min-width: 50px;
-        }
-
-        .model-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 0.5rem;
-            margin-top: 0.5rem;
-        }
-
-        .model-option {
-            position: relative;
-        }
-
-        .model-radio {
-            display: none;
-        }
-
-        .model-label {
-            display: block;
-            padding: 0.75rem;
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(157, 78, 221, 0.3);
-            border-radius: 8px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 0.85rem;
-            font-weight: 500;
-        }
-
-        .model-radio:checked + .model-label {
             background: var(--primary-color);
-            color: white;
-            box-shadow: 0 0 15px rgba(157, 78, 221, 0.5);
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(157, 78, 221, 0.6);
         }
-
-        .model-label:hover {
-            border-color: var(--primary-color);
-            transform: translateY(-2px);
+        .slider-group input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(157, 78, 221, 0.6);
         }
-
-        .action-buttons {
+        .slider-value {
+            min-width: 40px;
+            text-align: right;
+            font-weight: 600;
+            color: var(--secondary-color);
+        }
+        .button-group {
             display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
             justify-content: center;
-            gap: 1rem;
-            margin-top: 2rem;
-            padding-top: 1rem;
-            border-top: 1px solid rgba(157, 78, 221, 0.2);
         }
-
-        .btn {
-            padding: 1rem 2rem;
+        .button-group button {
+            padding: 0.8rem 1.5rem;
             border: none;
-            border-radius: 10px;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
             font-weight: 500;
             font-size: 0.9rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .btn-primary {
-            background: var(--gradient-cyber);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(157, 78, 221, 0.4);
-        }
-
-        .btn-secondary {
-            background: linear-gradient(135deg, #6c757d, #495057);
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(108, 117, 125, 0.4);
-        }
-
-        .btn-success {
-            background: linear-gradient(135deg, #28a745, #20c997);
-            color: white;
-        }
-
-        .btn-success:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(40, 167, 69, 0.4);
-        }
-
-        .status-message {
-            position: fixed;
-            top: 2rem;
-            right: 2rem;
-            padding: 1rem 1.5rem;
-            border-radius: 10px;
-            color: white;
-            font-weight: 500;
-            z-index: 1000;
-            transform: translateX(400px);
             transition: all 0.3s ease;
         }
-
-        .status-message.show {
-            transform: translateX(0);
+        .button-group button.primary {
+            background: linear-gradient(135deg, #00d4ff, #9d4edd);
         }
-
-        .status-message.success {
-            background: linear-gradient(135deg, #28a745, #20c997);
+        .button-group button.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.4);
         }
-
-        .status-message.error {
-            background: linear-gradient(135deg, #dc3545, #c82333);
+        .button-group button.secondary {
+            background: linear-gradient(135deg, #ff6b35, #f7931e);
         }
-
+        .button-group button.secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(255, 107, 53, 0.4);
+        }
         .back-links {
             text-align: center;
             margin-top: 2rem;
-            padding-top: 1rem;
-            border-top: 1px solid rgba(157, 78, 221, 0.2);
         }
-
         .back-links a {
             color: var(--secondary-color);
             text-decoration: none;
-            margin: 0 1rem;
+            margin: 0 10px;
+            font-size: 0.95rem;
             font-weight: 500;
-            transition: all 0.3s ease;
+            transition: color 0.3s ease;
         }
-
         .back-links a:hover {
             color: var(--primary-color);
-            text-shadow: 0 0 10px rgba(157, 78, 221, 0.5);
         }
-
-        @media (max-width: 768px) {
-            .settings-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .model-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .action-buttons {
-                flex-direction: column;
-            }
+        .status-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+        .status-message.success {
+            background: linear-gradient(135deg, #28a745, #20c997);
+        }
+        .status-message.error {
+            background: linear-gradient(135deg, #dc3545, #fd7e14);
+        }
+        .status-message.show {
+            transform: translateX(0);
         }
     </style>
 </head>
 <body>
-    <!-- Navigation -->
     <nav class="navbar">
         <div class="nav-container">
             <div class="nav-logo">
@@ -306,124 +224,97 @@
         </div>
     </nav>
 
-    <!-- Settings Section -->
     <section class="section-padding">
         <div class="container">
-            <div class="settings-container">
-                <div class="settings-header">
-                    <h1>⚙️ AI Settings</h1>
-                    <p>Configure AI chat assistants settings and parameters</p>
-                </div>
+            <div class="settings-header">
+                <h1>⚙️ AI Settings Dashboard</h1>
+                <p>Customize the behavior of your AI assistants.</p>
+            </div>
 
+            <div class="settings-container">
                 <div class="settings-grid">
                     <!-- AI Chat 1 Settings -->
-                    <div class="config-section">
-                        <h3>🤖 AI Chat 1 Configuration</h3>
-                        
+                    <div class="ai-config-card">
+                        <h3>AI Chat 1 Configuration</h3>
                         <div class="form-group">
-                            <label class="form-label">AI Model</label>
-                            <div class="model-grid">
-                                <div class="model-option">
-                                    <input type="radio" id="ai1-gpt41" name="ai1-model" value="gpt-4.1" class="model-radio">
-                                    <label for="ai1-gpt41" class="model-label">GPT-4.1</label>
-                                </div>
-                                <div class="model-option">
-                                    <input type="radio" id="ai1-gpt41mini" name="ai1-model" value="gpt-4.1-mini" class="model-radio">
-                                    <label for="ai1-gpt41mini" class="model-label">GPT-4.1 Mini</label>
-                                </div>
-                                <div class="model-option">
-                                    <input type="radio" id="ai1-gpt4o" name="ai1-model" value="gpt-4o" class="model-radio">
-                                    <label for="ai1-gpt4o" class="model-label">GPT-4o</label>
-                                </div>
+                            <label for="ai1-model">Model:</label>
+                            <select id="ai1-model">
+                                <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                                <option value="gpt-4">GPT-4</option>
+                                <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="ai1-system-prompt">System Prompt:</label>
+                            <textarea id="ai1-system-prompt" rows="6"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="ai1-max-tokens">Max Tokens:</label>
+                            <div class="slider-group">
+                                <input type="range" id="ai1-max-tokens" min="100" max="4000" step="100">
+                                <span class="slider-value" id="ai1-max-tokens-value"></span>
                             </div>
                         </div>
-
                         <div class="form-group">
-                            <label class="form-label">System Prompt</label>
-                            <textarea id="ai1-system-prompt" class="form-textarea" placeholder="Enter system prompt for AI Chat 1..."></textarea>
+                            <label for="ai1-temperature">Temperature:</label>
+                            <div class="slider-group">
+                                <input type="range" id="ai1-temperature" min="0.0" max="1.0" step="0.1">
+                                <span class="slider-value" id="ai1-temperature-value"></span>
+                            </div>
                         </div>
-
-                        <div class="form-group">
-                            <label class="form-label">Max Tokens</label>
-                            <input type="number" id="ai1-max-tokens" class="form-input" min="100" max="4000" step="100" value="1500">
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">
-                                Temperature <span class="range-value" id="ai1-temp-value">0.7</span>
-                            </label>
-                            <input type="range" id="ai1-temperature" class="form-range" min="0" max="1" step="0.1" value="0.7">
+                        <div class="button-group">
+                            <button class="secondary" onclick="loadDefaultConfig('ai1')">Load Defaults</button>
+                            <button class="primary" onclick="saveConfig('ai1')">Save Settings</button>
+                            <button class="primary" onclick="testConfig('ai1')" style="background: linear-gradient(135deg, #28a745, #20c997);">Test Config</button>
                         </div>
                     </div>
 
                     <!-- AI Chat 2 Settings -->
-                    <div class="config-section">
-                        <h3>🤖 AI Chat 2 Configuration</h3>
-                        
+                    <div class="ai-config-card">
+                        <h3>AI Chat 2 Configuration</h3>
                         <div class="form-group">
-                            <label class="form-label">AI Model</label>
-                            <div class="model-grid">
-                                <div class="model-option">
-                                    <input type="radio" id="ai2-gpt41" name="ai2-model" value="gpt-4.1" class="model-radio">
-                                    <label for="ai2-gpt41" class="model-label">GPT-4.1</label>
-                                </div>
-                                <div class="model-option">
-                                    <input type="radio" id="ai2-gpt41mini" name="ai2-model" value="gpt-4.1-mini" class="model-radio">
-                                    <label for="ai2-gpt41mini" class="model-label">GPT-4.1 Mini</label>
-                                </div>
-                                <div class="model-option">
-                                    <input type="radio" id="ai2-gpt4o" name="ai2-model" value="gpt-4o" class="model-radio">
-                                    <label for="ai2-gpt4o" class="model-label">GPT-4o</label>
-                                </div>
+                            <label for="ai2-model">Model:</label>
+                            <select id="ai2-model">
+                                <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                                <option value="gpt-4">GPT-4</option>
+                                <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="ai2-system-prompt">System Prompt:</label>
+                            <textarea id="ai2-system-prompt" rows="6"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="ai2-max-tokens">Max Tokens:</label>
+                            <div class="slider-group">
+                                <input type="range" id="ai2-max-tokens" min="100" max="4000" step="100">
+                                <span class="slider-value" id="ai2-max-tokens-value"></span>
                             </div>
                         </div>
-
                         <div class="form-group">
-                            <label class="form-label">System Prompt</label>
-                            <textarea id="ai2-system-prompt" class="form-textarea" placeholder="Enter system prompt for AI Chat 2..."></textarea>
+                            <label for="ai2-temperature">Temperature:</label>
+                            <div class="slider-group">
+                                <input type="range" id="ai2-temperature" min="0.0" max="1.0" step="0.1">
+                                <span class="slider-value" id="ai2-temperature-value"></span>
+                            </div>
                         </div>
-
-                        <div class="form-group">
-                            <label class="form-label">Max Tokens</label>
-                            <input type="number" id="ai2-max-tokens" class="form-input" min="100" max="4000" step="100" value="1500">
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">
-                                Temperature <span class="range-value" id="ai2-temp-value">0.7</span>
-                            </label>
-                            <input type="range" id="ai2-temperature" class="form-range" min="0" max="1" step="0.1" value="0.7">
+                        <div class="button-group">
+                            <button class="secondary" onclick="loadDefaultConfig('ai2')">Load Defaults</button>
+                            <button class="primary" onclick="saveConfig('ai2')">Save Settings</button>
+                            <button class="primary" onclick="testConfig('ai2')" style="background: linear-gradient(135deg, #28a745, #20c997);">Test Config</button>
                         </div>
                     </div>
                 </div>
 
-                <!-- Action Buttons -->
-                <div class="action-buttons">
-                    <button class="btn btn-secondary" onclick="loadDefaultSettings()">
-                        <i class="fas fa-undo"></i> Load Defaults
-                    </button>
-                    <button class="btn btn-success" onclick="saveSettings()">
-                        <i class="fas fa-save"></i> Save Settings
-                    </button>
-                    <button class="btn btn-primary" onclick="applySettings()">
-                        <i class="fas fa-rocket"></i> Apply & Test
-                    </button>
-                </div>
-
-                <!-- Back Links -->
                 <div class="back-links">
-                    <a href="ai.html"><i class="fas fa-comments"></i> AI Chat 1</a>
-                    <a href="ai1.html"><i class="fas fa-comments"></i> AI Chat 2</a>
-                    <a href="airesult.html"><i class="fas fa-chart-bar"></i> Results</a>
+                    <a href="ai.html"><i class="fas fa-robot"></i> Go to AI Chat 1</a>
+                    <a href="ai1.html"><i class="fas fa-robot"></i> Go to AI Chat 2</a>
+                    <a href="airesult.html"><i class="fas fa-chart-bar"></i> View Results</a>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Status Message -->
-    <div id="status-message" class="status-message"></div>
-
-    <!-- Footer -->
     <footer class="footer">
         <div class="container">
             <div class="footer-content">
@@ -438,144 +329,146 @@
         </div>
     </footer>
 
+    <!-- Status Message -->
+    <div id="status-message" class="status-message"></div>
+
     <script src="script.js"></script>
     <script src="ai-config.js"></script>
     <script src="ai1-config.js"></script>
     <script>
-        // Default configurations
-        const DEFAULT_AI1_CONFIG = {
-            model: 'gpt-4.1',
-            systemPrompt: `你是Ruoyu Wen的个人AI助手，一个友好、专业且有帮助的助手。
-
-关于Ruoyu Wen:
-- 新西兰坎特伯雷大学人机交互博士生
-- 专注于游戏设计和玩家心理学研究
-- 研究领域包括ARG（另类现实游戏）、AI生成内容、对话式代理等
-- 对赛博朋克、日本动漫文化、游戏开发有浓厚兴趣
-
-你的特点：
-- 用中文回答问题（除非用户要求使用其他语言）
-- 保持友好、专业的语调
-- 可以讨论学术研究、游戏设计、技术话题
-- 适当使用emoji让对话更生动
-- 如果遇到不确定的问题，会诚实地说明
-
-请根据上下文提供有帮助的回答。`,
-            maxTokens: 1500,
-            temperature: 0.7
-        };
-
-        const DEFAULT_AI2_CONFIG = {
-            model: 'gpt-4.1',
-            systemPrompt: `你是一个专业的AI助手，专门帮助用户解决各种问题。
-
-你的特点：
-- 用中文回答问题（除非用户要求使用其他语言）
-- 保持专业、准确的语调
-- 可以讨论技术、学术、生活等各种话题
-- 提供详细和有用的回答
-- 如果遇到不确定的问题，会诚实地说明
-
-请根据用户的问题提供有帮助的回答。`,
-            maxTokens: 1500,
-            temperature: 0.7
-        };
-
-        // Initialize page
-        document.addEventListener('DOMContentLoaded', () => {
-            loadCurrentSettings();
-            setupEventListeners();
-        });
-
-        function setupEventListeners() {
-            // Temperature sliders
-            document.getElementById('ai1-temperature').addEventListener('input', (e) => {
-                document.getElementById('ai1-temp-value').textContent = e.target.value;
-            });
-            
-            document.getElementById('ai2-temperature').addEventListener('input', (e) => {
-                document.getElementById('ai2-temp-value').textContent = e.target.value;
-            });
-        }
-
-        function loadCurrentSettings() {
-            try {
-                // Load AI Chat 1 settings
-                const ai1Settings = JSON.parse(localStorage.getItem('ai1_custom_config')) || DEFAULT_AI1_CONFIG;
-                document.querySelector(`input[name="ai1-model"][value="${ai1Settings.model}"]`).checked = true;
-                document.getElementById('ai1-system-prompt').value = ai1Settings.systemPrompt;
-                document.getElementById('ai1-max-tokens').value = ai1Settings.maxTokens;
-                document.getElementById('ai1-temperature').value = ai1Settings.temperature;
-                document.getElementById('ai1-temp-value').textContent = ai1Settings.temperature;
-
-                // Load AI Chat 2 settings
-                const ai2Settings = JSON.parse(localStorage.getItem('ai2_custom_config')) || DEFAULT_AI2_CONFIG;
-                document.querySelector(`input[name="ai2-model"][value="${ai2Settings.model}"]`).checked = true;
-                document.getElementById('ai2-system-prompt').value = ai2Settings.systemPrompt;
-                document.getElementById('ai2-max-tokens').value = ai2Settings.maxTokens;
-                document.getElementById('ai2-temperature').value = ai2Settings.temperature;
-                document.getElementById('ai2-temp-value').textContent = ai2Settings.temperature;
-            } catch (error) {
-                console.error('Error loading settings:', error);
-                loadDefaultSettings();
+        // Function to get default config based on AI type
+        function getDefaultConfig(aiType) {
+            if (aiType === 'ai1') {
+                return window.AI_CONFIG;
+            } else if (aiType === 'ai2') {
+                return window.AI1_CONFIG;
             }
+            return {};
         }
 
-        function loadDefaultSettings() {
-            // Load AI Chat 1 defaults
-            document.querySelector(`input[name="ai1-model"][value="${DEFAULT_AI1_CONFIG.model}"]`).checked = true;
-            document.getElementById('ai1-system-prompt').value = DEFAULT_AI1_CONFIG.systemPrompt;
-            document.getElementById('ai1-max-tokens').value = DEFAULT_AI1_CONFIG.maxTokens;
-            document.getElementById('ai1-temperature').value = DEFAULT_AI1_CONFIG.temperature;
-            document.getElementById('ai1-temp-value').textContent = DEFAULT_AI1_CONFIG.temperature;
-
-            // Load AI Chat 2 defaults
-            document.querySelector(`input[name="ai2-model"][value="${DEFAULT_AI2_CONFIG.model}"]`).checked = true;
-            document.getElementById('ai2-system-prompt').value = DEFAULT_AI2_CONFIG.systemPrompt;
-            document.getElementById('ai2-max-tokens').value = DEFAULT_AI2_CONFIG.maxTokens;
-            document.getElementById('ai2-temperature').value = DEFAULT_AI2_CONFIG.temperature;
-            document.getElementById('ai2-temp-value').textContent = DEFAULT_AI2_CONFIG.temperature;
-
-            showStatus('Default settings loaded successfully!', 'success');
+        // Function to load config from localStorage or defaults
+        function loadConfigFromStorage(aiType) {
+            const key = aiType === 'ai1' ? 'ai1_custom_config' : 'ai2_custom_config';
+            const savedConfig = localStorage.getItem(key);
+            if (savedConfig) {
+                try {
+                    return JSON.parse(savedConfig);
+                } catch (e) {
+                    console.error(`Error parsing ${key} from localStorage:`, e);
+                    return null;
+                }
+            }
+            return null;
         }
 
-        function saveSettings() {
+        // Function to populate form fields
+        function populateForm(aiType) {
+            const defaultConfig = getDefaultConfig(aiType);
+            const customConfig = loadConfigFromStorage(aiType);
+            const configToUse = customConfig || {
+                model: defaultConfig.model,
+                systemPrompt: defaultConfig.systemPrompt,
+                maxTokens: defaultConfig.apiParams.max_tokens,
+                temperature: defaultConfig.apiParams.temperature
+            };
+
+            const modelSelect = document.getElementById(`${aiType}-model`);
+            const systemPromptTextarea = document.getElementById(`${aiType}-system-prompt`);
+            const maxTokensRange = document.getElementById(`${aiType}-max-tokens`);
+            const maxTokensValueSpan = document.getElementById(`${aiType}-max-tokens-value`);
+            const temperatureRange = document.getElementById(`${aiType}-temperature`);
+            const temperatureValueSpan = document.getElementById(`${aiType}-temperature-value`);
+
+            modelSelect.value = configToUse.model;
+            systemPromptTextarea.value = configToUse.systemPrompt;
+            maxTokensRange.value = configToUse.maxTokens;
+            maxTokensValueSpan.textContent = configToUse.maxTokens;
+            temperatureRange.value = configToUse.temperature;
+            temperatureValueSpan.textContent = configToUse.temperature;
+
+            // Add event listeners for sliders to update value display
+            maxTokensRange.oninput = () => {
+                maxTokensValueSpan.textContent = maxTokensRange.value;
+            };
+            temperatureRange.oninput = () => {
+                temperatureValueSpan.textContent = temperatureRange.value;
+            };
+        }
+
+        // Function to save config to localStorage
+        function saveConfig(aiType) {
             try {
-                // Get AI Chat 1 settings
-                const ai1Config = {
-                    model: document.querySelector('input[name="ai1-model"]:checked').value,
-                    systemPrompt: document.getElementById('ai1-system-prompt').value,
-                    maxTokens: parseInt(document.getElementById('ai1-max-tokens').value),
-                    temperature: parseFloat(document.getElementById('ai1-temperature').value)
+                const model = document.getElementById(`${aiType}-model`).value;
+                const systemPrompt = document.getElementById(`${aiType}-system-prompt`).value;
+                const maxTokens = parseInt(document.getElementById(`${aiType}-max-tokens`).value);
+                const temperature = parseFloat(document.getElementById(`${aiType}-temperature`).value);
+
+                const config = {
+                    model,
+                    systemPrompt,
+                    maxTokens,
+                    temperature
                 };
 
-                // Get AI Chat 2 settings
-                const ai2Config = {
-                    model: document.querySelector('input[name="ai2-model"]:checked').value,
-                    systemPrompt: document.getElementById('ai2-system-prompt').value,
-                    maxTokens: parseInt(document.getElementById('ai2-max-tokens').value),
-                    temperature: parseFloat(document.getElementById('ai2-temperature').value)
-                };
-
-                // Save to localStorage
-                localStorage.setItem('ai1_custom_config', JSON.stringify(ai1Config));
-                localStorage.setItem('ai2_custom_config', JSON.stringify(ai2Config));
-
-                showStatus('Settings saved successfully!', 'success');
-                console.log('Settings saved:', { ai1Config, ai2Config });
+                const key = aiType === 'ai1' ? 'ai1_custom_config' : 'ai2_custom_config';
+                localStorage.setItem(key, JSON.stringify(config));
+                
+                console.log(`💾 Settings saved for ${aiType}:`, config);
+                showStatus(`Settings for AI ${aiType === 'ai1' ? 'Chat 1' : 'Chat 2'} saved successfully!`, 'success');
             } catch (error) {
-                console.error('Error saving settings:', error);
+                console.error('Error saving config:', error);
                 showStatus('Error saving settings!', 'error');
             }
         }
 
-        function applySettings() {
-            saveSettings();
-            setTimeout(() => {
-                showStatus('Settings applied! You can now test in AI Chat pages.', 'success');
-            }, 500);
+        // Function to load default config
+        function loadDefaultConfig(aiType) {
+            const defaultConfig = getDefaultConfig(aiType);
+            const configToSet = {
+                model: defaultConfig.model,
+                systemPrompt: defaultConfig.systemPrompt,
+                maxTokens: defaultConfig.apiParams.max_tokens,
+                temperature: defaultConfig.apiParams.temperature
+            };
+
+            const modelSelect = document.getElementById(`${aiType}-model`);
+            const systemPromptTextarea = document.getElementById(`${aiType}-system-prompt`);
+            const maxTokensRange = document.getElementById(`${aiType}-max-tokens`);
+            const maxTokensValueSpan = document.getElementById(`${aiType}-max-tokens-value`);
+            const temperatureRange = document.getElementById(`${aiType}-temperature`);
+            const temperatureValueSpan = document.getElementById(`${aiType}-temperature-value`);
+
+            modelSelect.value = configToSet.model;
+            systemPromptTextarea.value = configToSet.systemPrompt;
+            maxTokensRange.value = configToSet.maxTokens;
+            maxTokensValueSpan.textContent = configToSet.maxTokens;
+            temperatureRange.value = configToSet.temperature;
+            temperatureValueSpan.textContent = configToSet.temperature;
+
+            showStatus(`Default settings for AI ${aiType === 'ai1' ? 'Chat 1' : 'Chat 2'} loaded.`, 'success');
         }
 
+        // Function to test config by showing current settings
+        function testConfig(aiType) {
+            try {
+                const key = aiType === 'ai1' ? 'ai1_custom_config' : 'ai2_custom_config';
+                const config = localStorage.getItem(key);
+                
+                if (config) {
+                    const parsed = JSON.parse(config);
+                    console.log(`🧪 Current ${aiType} config:`, parsed);
+                    showStatus(`Test: ${aiType} Model: ${parsed.model}, Tokens: ${parsed.maxTokens}, Temp: ${parsed.temperature}`, 'success');
+                } else {
+                    console.log(`⚠️ No custom config found for ${aiType}`);
+                    showStatus(`No custom configuration found for AI ${aiType === 'ai1' ? 'Chat 1' : 'Chat 2'}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error testing config:', error);
+                showStatus('Error testing configuration!', 'error');
+            }
+        }
+
+        // Function to show status message
         function showStatus(message, type = 'success') {
             const statusEl = document.getElementById('status-message');
             statusEl.textContent = message;
@@ -583,8 +476,14 @@
             
             setTimeout(() => {
                 statusEl.classList.remove('show');
-            }, 3000);
+            }, 5000); // Extended time for test messages
         }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🔧 AI Settings page loaded');
+            populateForm('ai1');
+            populateForm('ai2');
+        });
     </script>
 </body>
 </html>
