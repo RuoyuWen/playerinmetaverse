@@ -5,7 +5,7 @@
 
 const AI1_CONFIG = {
     // OpenAI模型配置
-    model: 'gpt-4o', // 最新的GPT-4模型，也可以使用 'gpt-4-turbo'
+    model: 'gpt-4.1', // 最新的GPT-4模型，也可以使用 'gpt-4-turbo'
     
     // 系统提示词 - 在这里自定义AI助手的行为
     systemPrompt: `你是一个专业的AI助手，专门帮助用户解决各种问题。
