@@ -137,85 +137,29 @@
             box-shadow: 0 10px 30px rgba(255, 107, 53, 0.4);
         }
 
-        .download-btn {
-            background: linear-gradient(135deg, #28a745, #20c997);
-            border: none;
-            border-radius: 8px;
-            color: white;
-            padding: 0.5rem 1rem;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        .download-link {
+            color: var(--secondary-color);
+            text-decoration: none;
             font-weight: 500;
-            font-size: 0.8rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin: 0.25rem;
-        }
-
-        .download-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
-        }
-
-        .chat-history-toggle {
-            background: linear-gradient(135deg, #6c757d, #495057);
-            border: none;
-            border-radius: 8px;
-            color: white;
-            padding: 0.5rem 1rem;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            font-weight: 500;
-            font-size: 0.8rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin: 0.25rem;
-        }
-
-        .chat-history-toggle:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 5px 15px rgba(108, 117, 125, 0.4);
-        }
-
-        .chat-history {
-            background: rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-            padding: 1rem;
-            margin-top: 1rem;
-            max-height: 300px;
-            overflow-y: auto;
-            border: 1px solid rgba(157, 78, 221, 0.2);
-        }
-
-        .chat-message {
-            margin-bottom: 0.75rem;
-            padding: 0.5rem;
-            border-radius: 6px;
             font-size: 0.9rem;
-        }
-
-        .chat-message.user {
-            background: rgba(0, 212, 255, 0.1);
-            border-left: 3px solid var(--secondary-color);
-        }
-
-        .chat-message.assistant {
-            background: rgba(157, 78, 221, 0.1);
-            border-left: 3px solid var(--primary-color);
-        }
-
-        .chat-message strong {
-            color: var(--text-color);
-        }
-
-        .result-actions {
-            display: flex;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
             gap: 0.5rem;
             margin-top: 1rem;
-            flex-wrap: wrap;
         }
 
-        .action-buttons {
-            text-align: center;
-            margin-top: 2rem;
+        .download-link:hover {
+            color: var(--primary-color);
+            text-shadow: 0 0 10px rgba(157, 78, 221, 0.5);
+        }
+
+        .download-link i {
+            transition: transform 0.3s ease;
+        }
+
+        .download-link:hover i {
+            transform: translateY(-1px);
         }
 
         .stats-section {
@@ -346,13 +290,7 @@
                 </div>
 
                 <!-- Action Buttons -->
-                <div class="action-buttons">
-                    <button class="download-btn" onclick="downloadAllChats()" id="download-all-btn" style="display: none;">
-                        <i class="fas fa-download"></i> Download All Chats (JSON)
-                    </button>
-                    <button class="download-btn" onclick="downloadAllChatsText()" id="download-all-text-btn" style="display: none;">
-                        <i class="fas fa-file-alt"></i> Download All Chats (TXT)
-                    </button>
+                <div style="text-align: center; margin-top: 2rem;">
                     <button class="clear-results-btn" onclick="clearAllResults()" id="clear-btn" style="display: none;">
                         <i class="fas fa-trash"></i> Clear All Results
                     </button>
@@ -390,8 +328,6 @@
             const resultsGrid = document.getElementById('results-grid');
             const noResults = document.getElementById('no-results');
             const clearBtn = document.getElementById('clear-btn');
-            const downloadAllBtn = document.getElementById('download-all-btn');
-            const downloadAllTextBtn = document.getElementById('download-all-text-btn');
             
             // Update statistics
             const totalResponses = results.length;
@@ -406,14 +342,10 @@
                 noResults.style.display = 'block';
                 resultsGrid.style.display = 'none';
                 clearBtn.style.display = 'none';
-                downloadAllBtn.style.display = 'none';
-                downloadAllTextBtn.style.display = 'none';
             } else {
                 noResults.style.display = 'none';
                 resultsGrid.style.display = 'grid';
                 clearBtn.style.display = 'inline-block';
-                downloadAllBtn.style.display = 'inline-block';
-                downloadAllTextBtn.style.display = 'inline-block';
                 
                 // Sort results by timestamp (newest first)
                 results.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
@@ -434,164 +366,47 @@
                             <div class="result-answer">Answer: ${result.answer}</div>
                             ${result.conversationRounds ? `<div style="font-size: 0.8rem; color: #888; margin-top: 0.5rem;">💬 ${result.conversationRounds} conversation rounds</div>` : ''}
                             
-                            <div class="result-actions">
-                                ${hasChat ? `
-                                    <button class="chat-history-toggle" onclick="toggleChatHistory(${index})">
-                                        <i class="fas fa-comments"></i> View Chat History
-                                    </button>
-                                    <button class="download-btn" onclick="downloadSingleChat(${index}, 'json')">
-                                        <i class="fas fa-download"></i> JSON
-                                    </button>
-                                    <button class="download-btn" onclick="downloadSingleChat(${index}, 'txt')">
-                                        <i class="fas fa-file-alt"></i> TXT
-                                    </button>
-                                ` : '<span style="font-size: 0.8rem; color: #888;">No chat history available</span>'}
-                            </div>
-                            
                             ${hasChat ? `
-                                <div class="chat-history" id="chat-history-${index}" style="display: none;">
-                                    ${result.chatHistory.map(msg => `
-                                        <div class="chat-message ${msg.role}">
-                                            <strong>${msg.role === 'user' ? 'You' : 'AI Assistant'}:</strong> ${escapeHtml(msg.content)}
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            ` : ''}
+                                <a href="#" class="download-link" onclick="downloadChatRecord(${index}); return false;">
+                                    <i class="fas fa-download"></i> Download Chat Record
+                                </a>
+                            ` : '<div style="font-size: 0.8rem; color: #888; margin-top: 1rem;">No chat history available</div>'}
                         </div>
                     `;
                 }).join('');
             }
         }
         
-        // Toggle chat history visibility
-        function toggleChatHistory(index) {
-            const chatHistory = document.getElementById(`chat-history-${index}`);
-            const isVisible = chatHistory.style.display !== 'none';
-            chatHistory.style.display = isVisible ? 'none' : 'block';
-            
-            const button = event.target.closest('.chat-history-toggle');
-            button.innerHTML = isVisible ? 
-                '<i class="fas fa-comments"></i> View Chat History' : 
-                '<i class="fas fa-eye-slash"></i> Hide Chat History';
-        }
-        
-        // Escape HTML to prevent XSS
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-        
-        // Download single chat history
-        function downloadSingleChat(index, format) {
+        // Download chat record as formatted text file
+        function downloadChatRecord(index) {
             const results = JSON.parse(localStorage.getItem('airesults') || '[]');
             const result = results[index];
             
-            if (!result || !result.chatHistory) {
+            if (!result || !result.chatHistory || result.chatHistory.length === 0) {
                 alert('No chat history available for this result.');
                 return;
             }
             
-            const filename = `chat_${result.id}_${new Date(result.timestamp).toISOString().split('T')[0]}`;
+            // Create formatted text content
+            let textContent = `AI Chat Record: ${result.id}\n`;
+            textContent += `==========================================\n\n`;
+            textContent += `Task: ${result.task === 'gift_selection' ? 'Gift Selection' : 'Restaurant Selection'}\n`;
+            textContent += `Source: ${result.taskType || (result.id.endsWith('ai') ? 'AI Chat 1' : 'AI Chat 2')}\n`;
+            textContent += `Answer: ${result.answer}\n`;
+            textContent += `Timestamp: ${new Date(result.timestamp).toLocaleString()}\n`;
+            textContent += `Conversation Rounds: ${result.conversationRounds || 'N/A'}\n\n`;
             
-            if (format === 'json') {
-                downloadJSON(result, filename + '.json');
-            } else if (format === 'txt') {
-                downloadText(result, filename + '.txt');
-            }
-        }
-        
-        // Download all chats as JSON
-        function downloadAllChats() {
-            const results = JSON.parse(localStorage.getItem('airesults') || '[]');
+            textContent += `Chat History:\n`;
+            textContent += `-`.repeat(20) + `\n\n`;
             
-            if (results.length === 0) {
-                alert('No results to download.');
-                return;
-            }
-            
-            const filename = `all_ai_chats_${new Date().toISOString().split('T')[0]}.json`;
-            downloadJSON(results, filename);
-        }
-        
-        // Download all chats as text
-        function downloadAllChatsText() {
-            const results = JSON.parse(localStorage.getItem('airesults') || '[]');
-            
-            if (results.length === 0) {
-                alert('No results to download.');
-                return;
-            }
-            
-            let textContent = `AI Chat Records - Generated on ${new Date().toLocaleString()}\n`;
-            textContent += `=====================================\n\n`;
-            
-            results.forEach((result, index) => {
-                textContent += `Record ${index + 1}: ${result.id}\n`;
-                textContent += `-`.repeat(40) + `\n`;
-                textContent += `Task: ${result.task === 'gift_selection' ? 'Gift Selection' : 'Restaurant Selection'}\n`;
-                textContent += `Source: ${result.taskType || (result.id.endsWith('ai') ? 'AI Chat 1' : 'AI Chat 2')}\n`;
-                textContent += `Answer: ${result.answer}\n`;
-                textContent += `Timestamp: ${new Date(result.timestamp).toLocaleString()}\n`;
-                textContent += `Conversation Rounds: ${result.conversationRounds || 'N/A'}\n\n`;
-                
-                if (result.chatHistory && result.chatHistory.length > 0) {
-                    textContent += `Chat History:\n`;
-                    result.chatHistory.forEach((msg, msgIndex) => {
-                        const speaker = msg.role === 'user' ? 'You' : 'AI Assistant';
-                        textContent += `[${msgIndex + 1}] ${speaker}: ${msg.content}\n\n`;
-                    });
-                } else {
-                    textContent += `Chat History: Not available\n\n`;
-                }
-                
-                textContent += `\n` + `=`.repeat(50) + `\n\n`;
+            result.chatHistory.forEach((msg, index) => {
+                const speaker = msg.role === 'user' ? 'You' : 'AI Assistant';
+                textContent += `[${index + 1}] ${speaker}: ${msg.content}\n\n`;
             });
             
-            const filename = `all_ai_chats_${new Date().toISOString().split('T')[0]}.txt`;
-            downloadText(textContent, filename);
-        }
-        
-        // Generic JSON download function
-        function downloadJSON(data, filename) {
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            downloadBlob(blob, filename);
-        }
-        
-        // Generic text download function (can accept object or string)
-        function downloadText(data, filename) {
-            let textContent;
-            
-            if (typeof data === 'string') {
-                textContent = data;
-            } else {
-                // Convert result object to readable text
-                textContent = `AI Chat Record: ${data.id}\n`;
-                textContent += `==========================================\n\n`;
-                textContent += `Task: ${data.task === 'gift_selection' ? 'Gift Selection' : 'Restaurant Selection'}\n`;
-                textContent += `Source: ${data.taskType || (data.id.endsWith('ai') ? 'AI Chat 1' : 'AI Chat 2')}\n`;
-                textContent += `Answer: ${data.answer}\n`;
-                textContent += `Timestamp: ${new Date(data.timestamp).toLocaleString()}\n`;
-                textContent += `Conversation Rounds: ${data.conversationRounds || 'N/A'}\n\n`;
-                
-                if (data.chatHistory && data.chatHistory.length > 0) {
-                    textContent += `Chat History:\n`;
-                    textContent += `-`.repeat(20) + `\n\n`;
-                    data.chatHistory.forEach((msg, index) => {
-                        const speaker = msg.role === 'user' ? 'You' : 'AI Assistant';
-                        textContent += `[${index + 1}] ${speaker}: ${msg.content}\n\n`;
-                    });
-                } else {
-                    textContent += `Chat History: Not available\n`;
-                }
-            }
-            
+            // Create and download the file
+            const filename = `chat_${result.id}_${new Date(result.timestamp).toISOString().split('T')[0]}.txt`;
             const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
-            downloadBlob(blob, filename);
-        }
-        
-        // Generic blob download function
-        function downloadBlob(blob, filename) {
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.style.display = 'none';

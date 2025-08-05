@@ -359,7 +359,14 @@ class AIChat {
         this.submitBtn.disabled = true;
         this.submitBtn.textContent = 'Submitted ✓';
         
+        // Disable chat functionality after task submission
+        this.chatInput.disabled = true;
+        this.sendBtn.disabled = true;
+        this.chatInput.placeholder = 'Chat disabled after task submission';
+        this.sendBtn.innerHTML = '<i class="fas fa-ban"></i> Disabled';
+        
         this.addMessage(`✅ Task completed! Your answer "${answer}" has been recorded with ID: ${result.id}`, 'assistant');
+        this.addMessage('🔒 Chat functionality has been disabled after task submission.', 'assistant');
         
         // Show link to results page
         setTimeout(() => {
