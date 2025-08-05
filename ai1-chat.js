@@ -9,12 +9,43 @@ class AI1Chat {
         this.apiKey = '';
         this.messages = [];
         this.isTyping = false;
-        this.config = window.AI1_CONFIG || {};
+        this.config = this.loadConfig();
+        this.conversationRounds = 0;
+        this.taskEnabled = false;
         
         this.initializeElements();
         this.bindEvents();
         this.loadApiKey();
         this.initializeUI();
+    }
+
+    loadConfig() {
+        // Load default config
+        let config = window.AI1_CONFIG || {};
+        
+        try {
+            // Load custom config from localStorage if exists
+            const customConfig = localStorage.getItem('ai2_custom_config');
+            if (customConfig) {
+                const parsed = JSON.parse(customConfig);
+                console.log('🔧 Loading custom AI2 config:', parsed);
+                
+                // Override specific settings
+                config.model = parsed.model;
+                config.systemPrompt = parsed.systemPrompt;
+                config.apiParams = {
+                    ...config.apiParams,
+                    max_tokens: parsed.maxTokens,
+                    temperature: parsed.temperature
+                };
+                
+                console.log('✅ AI2 config updated with custom settings');
+            }
+        } catch (error) {
+            console.error('❌ Error loading custom AI2 config:', error);
+        }
+        
+        return config;
     }
 
     initializeElements() {
