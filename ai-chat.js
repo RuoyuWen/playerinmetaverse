@@ -9,10 +9,12 @@ class AIChat {
         this.apiKey = '';
         this.messages = [];
         this.isTyping = false;
+        this.config = window.AI_CONFIG || {};
         
         this.initializeElements();
         this.bindEvents();
         this.loadApiKey();
+        this.initializeUI();
     }
 
     initializeElements() {
@@ -20,6 +22,7 @@ class AIChat {
         this.chatInput = document.getElementById('chat-input');
         this.sendBtn = document.getElementById('send-btn');
         this.typingIndicator = document.getElementById('typing-indicator');
+        this.typingText = document.getElementById('typing-text');
         this.apiKeyInput = document.getElementById('api-key');
     }
 
@@ -49,6 +52,20 @@ class AIChat {
         if (savedKey) {
             this.apiKey = savedKey;
             this.apiKeyInput.value = savedKey;
+        }
+    }
+
+    initializeUI() {
+        // 设置UI文本从配置文件
+        if (this.config.ui) {
+            this.apiKeyInput.placeholder = this.config.ui.apiKeyPlaceholder || 'sk-proj-...';
+            this.sendBtn.innerHTML = `<i class="fas fa-paper-plane"></i> ${this.config.ui.sendButtonText || '发送'}`;
+            this.typingText.textContent = this.config.ui.typingText || 'AI正在思考中...';
+            
+            // 添加欢迎消息
+            if (this.config.ui.welcomeMessage) {
+                this.addMessage(this.config.ui.welcomeMessage, 'assistant');
+            }
         }
     }
 
@@ -87,6 +104,11 @@ class AIChat {
         // Add current message to conversation history
         this.messages.push({ role: 'user', content: userMessage });
 
+        // 从配置文件获取设置
+        const model = this.config.model || 'gpt-4o';
+        const systemPrompt = this.config.systemPrompt || '你是一个友好的助手。请用中文回答问题，保持礼貌和有帮助的态度。';
+        const apiParams = this.config.apiParams || {};
+
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
             headers: {
@@ -94,16 +116,19 @@ class AIChat {
                 'Authorization': `Bearer ${this.apiKey}`
             },
             body: JSON.stringify({
-                model: 'gpt-4', // 使用GPT-4模型
+                model: model,
                 messages: [
                     {
                         role: 'system',
-                        content: '你是一个友好的助手。请用中文回答问题，保持礼貌和有帮助的态度。'
+                        content: systemPrompt
                     },
                     ...this.messages
                 ],
-                max_tokens: 1000,
-                temperature: 0.7,
+                max_tokens: apiParams.max_tokens || 1500,
+                temperature: apiParams.temperature || 0.7,
+                top_p: apiParams.top_p || 0.9,
+                frequency_penalty: apiParams.frequency_penalty || 0.0,
+                presence_penalty: apiParams.presence_penalty || 0.0,
                 stream: false
             })
         });
@@ -119,9 +144,10 @@ class AIChat {
         // Add assistant response to conversation history
         this.messages.push({ role: 'assistant', content: assistantMessage });
 
-        // Keep conversation history reasonable (last 10 exchanges)
-        if (this.messages.length > 20) {
-            this.messages = this.messages.slice(-20);
+        // Keep conversation history reasonable (从配置文件获取历史长度限制)
+        const maxHistory = this.config.maxHistoryLength || 20;
+        if (this.messages.length > maxHistory) {
+            this.messages = this.messages.slice(-maxHistory);
         }
 
         return assistantMessage;
@@ -134,10 +160,14 @@ class AIChat {
         const contentDiv = document.createElement('div');
         contentDiv.className = 'message-content';
         
+        // 从配置文件获取标签文本
+        const userLabel = this.config.ui?.userLabel || '您';
+        const assistantLabel = this.config.ui?.assistantLabel || 'AI助手';
+        
         if (sender === 'user') {
-            contentDiv.innerHTML = `<strong>您:</strong> ${this.escapeHtml(message)}`;
+            contentDiv.innerHTML = `<strong>${userLabel}:</strong> ${this.escapeHtml(message)}`;
         } else {
-            contentDiv.innerHTML = `<strong>AI Assistant:</strong> ${this.formatMessage(message)}`;
+            contentDiv.innerHTML = `<strong>${assistantLabel}:</strong> ${this.formatMessage(message)}`;
         }
         
         messageDiv.appendChild(contentDiv);
@@ -152,7 +182,10 @@ class AIChat {
         
         const contentDiv = document.createElement('div');
         contentDiv.className = 'message-content';
-        contentDiv.innerHTML = `<strong>❌ 错误:</strong> ${errorMessage}`;
+        
+        // 使用配置文件中的错误消息或默认消息
+        const finalErrorMessage = errorMessage || this.config.ui?.errorMessage || '抱歉，AI助手暂时无法回应。请检查API Key或稍后重试。';
+        contentDiv.innerHTML = `<strong>❌ 错误:</strong> ${finalErrorMessage}`;
         
         messageDiv.appendChild(contentDiv);
         this.chatContainer.appendChild(messageDiv);

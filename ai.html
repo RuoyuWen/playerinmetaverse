@@ -194,7 +194,7 @@
                     <p>🔒 API Key仅保存在您的浏览器本地，不会上传到服务器</p>
                     <p>⚠️ 注意：直接在前端使用API key存在安全风险，建议仅用于个人测试</p>
                     <label for="api-key">OpenAI API Key:</label>
-                    <input type="password" id="api-key" class="api-key-input" placeholder="sk-proj-..." />
+                    <input type="password" id="api-key" class="api-key-input" placeholder="" />
                     <small style="color: #888; font-size: 0.9em; margin-top: 0.5rem; display: block;">
                         💡 获取API Key: 访问 <a href="https://platform.openai.com/api-keys" target="_blank" style="color: var(--secondary-color);">OpenAI API Keys</a>
                     </small>
@@ -202,17 +202,13 @@
 
                 <!-- Chat Container -->
                 <div class="chat-container" id="chat-container">
-                    <div class="message assistant">
-                        <div class="message-content">
-                            <strong>AI Assistant:</strong> 您好！我是您的AI助手，很高兴为您服务！🌟 有什么我可以帮助您的吗？
-                        </div>
-                    </div>
+                    <!-- 欢迎消息将通过JavaScript从配置文件中加载 -->
                 </div>
 
                 <!-- Typing Indicator -->
                 <div class="typing-indicator" id="typing-indicator">
                     <i class="fas fa-robot"></i>
-                    AI正在思考中...
+                    <span id="typing-text">AI正在思考中...</span>
                     <div class="typing-dots">
                         <div class="typing-dot"></div>
                         <div class="typing-dot"></div>
@@ -253,6 +249,7 @@
     </footer>
 
     <script src="script.js"></script>
+    <script src="ai-config.js"></script>
     <script src="ai-chat.js"></script>
 </body>
 </html>
