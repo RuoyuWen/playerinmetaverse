@@ -331,11 +331,22 @@ class AI1Chat {
 
         // Generate unique ID and record the result
         const resultId = this.generateUniqueId();
+        
+        // 收集聊天记录
+        const chatHistory = this.messages.map(msg => ({
+            role: msg.role,
+            content: msg.content,
+            timestamp: new Date().toISOString()
+        }));
+        
         const result = {
             id: resultId + 'ai1',
             answer: answer,
             timestamp: new Date().toISOString(),
-            task: 'restaurant_selection'
+            task: 'restaurant_selection',
+            chatHistory: chatHistory,
+            conversationRounds: this.conversationRounds,
+            taskType: 'AI Chat 2'
         };
 
         // Save to localStorage
