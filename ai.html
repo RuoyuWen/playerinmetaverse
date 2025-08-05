@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hidden AI Chat | Ruoyu Wen</title>
+    <meta name="description" content="Hidden AI Chat Page - GPT-4 Assistant">
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .ai-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            border: 1px solid rgba(157, 78, 221, 0.3);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 20px 40px rgba(157, 78, 221, 0.1);
+        }
+
+        .chat-container {
+            height: 500px;
+            overflow-y: auto;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            margin-bottom: 1rem;
+            scroll-behavior: smooth;
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border-radius: 10px;
+            animation: fadeInUp 0.3s ease-out;
+        }
+
+        .message.user {
+            background: linear-gradient(135deg, rgba(157, 78, 221, 0.2), rgba(0, 212, 255, 0.1));
+            border-left: 4px solid var(--primary-color);
+            margin-left: 2rem;
+        }
+
+        .message.assistant {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(157, 78, 221, 0.1));
+            border-left: 4px solid var(--secondary-color);
+            margin-right: 2rem;
+        }
+
+        .message-content {
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-end;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(157, 78, 221, 0.3);
+            border-radius: 10px;
+            color: var(--text-color);
+            font-family: var(--font-primary);
+            resize: vertical;
+            min-height: 50px;
+            max-height: 150px;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 20px rgba(157, 78, 221, 0.3);
+        }
+
+        .send-btn {
+            padding: 1rem 1.5rem;
+            background: var(--gradient-cyber);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .send-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(157, 78, 221, 0.4);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .typing-indicator {
+            display: none;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--secondary-color);
+            font-style: italic;
+            padding: 1rem;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--secondary-color);
+            border-radius: 50%;
+            animation: typingDot 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typingDot {
+            0%, 60%, 100% { opacity: 0.3; }
+            30% { opacity: 1; }
+        }
+
+        .security-warning {
+            background: linear-gradient(135deg, rgba(255, 165, 0, 0.2), rgba(255, 69, 0, 0.1));
+            border: 1px solid rgba(255, 165, 0, 0.5);
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            color: #ffb84d;
+        }
+
+        .api-key-input {
+            width: 100%;
+            padding: 0.8rem;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 165, 0, 0.3);
+            border-radius: 8px;
+            color: var(--text-color);
+            font-family: monospace;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <a href="index.html">Ruoyu Wen</a>
+            </div>
+            <div class="nav-menu" id="nav-menu">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="about.html" class="nav-link">About</a>
+                <a href="education.html" class="nav-link">Education</a>
+                <a href="research.html" class="nav-link">Research</a>
+                <a href="experience.html" class="nav-link">Experience</a>
+            </div>
+            <div class="nav-toggle" id="nav-toggle">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- AI Chat Section -->
+    <section class="section-padding">
+        <div class="container">
+            <div class="page-header">
+                <h1 class="page-title">🔍 Hidden AI Chat ▸ 🤖</h1>
+                <p class="page-subtitle">Private GPT-4 Assistant • Enter your own API Key ✨</p>
+            </div>
+
+            <div class="ai-container">
+                <!-- API Key Setup -->
+                <div class="security-warning">
+                    <h3><i class="fas fa-key"></i> API Key 设置</h3>
+                    <p>💡 请输入您的OpenAI API Key来开始对话</p>
+                    <p>🔒 API Key仅保存在您的浏览器本地，不会上传到服务器</p>
+                    <p>⚠️ 注意：直接在前端使用API key存在安全风险，建议仅用于个人测试</p>
+                    <label for="api-key">OpenAI API Key:</label>
+                    <input type="password" id="api-key" class="api-key-input" placeholder="sk-proj-..." />
+                    <small style="color: #888; font-size: 0.9em; margin-top: 0.5rem; display: block;">
+                        💡 获取API Key: 访问 <a href="https://platform.openai.com/api-keys" target="_blank" style="color: var(--secondary-color);">OpenAI API Keys</a>
+                    </small>
+                </div>
+
+                <!-- Chat Container -->
+                <div class="chat-container" id="chat-container">
+                    <div class="message assistant">
+                        <div class="message-content">
+                            <strong>AI Assistant:</strong> 您好！我是您的AI助手，很高兴为您服务！🌟 有什么我可以帮助您的吗？
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Typing Indicator -->
+                <div class="typing-indicator" id="typing-indicator">
+                    <i class="fas fa-robot"></i>
+                    AI正在思考中...
+                    <div class="typing-dots">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                </div>
+
+                <!-- Input Container -->
+                <div class="input-container">
+                    <textarea 
+                        id="chat-input" 
+                        class="chat-input" 
+                        placeholder="输入您的问题..." 
+                        rows="2"
+                    ></textarea>
+                    <button id="send-btn" class="send-btn">
+                        <i class="fas fa-paper-plane"></i>
+                        发送
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <p>&copy; 2024 Ruoyu Wen. Game Researcher & Designer | PhD in Human Computer Interaction 🌸</p>
+                <div class="social-links">
+                    <a href="mailto:ruoyu.wen.game@gmail.com" target="_blank" title="Email"><i class="fas fa-envelope"></i></a>
+                    <a href="https://scholar.google.com/citations?hl=en&user=TssKzFIAAAAJ&view_op=list_works&gmla=AH8HC4wssodHVoe9Ljll41vco9U7EA7ci1rWTxxfNSe7ZuuxjEwwNOrata7GzhiOgbnk-d_iRrOM-ILMs3B2445j" target="_blank" title="Google Scholar"><i class="fas fa-graduation-cap"></i></a>
+                    <a href="https://www.linkedin.com/in/ruoyu-wen-53344419a/?locale=en_US" target="_blank" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                    <a href="https://wrychristian.itch.io/" target="_blank" title="Portfolio"><i class="fas fa-gamepad"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script src="ai-chat.js"></script>
+</body>
+</html>
