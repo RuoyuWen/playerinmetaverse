@@ -319,31 +319,5 @@ class AI1Chat {
 
 // Initialize AI Chat when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    window.ai1ChatInstance = new AI1Chat();
+    new AI1Chat();
 });
-
-// Test function to simulate 3 conversation rounds for AI1
-window.simulateThreeRoundsAI1 = function() {
-    console.log('AI1: Simulating 3 conversation rounds...');
-    if (window.ai1ChatInstance) {
-        // Simulate 3 rounds
-        window.ai1ChatInstance.conversationRounds = 3;
-        window.ai1ChatInstance.addMessage('Simulated User: Hello', 'user');
-        window.ai1ChatInstance.addMessage('Simulated AI: Hi there!', 'assistant');
-        window.ai1ChatInstance.addMessage('Simulated User: How are you?', 'user');
-        window.ai1ChatInstance.addMessage('Simulated AI: I\'m doing well, thanks!', 'assistant');
-        window.ai1ChatInstance.addMessage('Simulated User: Great!', 'user');
-        window.ai1ChatInstance.addMessage('Simulated AI: Is there anything I can help you with?', 'assistant');
-        
-        // Check if task should be enabled
-        console.log(`AI1 After simulation: rounds=${window.ai1ChatInstance.conversationRounds}, taskEnabled=${window.ai1ChatInstance.taskEnabled}`);
-        if (window.ai1ChatInstance.conversationRounds >= 3 && !window.ai1ChatInstance.taskEnabled) {
-            console.log('AI1 Enabling task after simulation!');
-            setTimeout(() => {
-                window.ai1ChatInstance.enableTask();
-            }, 500);
-        }
-    } else {
-        console.error('AI1 Chat instance not found!');
-    }
-};
