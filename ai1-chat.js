@@ -20,32 +20,47 @@ class AI1Chat {
     }
 
     loadConfig() {
-        // Load default config
-        let config = window.AI1_CONFIG || {};
+        // Load default config first
+        let config = JSON.parse(JSON.stringify(window.AI1_CONFIG || {}));
+        console.log('📋 Default AI2 config loaded:', config);
         
         try {
             // Load custom config from localStorage if exists
-            const customConfig = localStorage.getItem('ai2_custom_config');
-            if (customConfig) {
-                const parsed = JSON.parse(customConfig);
+            const customConfigStr = localStorage.getItem('ai2_custom_config');
+            console.log('🔍 Checking localStorage for ai2_custom_config:', customConfigStr);
+            
+            if (customConfigStr) {
+                const parsed = JSON.parse(customConfigStr);
                 console.log('🔧 Loading custom AI2 config:', parsed);
                 
                 // Override specific settings
-                config.model = parsed.model;
-                config.systemPrompt = parsed.systemPrompt;
-                config.apiParams = {
-                    ...config.apiParams,
-                    max_tokens: parsed.maxTokens,
-                    temperature: parsed.temperature
-                };
+                if (parsed.model) config.model = parsed.model;
+                if (parsed.systemPrompt) config.systemPrompt = parsed.systemPrompt;
+                if (parsed.maxTokens) {
+                    config.apiParams = config.apiParams || {};
+                    config.apiParams.max_tokens = parsed.maxTokens;
+                }
+                if (parsed.temperature !== undefined) {
+                    config.apiParams = config.apiParams || {};
+                    config.apiParams.temperature = parsed.temperature;
+                }
                 
-                console.log('✅ AI2 config updated with custom settings');
+                console.log('✅ AI2 config updated with custom settings:', config);
+            } else {
+                console.log('ℹ️ No custom AI2 config found, using defaults');
             }
         } catch (error) {
             console.error('❌ Error loading custom AI2 config:', error);
         }
         
         return config;
+    }
+
+    // Add method to refresh config
+    refreshConfig() {
+        console.log('🔄 Refreshing AI2 configuration...');
+        this.config = this.loadConfig();
+        this.addMessage('🔄 Configuration refreshed! New settings will apply to future conversations.', 'assistant');
     }
 
     initializeElements() {
@@ -350,5 +365,5 @@ class AI1Chat {
 
 // Initialize AI Chat when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    new AI1Chat();
+    window.ai1ChatInstance = new AI1Chat();
 });

@@ -438,6 +438,9 @@
                         <i class="fas fa-paper-plane"></i>
                         Send
                     </button>
+                    <button onclick="refreshAI1Config()" style="padding: 0.5rem; margin-left: 0.5rem; background: linear-gradient(135deg, #28a745, #20c997); color: white; border: none; border-radius: 8px; font-size: 0.8rem; cursor: pointer;" title="Refresh configuration from settings">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
                 </div>
             </div>
         </div>
@@ -461,5 +464,15 @@
     <script src="script.js"></script>
     <script src="ai1-config.js"></script>
     <script src="ai1-chat.js"></script>
+    <script>
+        // Global function to refresh AI1 config
+        function refreshAI1Config() {
+            if (window.ai1ChatInstance && window.ai1ChatInstance.refreshConfig) {
+                window.ai1ChatInstance.refreshConfig();
+            } else {
+                console.error('AI1 Chat instance not found');
+            }
+        }
+    </script>
 </body>
 </html>
