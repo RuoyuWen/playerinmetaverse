@@ -6,8 +6,8 @@
 
 class OnlineGlobalConfig {
     constructor() {
-        this.configEndpoint = 'https://api.jsonbin.io/v3/b/YOUR_BIN_ID'; // Replace with your JSONBin ID
-        this.apiKey = '$2a$10$YOUR_API_KEY'; // Replace with your JSONBin API key
+        this.configEndpoint = 'https://api.jsonbin.io/v3/b/6892ab887b4b8670d8ae42df'; // Your JSONBin ID
+        this.apiKey = '$2a$10$5TnfTLmPf748ZYyP4QUtNeN.IrUikxZfISRpo17ROvabgGg9SLjuS'; // Your JSONBin API key
         this.fallbackConfig = this.getDefaultConfig();
         this.currentConfig = null;
         this.configVersion = null;
@@ -107,8 +107,7 @@ Please provide helpful answers based on user questions.`,
             const response = await fetch(`${this.configEndpoint}/latest`, {
                 method: 'GET',
                 headers: {
-                    'X-Master-Key': this.apiKey,
-                    'X-Bin-Meta': 'false'
+                    'X-Master-Key': this.apiKey
                 }
             });
 
@@ -116,7 +115,10 @@ Please provide helpful answers based on user questions.`,
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
 
-            const config = await response.json();
+            const responseData = await response.json();
+            
+            // JSONBin returns data in a "record" wrapper for private bins
+            const config = responseData.record || responseData;
             
             // Cache the config locally for offline use
             this.saveToCache(config);
@@ -132,6 +134,8 @@ Please provide helpful answers based on user questions.`,
     async saveToCloud(config) {
         try {
             console.log('💾 Saving global config to cloud...');
+            console.log('🔗 Endpoint:', this.configEndpoint);
+            console.log('🔑 API Key (first 10 chars):', this.apiKey ? this.apiKey.substring(0, 10) + '...' : 'NOT SET');
             
             const response = await fetch(this.configEndpoint, {
                 method: 'PUT',
@@ -142,8 +146,20 @@ Please provide helpful answers based on user questions.`,
                 body: JSON.stringify(config)
             });
 
+            console.log('📊 Response status:', response.status);
+            console.log('📊 Response headers:', Object.fromEntries(response.headers.entries()));
+
             if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                // Try to get more error details
+                let errorDetails = 'Unknown error';
+                try {
+                    const errorResponse = await response.text();
+                    console.log('❌ Error response body:', errorResponse);
+                    errorDetails = errorResponse;
+                } catch (e) {
+                    console.log('❌ Could not parse error response');
+                }
+                throw new Error(`HTTP ${response.status}: ${response.statusText}. Details: ${errorDetails}`);
             }
 
             const result = await response.json();
