@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Configuration Manager | AI Chat System</title>
+    <meta name="description" content="Global Configuration Manager - Update AI settings for all users across all devices">
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .global-admin-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 0, 0, 0.3);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 20px 40px rgba(255, 0, 0, 0.1);
+        }
+
+        .admin-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, rgba(255, 0, 0, 0.1), rgba(220, 20, 60, 0.1));
+            border-radius: 15px;
+            border: 1px solid rgba(255, 0, 0, 0.2);
+        }
+
+        .admin-header h1 {
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            font-size: 2.5rem;
+            color: #ff4444;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 0 20px rgba(255, 68, 68, 0.6);
+        }
+
+        .critical-warning {
+            background: linear-gradient(135deg, rgba(255, 0, 0, 0.2), rgba(139, 0, 0, 0.2));
+            border: 2px solid rgba(255, 0, 0, 0.5);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            font-size: 1rem;
+            color: #ffcccc;
+            text-align: center;
+        }
+
+        .critical-warning i {
+            color: #ff4444;
+            margin-right: 0.5rem;
+            font-size: 1.2rem;
+        }
+
+        .config-editor {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+        }
+
+        .config-editor h3 {
+            color: var(--secondary-color);
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+
+        .editor-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .editor-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid rgba(157, 78, 221, 0.3);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+        }
+
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+            font-family: 'Source Code Pro', monospace;
+        }
+
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 10px rgba(157, 78, 221, 0.3);
+        }
+
+        .current-config {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            font-family: 'Source Code Pro', monospace;
+            font-size: 0.85rem;
+            color: #cccccc;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .update-btn {
+            background: linear-gradient(135deg, #ff4444, #cc0000);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            padding: 1rem 2rem;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0.5rem;
+        }
+
+        .update-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 68, 68, 0.4);
+        }
+
+        .preview-btn {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0.5rem;
+        }
+
+        .preview-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+        }
+
+        .generated-config {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+        }
+
+        .generated-config pre {
+            color: #cccccc;
+            font-family: 'Source Code Pro', monospace;
+            font-size: 0.85rem;
+            white-space: pre-wrap;
+            margin: 0;
+        }
+
+        .instructions {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+            border: 1px solid rgba(255, 165, 0, 0.3);
+        }
+
+        .instructions h4 {
+            color: #ffa500;
+            margin-bottom: 1rem;
+        }
+
+        .instructions ol {
+            padding-left: 1.5rem;
+        }
+
+        .instructions li {
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <a href="index.html">Ruoyu Wen</a>
+            </div>
+            <div class="nav-menu" id="nav-menu">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="about.html" class="nav-link">About</a>
+                <a href="admin.html" class="nav-link">Admin Dashboard</a>
+                <a href="aisetting.html" class="nav-link">Local Settings</a>
+            </div>
+            <div class="nav-toggle" id="nav-toggle">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Global Admin Section -->
+    <section class="section-padding">
+        <div class="container">
+            <div class="global-admin-container">
+                <div class="admin-header">
+                    <h1><i class="fas fa-globe-americas"></i> Global Configuration Manager</h1>
+                    <p class="subtitle">Update AI settings for ALL users across ALL devices worldwide</p>
+                </div>
+
+                <div class="critical-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>CRITICAL SYSTEM-WIDE CHANGES:</strong><br>
+                    This interface generates new configuration code that must be manually deployed.<br>
+                    Changes here will affect every visitor on every device once deployed to the server.
+                </div>
+
+                <!-- Current Configuration Display -->
+                <div class="config-editor">
+                    <h3><i class="fas fa-eye"></i> Current Global Configuration</h3>
+                    <div id="current-config-display" class="current-config">
+                        Loading current configuration...
+                    </div>
+                </div>
+
+                <!-- Configuration Editor -->
+                <div class="config-editor">
+                    <h3><i class="fas fa-edit"></i> Configuration Editor</h3>
+                    
+                    <div class="editor-grid">
+                        <!-- AI Chat 1 Configuration -->
+                        <div>
+                            <h4 style="color: var(--primary-color); margin-bottom: 1rem;">AI Chat 1 Configuration</h4>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="ai1-model">Model:</label>
+                                <select id="ai1-model" class="form-select">
+                                    <option value="gpt-4.1">GPT-4.1</option>
+                                    <option value="gpt-4.1-mini">GPT-4.1 Mini</option>
+                                    <option value="gpt-4o">GPT-4o</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="ai1-max-tokens">Max Tokens:</label>
+                                <input type="number" id="ai1-max-tokens" class="form-input" min="100" max="4000" value="1500">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="ai1-temperature">Temperature:</label>
+                                <input type="number" id="ai1-temperature" class="form-input" min="0" max="2" step="0.1" value="0.7">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="ai1-system-prompt">System Prompt:</label>
+                                <textarea id="ai1-system-prompt" class="form-textarea" placeholder="Enter system prompt for AI Chat 1..."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- AI Chat 2 Configuration -->
+                        <div>
+                            <h4 style="color: var(--secondary-color); margin-bottom: 1rem;">AI Chat 2 Configuration</h4>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="ai2-model">Model:</label>
+                                <select id="ai2-model" class="form-select">
+                                    <option value="gpt-4.1">GPT-4.1</option>
+                                    <option value="gpt-4.1-mini">GPT-4.1 Mini</option>
+                                    <option value="gpt-4o">GPT-4o</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="ai2-max-tokens">Max Tokens:</label>
+                                <input type="number" id="ai2-max-tokens" class="form-input" min="100" max="4000" value="1500">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="ai2-temperature">Temperature:</label>
+                                <input type="number" id="ai2-temperature" class="form-input" min="0" max="2" step="0.1" value="0.7">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="ai2-system-prompt">System Prompt:</label>
+                                <textarea id="ai2-system-prompt" class="form-textarea" placeholder="Enter system prompt for AI Chat 2..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 2rem;">
+                        <button class="preview-btn" onclick="generateConfig()">
+                            <i class="fas fa-code"></i> Generate Configuration Code
+                        </button>
+                        <button class="update-btn" onclick="downloadConfig()">
+                            <i class="fas fa-download"></i> Download global-config.js
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Generated Configuration Display -->
+                <div class="config-editor" id="generated-config-section" style="display: none;">
+                    <h3><i class="fas fa-code"></i> Generated Configuration Code</h3>
+                    <p style="color: #cccccc; margin-bottom: 1rem;">Copy this code and replace the content of <code>global-config.js</code> file:</p>
+                    <div class="generated-config">
+                        <pre id="generated-config-code"></pre>
+                    </div>
+                </div>
+
+                <!-- Instructions -->
+                <div class="instructions">
+                    <h4><i class="fas fa-info-circle"></i> Deployment Instructions</h4>
+                    <ol>
+                        <li>Configure the AI settings above according to your research requirements</li>
+                        <li>Click "Generate Configuration Code" to preview the changes</li>
+                        <li>Click "Download global-config.js" to download the new configuration file</li>
+                        <li>Replace the existing <code>global-config.js</code> file in your project</li>
+                        <li>Commit and push the changes to your Git repository</li>
+                        <li>Deploy to your hosting platform (GitHub Pages, Netlify, etc.)</li>
+                        <li>All users worldwide will immediately use the new configuration</li>
+                    </ol>
+                    <p style="margin-top: 1rem; color: #ffa500;">
+                        <strong>Note:</strong> Unlike localStorage-based settings, this method ensures true global configuration across all devices and browsers.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <p>&copy; 2024 Ruoyu Wen. Game Researcher & Designer | PhD in Human Computer Interaction 🌸</p>
+                <div class="social-links">
+                    <a href="mailto:ruoyu.wen.game@gmail.com" target="_blank" title="Email"><i class="fas fa-envelope"></i></a>
+                    <a href="https://scholar.google.com/citations?hl=en&user=TssKzFIAAAAJ&view_op=list_works&gmla=AH8HC4wssodHVoe9Ljll41vco9U7EA7ci1rWTxxfNSe7ZuuxjEwwNOrata7GzhiOgbnk-d_iRrOM-ILMs3B2445j" target="_blank" title="Google Scholar"><i class="fas fa-graduation-cap"></i></a>
+                    <a href="https://www.linkedin.com/in/ruoyu-wen-53344419a/?locale=en_US" target="_blank" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                    <a href="https://wrychristian.itch.io/" target="_blank" title="Portfolio"><i class="fas fa-gamepad"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script src="global-config.js"></script>
+    <script>
+        // Load current configuration on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCurrentConfig();
+            populateFormFromCurrent();
+        });
+
+        function loadCurrentConfig() {
+            const currentConfigDiv = document.getElementById('current-config-display');
+            
+            if (window.GLOBAL_AI1_CONFIG && window.GLOBAL_AI2_CONFIG) {
+                const configDisplay = `
+AI Chat 1 Configuration:
+  Model: ${window.GLOBAL_AI1_CONFIG.model}
+  Max Tokens: ${window.GLOBAL_AI1_CONFIG.maxTokens}
+  Temperature: ${window.GLOBAL_AI1_CONFIG.temperature}
+  Last Updated: ${window.GLOBAL_AI1_CONFIG.lastUpdated}
+
+AI Chat 2 Configuration:
+  Model: ${window.GLOBAL_AI2_CONFIG.model}
+  Max Tokens: ${window.GLOBAL_AI2_CONFIG.maxTokens}
+  Temperature: ${window.GLOBAL_AI2_CONFIG.temperature}
+  Last Updated: ${window.GLOBAL_AI2_CONFIG.lastUpdated}
+
+Global Config Version: ${window.GLOBAL_CONFIG_VERSION}
+                `;
+                currentConfigDiv.textContent = configDisplay;
+            } else {
+                currentConfigDiv.textContent = 'Error: Global configuration not loaded. Please refresh the page.';
+            }
+        }
+
+        function populateFormFromCurrent() {
+            if (window.GLOBAL_AI1_CONFIG) {
+                document.getElementById('ai1-model').value = window.GLOBAL_AI1_CONFIG.model || 'gpt-4.1';
+                document.getElementById('ai1-max-tokens').value = window.GLOBAL_AI1_CONFIG.maxTokens || 1500;
+                document.getElementById('ai1-temperature').value = window.GLOBAL_AI1_CONFIG.temperature || 0.7;
+                document.getElementById('ai1-system-prompt').value = window.GLOBAL_AI1_CONFIG.systemPrompt || '';
+            }
+
+            if (window.GLOBAL_AI2_CONFIG) {
+                document.getElementById('ai2-model').value = window.GLOBAL_AI2_CONFIG.model || 'gpt-4.1';
+                document.getElementById('ai2-max-tokens').value = window.GLOBAL_AI2_CONFIG.maxTokens || 1500;
+                document.getElementById('ai2-temperature').value = window.GLOBAL_AI2_CONFIG.temperature || 0.7;
+                document.getElementById('ai2-system-prompt').value = window.GLOBAL_AI2_CONFIG.systemPrompt || '';
+            }
+        }
+
+        function generateConfig() {
+            const ai1Config = {
+                model: document.getElementById('ai1-model').value,
+                systemPrompt: document.getElementById('ai1-system-prompt').value,
+                maxTokens: parseInt(document.getElementById('ai1-max-tokens').value),
+                temperature: parseFloat(document.getElementById('ai1-temperature').value),
+                lastUpdated: new Date().toISOString(),
+                updatedBy: 'admin'
+            };
+
+            const ai2Config = {
+                model: document.getElementById('ai2-model').value,
+                systemPrompt: document.getElementById('ai2-system-prompt').value,
+                maxTokens: parseInt(document.getElementById('ai2-max-tokens').value),
+                temperature: parseFloat(document.getElementById('ai2-temperature').value),
+                lastUpdated: new Date().toISOString(),
+                updatedBy: 'admin'
+            };
+
+            const configVersion = Date.now();
+
+            const configCode = `/**
+ * Global Configuration File
+ * This file defines the global AI settings that apply to ALL visitors across ALL devices
+ * 
+ * To update settings globally:
+ * 1. Modify this file directly
+ * 2. Commit and push to GitHub
+ * 3. All visitors will automatically use the new settings
+ */
+
+// Global timestamp to track when settings were last updated
+const GLOBAL_CONFIG_VERSION = ${configVersion};
+
+// Global AI Chat 1 Configuration
+const GLOBAL_AI1_CONFIG = {
+    model: '${ai1Config.model}',
+    systemPrompt: \`${ai1Config.systemPrompt.replace(/`/g, '\\`')}\`,
+    maxTokens: ${ai1Config.maxTokens},
+    temperature: ${ai1Config.temperature},
+    lastUpdated: '${ai1Config.lastUpdated}',
+    updatedBy: '${ai1Config.updatedBy}'
+};
+
+// Global AI Chat 2 Configuration
+const GLOBAL_AI2_CONFIG = {
+    model: '${ai2Config.model}',
+    systemPrompt: \`${ai2Config.systemPrompt.replace(/`/g, '\\`')}\`,
+    maxTokens: ${ai2Config.maxTokens},
+    temperature: ${ai2Config.temperature},
+    lastUpdated: '${ai2Config.lastUpdated}',
+    updatedBy: '${ai2Config.updatedBy}'
+};
+
+// Configuration change log
+const GLOBAL_CONFIG_CHANGES = [
+    {
+        version: GLOBAL_CONFIG_VERSION,
+        timestamp: '${new Date().toISOString()}',
+        changes: 'Configuration updated via Global Admin Panel',
+        updatedBy: 'admin'
+    }
+];
+
+// Export configurations
+if (typeof window !== 'undefined') {
+    // Browser environment
+    window.GLOBAL_AI1_CONFIG = GLOBAL_AI1_CONFIG;
+    window.GLOBAL_AI2_CONFIG = GLOBAL_AI2_CONFIG;
+    window.GLOBAL_CONFIG_VERSION = GLOBAL_CONFIG_VERSION;
+    window.GLOBAL_CONFIG_CHANGES = GLOBAL_CONFIG_CHANGES;
+    
+    console.log('🌍 Global configurations loaded:', {
+        version: GLOBAL_CONFIG_VERSION,
+        ai1: GLOBAL_AI1_CONFIG.model,
+        ai2: GLOBAL_AI2_CONFIG.model,
+        lastUpdated: GLOBAL_AI1_CONFIG.lastUpdated
+    });
+}
+
+// Node.js environment (for potential backend use)
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        GLOBAL_AI1_CONFIG,
+        GLOBAL_AI2_CONFIG,
+        GLOBAL_CONFIG_VERSION,
+        GLOBAL_CONFIG_CHANGES
+    };
+}`;
+
+            document.getElementById('generated-config-code').textContent = configCode;
+            document.getElementById('generated-config-section').style.display = 'block';
+            
+            // Store generated config for download
+            window.generatedConfigCode = configCode;
+            
+            alert('Configuration code generated successfully! Review the code below.');
+        }
+
+        function downloadConfig() {
+            if (!window.generatedConfigCode) {
+                alert('Please generate the configuration code first by clicking "Generate Configuration Code".');
+                return;
+            }
+
+            const blob = new Blob([window.generatedConfigCode], { type: 'application/javascript' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = 'global-config.js';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            alert('Configuration file downloaded! Replace the existing global-config.js file and deploy to apply changes globally.');
+        }
+    </script>
+</body>
+</html>

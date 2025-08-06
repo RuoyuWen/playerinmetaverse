@@ -37,13 +37,32 @@ class AI1Chat {
         console.log('📋 Default AI2 config loaded:', config);
         
         try {
-            // First check for GLOBAL configuration (highest priority)
-            const globalConfigStr = localStorage.getItem('global_ai2_config');
-            console.log('🌐 Checking for global_ai2_config:', globalConfigStr);
-            
-            if (globalConfigStr) {
-                const parsed = JSON.parse(globalConfigStr);
-                console.log('🌍 Loading GLOBAL AI2 config:', parsed);
+            // PRIORITY 1: Check for TRUE GLOBAL configuration from global-config.js
+            if (window.GLOBAL_AI2_CONFIG) {
+                const globalConfig = window.GLOBAL_AI2_CONFIG;
+                console.log('🌍 Loading TRUE GLOBAL AI2 config:', globalConfig);
+                
+                if (globalConfig.model) config.model = globalConfig.model;
+                if (globalConfig.systemPrompt) config.systemPrompt = globalConfig.systemPrompt;
+                if (globalConfig.maxTokens) {
+                    config.apiParams = config.apiParams || {};
+                    config.apiParams.max_tokens = globalConfig.maxTokens;
+                }
+                if (globalConfig.temperature !== undefined) {
+                    config.apiParams = config.apiParams || {};
+                    config.apiParams.temperature = globalConfig.temperature;
+                }
+                
+                console.log('✅ AI2 config updated with TRUE GLOBAL settings:', config);
+                console.log('🕐 Global config version:', window.GLOBAL_CONFIG_VERSION);
+            } else {
+                // PRIORITY 2: Fallback to localStorage global config
+                const globalConfigStr = localStorage.getItem('global_ai2_config');
+                console.log('🌐 Checking for localStorage global_ai2_config:', globalConfigStr);
+                
+                if (globalConfigStr) {
+                    const parsed = JSON.parse(globalConfigStr);
+                    console.log('🔧 Loading localStorage GLOBAL AI2 config:', parsed);
                 
                 // Override specific settings
                 if (parsed.model) config.model = parsed.model;
@@ -57,31 +76,32 @@ class AI1Chat {
                     config.apiParams.temperature = parsed.temperature;
                 }
                 
-                console.log('✅ AI2 config updated with GLOBAL settings:', config);
-            } else {
-                // Fallback to legacy user-specific config
-                const customConfigStr = localStorage.getItem('ai2_custom_config');
-                console.log('🔍 Checking localStorage for ai2_custom_config (legacy):', customConfigStr);
-                
-                if (customConfigStr) {
-                    const parsed = JSON.parse(customConfigStr);
-                    console.log('🔧 Loading legacy custom AI2 config:', parsed);
-                    
-                    // Override specific settings
-                    if (parsed.model) config.model = parsed.model;
-                    if (parsed.systemPrompt) config.systemPrompt = parsed.systemPrompt;
-                    if (parsed.maxTokens) {
-                        config.apiParams = config.apiParams || {};
-                        config.apiParams.max_tokens = parsed.maxTokens;
-                    }
-                    if (parsed.temperature !== undefined) {
-                        config.apiParams = config.apiParams || {};
-                        config.apiParams.temperature = parsed.temperature;
-                    }
-                    
-                    console.log('✅ AI2 config updated with legacy custom settings:', config);
+                    console.log('✅ AI2 config updated with localStorage GLOBAL settings:', config);
                 } else {
-                    console.log('ℹ️ No custom AI2 config found, using defaults');
+                    // PRIORITY 3: Fallback to legacy user-specific config
+                    const customConfigStr = localStorage.getItem('ai2_custom_config');
+                    console.log('🔍 Checking localStorage for ai2_custom_config (legacy):', customConfigStr);
+                    
+                    if (customConfigStr) {
+                        const parsed = JSON.parse(customConfigStr);
+                        console.log('🔧 Loading legacy custom AI2 config:', parsed);
+                        
+                        // Override specific settings
+                        if (parsed.model) config.model = parsed.model;
+                        if (parsed.systemPrompt) config.systemPrompt = parsed.systemPrompt;
+                        if (parsed.maxTokens) {
+                            config.apiParams = config.apiParams || {};
+                            config.apiParams.max_tokens = parsed.maxTokens;
+                        }
+                        if (parsed.temperature !== undefined) {
+                            config.apiParams = config.apiParams || {};
+                            config.apiParams.temperature = parsed.temperature;
+                        }
+                        
+                        console.log('✅ AI2 config updated with legacy custom settings:', config);
+                    } else {
+                        console.log('ℹ️ No custom AI2 config found, using defaults');
+                    }
                 }
             }
         } catch (error) {
