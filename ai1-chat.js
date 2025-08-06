@@ -29,6 +29,42 @@ class AI1Chat {
         this.loadApiKey();
         this.initializeUI();
         this.randomizeOptions();
+        
+        // 确保在线配置立即生效
+        this.ensureOnlineConfigActive();
+    }
+
+    // 确保在线配置立即生效
+    ensureOnlineConfigActive() {
+        console.log('🔧 Ensuring online config is active for AI2...');
+        
+        // 等待在线配置加载完成
+        const checkOnlineConfig = () => {
+            if (window.onlineGlobalConfig && window.onlineGlobalConfig.currentConfig) {
+                const onlineConfig = window.onlineGlobalConfig.getAI2Config();
+                console.log('🎯 Forcing online config application for AI2:', onlineConfig);
+                
+                // 强制应用在线配置
+                if (onlineConfig.systemPrompt) {
+                    this.config.systemPrompt = onlineConfig.systemPrompt;
+                    console.log('✅ AI2 System prompt forcefully updated to:', this.config.systemPrompt);
+                }
+                if (onlineConfig.model) {
+                    this.config.model = onlineConfig.model;
+                }
+                if (onlineConfig.apiParams) {
+                    this.config.apiParams = { ...this.config.apiParams, ...onlineConfig.apiParams };
+                }
+                
+                console.log('🚀 Final AI2 config after force update:', this.config);
+            } else {
+                console.log('⏳ Online config not ready for AI2, retrying in 1 second...');
+                setTimeout(checkOnlineConfig, 1000);
+            }
+        };
+        
+        // 立即检查，如果不可用则每秒重试
+        checkOnlineConfig();
     }
 
     loadConfig() {
