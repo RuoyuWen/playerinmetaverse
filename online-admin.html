@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Global Configuration | AI Chat System</title>
+    <meta name="description" content="Online Global Configuration - Real-time AI settings for all users">
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .online-admin-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 20px 40px rgba(0, 212, 255, 0.1);
+        }
+
+        .admin-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(157, 78, 221, 0.1));
+            border-radius: 15px;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+        }
+
+        .admin-header h1 {
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            font-size: 2.5rem;
+            color: var(--secondary-color);
+            margin-bottom: 0.5rem;
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.6);
+        }
+
+        .online-info {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(40, 167, 69, 0.1));
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            font-size: 1rem;
+            color: #ccffff;
+            text-align: center;
+        }
+
+        .online-info i {
+            color: var(--secondary-color);
+            margin-right: 0.5rem;
+            font-size: 1.2rem;
+        }
+
+        .config-status {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 165, 0, 0.2);
+        }
+
+        .config-status h3 {
+            color: #ffa500;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .status-card {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            padding: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .status-card h4 {
+            color: var(--text-color);
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .status-value {
+            font-family: 'Source Code Pro', monospace;
+            font-size: 0.85rem;
+            color: #cccccc;
+            word-break: break-all;
+        }
+
+        .config-editor {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(157, 78, 221, 0.2);
+        }
+
+        .config-editor h3 {
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+            font-size: 1.3rem;
+        }
+
+        .editor-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .editor-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid rgba(157, 78, 221, 0.3);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+        }
+
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+            font-family: 'Source Code Pro', monospace;
+        }
+
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 10px rgba(157, 78, 221, 0.3);
+        }
+
+        .save-btn {
+            background: linear-gradient(135deg, var(--secondary-color), #0ea5e9);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            padding: 1rem 2rem;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0.5rem;
+        }
+
+        .save-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 212, 255, 0.4);
+        }
+
+        .save-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .refresh-btn {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0.5rem;
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            z-index: 10000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background: linear-gradient(135deg, #28a745, #20c997);
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+        }
+
+        .notification.warning {
+            background: linear-gradient(135deg, #ffc107, #fd7e14);
+        }
+
+        .setup-instructions {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+            border: 1px solid rgba(255, 165, 0, 0.3);
+        }
+
+        .setup-instructions h4 {
+            color: #ffa500;
+            margin-bottom: 1rem;
+        }
+
+        .setup-instructions ol {
+            padding-left: 1.5rem;
+        }
+
+        .setup-instructions li {
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+        }
+
+        .setup-instructions code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'Source Code Pro', monospace;
+            color: #00d4ff;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <a href="index.html">Ruoyu Wen</a>
+            </div>
+            <div class="nav-menu" id="nav-menu">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="about.html" class="nav-link">About</a>
+                <a href="admin.html" class="nav-link">Admin Dashboard</a>
+                <a href="global-admin.html" class="nav-link">File-based Config</a>
+            </div>
+            <div class="nav-toggle" id="nav-toggle">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Online Admin Section -->
+    <section class="section-padding">
+        <div class="container">
+            <div class="online-admin-container">
+                <div class="admin-header">
+                    <h1><i class="fas fa-cloud"></i> Online Global Configuration</h1>
+                    <p class="subtitle">Real-time AI settings management - Changes apply instantly worldwide</p>
+                </div>
+
+                <div class="online-info">
+                    <i class="fas fa-wifi"></i>
+                    <strong>Real-time Global Configuration:</strong><br>
+                    Changes made here are saved to cloud storage and automatically applied to all users within minutes.<br>
+                    No file downloads, uploads, or deployments required!
+                </div>
+
+                <!-- Configuration Status -->
+                <div class="config-status">
+                    <h3><i class="fas fa-info-circle"></i> Current Configuration Status</h3>
+                    <div class="status-grid">
+                        <div class="status-card">
+                            <h4>Configuration Source</h4>
+                            <div class="status-value" id="config-source">Loading...</div>
+                        </div>
+                        <div class="status-card">
+                            <h4>Last Updated</h4>
+                            <div class="status-value" id="last-updated">Loading...</div>
+                        </div>
+                        <div class="status-card">
+                            <h4>Config Version</h4>
+                            <div class="status-value" id="config-version">Loading...</div>
+                        </div>
+                        <div class="status-card">
+                            <h4>Auto-Update Status</h4>
+                            <div class="status-value" id="auto-update-status">Active (5 min interval)</div>
+                        </div>
+                    </div>
+                    <div style="text-align: center; margin-top: 1rem;">
+                        <button class="refresh-btn" onclick="refreshStatus()">
+                            <i class="fas fa-sync-alt"></i> Refresh Status
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Configuration Editor -->
+                <div class="config-editor">
+                    <h3><i class="fas fa-edit"></i> Global AI Configuration Editor</h3>
+                    
+                    <div class="editor-grid">
+                        <!-- AI Chat 1 Configuration -->
+                        <div>
+                            <h4 style="color: var(--primary-color); margin-bottom: 1rem;">AI Chat 1 Configuration</h4>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="ai1-model">Model:</label>
+                                <select id="ai1-model" class="form-select">
+                                    <option value="gpt-4.1">GPT-4.1</option>
+                                    <option value="gpt-4.1-mini">GPT-4.1 Mini</option>
+                                    <option value="gpt-4o">GPT-4o</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="ai1-max-tokens">Max Tokens:</label>
+                                <input type="number" id="ai1-max-tokens" class="form-input" min="100" max="4000" value="1500">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="ai1-temperature">Temperature:</label>
+                                <input type="number" id="ai1-temperature" class="form-input" min="0" max="2" step="0.1" value="0.7">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="ai1-system-prompt">System Prompt:</label>
+                                <textarea id="ai1-system-prompt" class="form-textarea" placeholder="Enter system prompt for AI Chat 1..."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- AI Chat 2 Configuration -->
+                        <div>
+                            <h4 style="color: var(--secondary-color); margin-bottom: 1rem;">AI Chat 2 Configuration</h4>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="ai2-model">Model:</label>
+                                <select id="ai2-model" class="form-select">
+                                    <option value="gpt-4.1">GPT-4.1</option>
+                                    <option value="gpt-4.1-mini">GPT-4.1 Mini</option>
+                                    <option value="gpt-4o">GPT-4o</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="ai2-max-tokens">Max Tokens:</label>
+                                <input type="number" id="ai2-max-tokens" class="form-input" min="100" max="4000" value="1500">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="ai2-temperature">Temperature:</label>
+                                <input type="number" id="ai2-temperature" class="form-input" min="0" max="2" step="0.1" value="0.7">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="ai2-system-prompt">System Prompt:</label>
+                                <textarea id="ai2-system-prompt" class="form-textarea" placeholder="Enter system prompt for AI Chat 2..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 2rem;">
+                        <button class="save-btn" onclick="saveConfiguration()" id="save-btn">
+                            <i class="fas fa-cloud-upload-alt"></i> Save to Cloud (Apply Globally)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Setup Instructions -->
+                <div class="setup-instructions">
+                    <h4><i class="fas fa-wrench"></i> Setup Instructions (One-time)</h4>
+                    <p>To enable online configuration, you need to set up a free cloud storage account:</p>
+                    <ol>
+                        <li>Visit <a href="https://jsonbin.io" target="_blank" style="color: var(--secondary-color);">JSONBin.io</a> and create a free account</li>
+                        <li>Create a new "Bin" (JSON storage) for your configuration</li>
+                        <li>Copy your Bin ID and API Key</li>
+                        <li>Update the <code>online-global-config.js</code> file with your credentials:
+                            <br><code>configEndpoint: 'https://api.jsonbin.io/v3/b/YOUR_BIN_ID'</code>
+                            <br><code>apiKey: '$2a$10$YOUR_API_KEY'</code>
+                        </li>
+                        <li>Deploy the updated file to your server</li>
+                        <li>Refresh this page and start using online configuration!</li>
+                    </ol>
+                    <p style="margin-top: 1rem; color: #00d4ff;">
+                        <strong>Alternative:</strong> You can also use Firebase, MongoDB Atlas, or any other cloud JSON storage service.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <p>&copy; 2024 Ruoyu Wen. Game Researcher & Designer | PhD in Human Computer Interaction 🌸</p>
+                <div class="social-links">
+                    <a href="mailto:ruoyu.wen.game@gmail.com" target="_blank" title="Email"><i class="fas fa-envelope"></i></a>
+                    <a href="https://scholar.google.com/citations?hl=en&user=TssKzFIAAAAJ&view_op=list_works&gmla=AH8HC4wssodHVoe9Ljll41vco9U7EA7ci1rWTxxfNSe7ZuuxjEwwNOrata7GzhiOgbnk-d_iRrOM-ILMs3B2445j" target="_blank" title="Google Scholar"><i class="fas fa-graduation-cap"></i></a>
+                    <a href="https://www.linkedin.com/in/ruoyu-wen-53344419a/?locale=en_US" target="_blank" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                    <a href="https://wrychristian.itch.io/" target="_blank" title="Portfolio"><i class="fas fa-gamepad"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script src="online-global-config.js"></script>
+    <script>
+        // Load current configuration on page load
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadCurrentConfiguration();
+            refreshStatus();
+        });
+
+        // Listen for configuration updates
+        window.addEventListener('globalConfigChanged', function(event) {
+            console.log('📢 Configuration updated:', event.detail);
+            showNotification('Configuration updated automatically!', 'success');
+            refreshStatus();
+        });
+
+        async function loadCurrentConfiguration() {
+            try {
+                if (!window.onlineGlobalConfig) {
+                    showNotification('Online configuration system not available. Please check setup.', 'error');
+                    return;
+                }
+
+                const config = await window.onlineGlobalConfig.loadConfig();
+                
+                if (config && config.ai1 && config.ai2) {
+                    // Populate AI1 form
+                    document.getElementById('ai1-model').value = config.ai1.model || 'gpt-4.1';
+                    document.getElementById('ai1-max-tokens').value = config.ai1.maxTokens || 1500;
+                    document.getElementById('ai1-temperature').value = config.ai1.temperature || 0.7;
+                    document.getElementById('ai1-system-prompt').value = config.ai1.systemPrompt || '';
+
+                    // Populate AI2 form
+                    document.getElementById('ai2-model').value = config.ai2.model || 'gpt-4.1';
+                    document.getElementById('ai2-max-tokens').value = config.ai2.maxTokens || 1500;
+                    document.getElementById('ai2-temperature').value = config.ai2.temperature || 0.7;
+                    document.getElementById('ai2-system-prompt').value = config.ai2.systemPrompt || '';
+
+                    showNotification('Configuration loaded successfully!', 'success');
+                } else {
+                    showNotification('Using default configuration', 'warning');
+                }
+            } catch (error) {
+                console.error('Error loading configuration:', error);
+                showNotification('Error loading configuration: ' + error.message, 'error');
+            }
+        }
+
+        async function saveConfiguration() {
+            const saveBtn = document.getElementById('save-btn');
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+            try {
+                if (!window.onlineGlobalConfig) {
+                    throw new Error('Online configuration system not available');
+                }
+
+                const newConfig = {
+                    ai1: {
+                        model: document.getElementById('ai1-model').value,
+                        systemPrompt: document.getElementById('ai1-system-prompt').value,
+                        maxTokens: parseInt(document.getElementById('ai1-max-tokens').value),
+                        temperature: parseFloat(document.getElementById('ai1-temperature').value)
+                    },
+                    ai2: {
+                        model: document.getElementById('ai2-model').value,
+                        systemPrompt: document.getElementById('ai2-system-prompt').value,
+                        maxTokens: parseInt(document.getElementById('ai2-max-tokens').value),
+                        temperature: parseFloat(document.getElementById('ai2-temperature').value)
+                    }
+                };
+
+                await window.onlineGlobalConfig.updateConfig(newConfig);
+                
+                showNotification('Configuration saved successfully! Changes will apply globally within minutes.', 'success');
+                refreshStatus();
+                
+            } catch (error) {
+                console.error('Error saving configuration:', error);
+                showNotification('Error saving configuration: ' + error.message, 'error');
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Save to Cloud (Apply Globally)';
+            }
+        }
+
+        function refreshStatus() {
+            if (window.onlineGlobalConfig) {
+                const config = window.onlineGlobalConfig.getConfig();
+                
+                document.getElementById('config-source').textContent = config.version ? 'Cloud Storage' : 'Default/Fallback';
+                document.getElementById('last-updated').textContent = config.lastUpdated ? 
+                    new Date(config.lastUpdated).toLocaleString() : 'Unknown';
+                document.getElementById('config-version').textContent = config.version || 'Default';
+                
+                // Trigger update check
+                window.onlineGlobalConfig.checkForUpdates();
+            } else {
+                document.getElementById('config-source').textContent = 'System not initialized';
+                document.getElementById('last-updated').textContent = 'N/A';
+                document.getElementById('config-version').textContent = 'N/A';
+            }
+        }
+
+        function showNotification(message, type = 'success') {
+            // Remove existing notifications
+            const existing = document.querySelector('.notification');
+            if (existing) {
+                existing.remove();
+            }
+
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `<i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'times' : 'exclamation'}"></i> ${message}`;
+            
+            document.body.appendChild(notification);
+            
+            // Show notification
+            setTimeout(() => notification.classList.add('show'), 100);
+            
+            // Hide notification after 5 seconds
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

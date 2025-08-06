@@ -37,10 +37,24 @@ class AIChat {
         console.log('📋 Default AI1 config loaded:', config);
         
         try {
-            // PRIORITY 1: Check for TRUE GLOBAL configuration from global-config.js
-            if (window.GLOBAL_AI1_CONFIG) {
+            // PRIORITY 1: Check for ONLINE GLOBAL configuration
+            if (window.onlineGlobalConfig) {
+                const onlineConfig = window.onlineGlobalConfig.getAI1Config();
+                console.log('☁️ Loading ONLINE GLOBAL AI1 config:', onlineConfig);
+                
+                if (onlineConfig.model) config.model = onlineConfig.model;
+                if (onlineConfig.systemPrompt) config.systemPrompt = onlineConfig.systemPrompt;
+                if (onlineConfig.apiParams) {
+                    config.apiParams = { ...config.apiParams, ...onlineConfig.apiParams };
+                }
+                
+                console.log('✅ AI1 config updated with ONLINE GLOBAL settings:', config);
+                console.log('🕐 Online config version:', window.onlineGlobalConfig.configVersion);
+            }
+            // PRIORITY 2: Check for FILE-BASED GLOBAL configuration from global-config.js
+            else if (window.GLOBAL_AI1_CONFIG) {
                 const globalConfig = window.GLOBAL_AI1_CONFIG;
-                console.log('🌍 Loading TRUE GLOBAL AI1 config:', globalConfig);
+                console.log('🌍 Loading FILE-BASED GLOBAL AI1 config:', globalConfig);
                 
                 if (globalConfig.model) config.model = globalConfig.model;
                 if (globalConfig.systemPrompt) config.systemPrompt = globalConfig.systemPrompt;
@@ -53,10 +67,10 @@ class AIChat {
                     config.apiParams.temperature = globalConfig.temperature;
                 }
                 
-                console.log('✅ AI1 config updated with TRUE GLOBAL settings:', config);
+                console.log('✅ AI1 config updated with FILE-BASED GLOBAL settings:', config);
                 console.log('🕐 Global config version:', window.GLOBAL_CONFIG_VERSION);
             } else {
-                // PRIORITY 2: Fallback to localStorage global config
+                // PRIORITY 3: Fallback to localStorage global config
                 const globalConfigStr = localStorage.getItem('global_ai1_config');
                 console.log('🌐 Checking for localStorage global_ai1_config:', globalConfigStr);
                 
@@ -78,7 +92,7 @@ class AIChat {
                 
                     console.log('✅ AI1 config updated with localStorage GLOBAL settings:', config);
                 } else {
-                    // PRIORITY 3: Fallback to legacy user-specific config
+                    // PRIORITY 4: Fallback to legacy user-specific config
                     const customConfigStr = localStorage.getItem('ai1_custom_config');
                     console.log('🔍 Checking localStorage for ai1_custom_config (legacy):', customConfigStr);
                     

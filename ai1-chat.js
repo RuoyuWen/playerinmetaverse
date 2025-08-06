@@ -37,10 +37,24 @@ class AI1Chat {
         console.log('📋 Default AI2 config loaded:', config);
         
         try {
-            // PRIORITY 1: Check for TRUE GLOBAL configuration from global-config.js
-            if (window.GLOBAL_AI2_CONFIG) {
+            // PRIORITY 1: Check for ONLINE GLOBAL configuration
+            if (window.onlineGlobalConfig) {
+                const onlineConfig = window.onlineGlobalConfig.getAI2Config();
+                console.log('☁️ Loading ONLINE GLOBAL AI2 config:', onlineConfig);
+                
+                if (onlineConfig.model) config.model = onlineConfig.model;
+                if (onlineConfig.systemPrompt) config.systemPrompt = onlineConfig.systemPrompt;
+                if (onlineConfig.apiParams) {
+                    config.apiParams = { ...config.apiParams, ...onlineConfig.apiParams };
+                }
+                
+                console.log('✅ AI2 config updated with ONLINE GLOBAL settings:', config);
+                console.log('🕐 Online config version:', window.onlineGlobalConfig.configVersion);
+            }
+            // PRIORITY 2: Check for FILE-BASED GLOBAL configuration from global-config.js
+            else if (window.GLOBAL_AI2_CONFIG) {
                 const globalConfig = window.GLOBAL_AI2_CONFIG;
-                console.log('🌍 Loading TRUE GLOBAL AI2 config:', globalConfig);
+                console.log('🌍 Loading FILE-BASED GLOBAL AI2 config:', globalConfig);
                 
                 if (globalConfig.model) config.model = globalConfig.model;
                 if (globalConfig.systemPrompt) config.systemPrompt = globalConfig.systemPrompt;
