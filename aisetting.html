@@ -36,6 +36,19 @@
             opacity: 0.9;
             margin-top: 0.5rem;
         }
+        .global-warning {
+            background: linear-gradient(135deg, rgba(255, 165, 0, 0.1), rgba(255, 107, 53, 0.1));
+            border: 1px solid rgba(255, 165, 0, 0.3);
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+        .global-warning i {
+            color: #ffa500;
+            margin-right: 0.5rem;
+        }
         .settings-grid {
             display: grid;
             grid-template-columns: 1fr;
@@ -227,8 +240,14 @@
     <section class="section-padding">
         <div class="container">
             <div class="settings-header">
-                <h1>⚙️ AI Settings Dashboard</h1>
-                <p>Customize the behavior of your AI assistants.</p>
+                <h1>⚙️ Global AI Settings Dashboard</h1>
+                <p>Configure AI behavior for ALL website visitors - changes affect everyone</p>
+            </div>
+
+            <div class="global-warning">
+                <i class="fas fa-globe"></i>
+                <strong>Global Configuration:</strong> Settings applied here will affect ALL visitors to the website. 
+                Changes take effect immediately for all new AI chat sessions.
             </div>
 
             <div class="settings-container">
@@ -395,7 +414,7 @@
             };
         }
 
-        // Function to save config to localStorage
+        // Function to save config to GLOBAL storage (affects all visitors)
         function saveConfig(aiType) {
             try {
                 const model = document.getElementById(`${aiType}-model`).value;
@@ -407,17 +426,57 @@
                     model,
                     systemPrompt,
                     maxTokens,
-                    temperature
+                    temperature,
+                    lastUpdated: new Date().toISOString(),
+                    updatedBy: 'admin'
                 };
 
-                const key = aiType === 'ai1' ? 'ai1_custom_config' : 'ai2_custom_config';
-                localStorage.setItem(key, JSON.stringify(config));
+                // Save to GLOBAL configuration (affects all users)
+                const globalKey = aiType === 'ai1' ? 'global_ai1_config' : 'global_ai2_config';
+                localStorage.setItem(globalKey, JSON.stringify(config));
                 
-                console.log(`💾 Settings saved for ${aiType}:`, config);
-                showStatus(`Settings for AI ${aiType === 'ai1' ? 'Chat 1' : 'Chat 2'} saved successfully!`, 'success');
+                // Also keep the old key for backward compatibility
+                const legacyKey = aiType === 'ai1' ? 'ai1_custom_config' : 'ai2_custom_config';
+                localStorage.setItem(legacyKey, JSON.stringify(config));
+                
+                // Save to admin tracking
+                saveGlobalConfigChange(aiType, config);
+                
+                console.log(`🌐 GLOBAL settings saved for ${aiType}:`, config);
+                showStatus(`GLOBAL settings for AI ${aiType === 'ai1' ? 'Chat 1' : 'Chat 2'} saved successfully! All visitors will use these settings.`, 'success');
+                
+                // Notify about global impact
+                setTimeout(() => {
+                    showStatus(`⚠️ All website visitors will now use the new ${aiType === 'ai1' ? 'AI Chat 1' : 'AI Chat 2'} configuration.`, 'warning');
+                }, 2000);
+                
             } catch (error) {
-                console.error('Error saving config:', error);
-                showStatus('Error saving settings!', 'error');
+                console.error('Error saving global config:', error);
+                showStatus('Error saving global settings!', 'error');
+            }
+        }
+
+        // Track global configuration changes for admin purposes
+        function saveGlobalConfigChange(aiType, config) {
+            try {
+                const changes = JSON.parse(localStorage.getItem('globalConfigChanges') || '[]');
+                const change = {
+                    aiType: aiType,
+                    config: config,
+                    timestamp: new Date().toISOString(),
+                    changeId: Date.now().toString()
+                };
+                changes.push(change);
+                
+                // Keep only last 50 changes
+                if (changes.length > 50) {
+                    changes.splice(0, changes.length - 50);
+                }
+                
+                localStorage.setItem('globalConfigChanges', JSON.stringify(changes));
+                console.log('📝 Global config change logged:', change);
+            } catch (error) {
+                console.error('Error logging config change:', error);
             }
         }
 

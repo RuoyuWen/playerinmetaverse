@@ -37,13 +37,13 @@ class AI1Chat {
         console.log('📋 Default AI2 config loaded:', config);
         
         try {
-            // Load custom config from localStorage if exists
-            const customConfigStr = localStorage.getItem('ai2_custom_config');
-            console.log('🔍 Checking localStorage for ai2_custom_config:', customConfigStr);
+            // First check for GLOBAL configuration (highest priority)
+            const globalConfigStr = localStorage.getItem('global_ai2_config');
+            console.log('🌐 Checking for global_ai2_config:', globalConfigStr);
             
-            if (customConfigStr) {
-                const parsed = JSON.parse(customConfigStr);
-                console.log('🔧 Loading custom AI2 config:', parsed);
+            if (globalConfigStr) {
+                const parsed = JSON.parse(globalConfigStr);
+                console.log('🌍 Loading GLOBAL AI2 config:', parsed);
                 
                 // Override specific settings
                 if (parsed.model) config.model = parsed.model;
@@ -57,9 +57,32 @@ class AI1Chat {
                     config.apiParams.temperature = parsed.temperature;
                 }
                 
-                console.log('✅ AI2 config updated with custom settings:', config);
+                console.log('✅ AI2 config updated with GLOBAL settings:', config);
             } else {
-                console.log('ℹ️ No custom AI2 config found, using defaults');
+                // Fallback to legacy user-specific config
+                const customConfigStr = localStorage.getItem('ai2_custom_config');
+                console.log('🔍 Checking localStorage for ai2_custom_config (legacy):', customConfigStr);
+                
+                if (customConfigStr) {
+                    const parsed = JSON.parse(customConfigStr);
+                    console.log('🔧 Loading legacy custom AI2 config:', parsed);
+                    
+                    // Override specific settings
+                    if (parsed.model) config.model = parsed.model;
+                    if (parsed.systemPrompt) config.systemPrompt = parsed.systemPrompt;
+                    if (parsed.maxTokens) {
+                        config.apiParams = config.apiParams || {};
+                        config.apiParams.max_tokens = parsed.maxTokens;
+                    }
+                    if (parsed.temperature !== undefined) {
+                        config.apiParams = config.apiParams || {};
+                        config.apiParams.temperature = parsed.temperature;
+                    }
+                    
+                    console.log('✅ AI2 config updated with legacy custom settings:', config);
+                } else {
+                    console.log('ℹ️ No custom AI2 config found, using defaults');
+                }
             }
         } catch (error) {
             console.error('❌ Error loading custom AI2 config:', error);

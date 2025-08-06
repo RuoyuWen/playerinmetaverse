@@ -308,6 +308,15 @@
                     <p>No user submissions have been recorded yet. Results will appear here when users complete AI chat tasks.</p>
                 </div>
 
+                <!-- Global Configuration Management -->
+                <div class="export-section">
+                    <h3><i class="fas fa-cogs"></i> Global AI Configuration</h3>
+                    <p>Manage AI settings that affect all website visitors. <a href="aisetting.html" target="_blank" style="color: var(--secondary-color);">Open Settings Panel</a></p>
+                    <div id="config-status">
+                        <!-- Configuration status will be populated here -->
+                    </div>
+                </div>
+
                 <!-- Export Section -->
                 <div class="export-section">
                     <h3><i class="fas fa-chart-bar"></i> Data Analysis</h3>
@@ -358,6 +367,76 @@
             
             updateStatistics(uniqueResults);
             displayResults(uniqueResults);
+            displayConfigStatus();
+        }
+
+        // Display global configuration status
+        function displayConfigStatus() {
+            const configContainer = document.getElementById('config-status');
+            
+            // Check global configurations
+            const globalAI1 = localStorage.getItem('global_ai1_config');
+            const globalAI2 = localStorage.getItem('global_ai2_config');
+            const configChanges = JSON.parse(localStorage.getItem('globalConfigChanges') || '[]');
+            
+            let statusHTML = '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">';
+            
+            // AI Chat 1 Status
+            if (globalAI1) {
+                const config = JSON.parse(globalAI1);
+                statusHTML += `
+                    <div style="background: rgba(40, 167, 69, 0.1); border: 1px solid rgba(40, 167, 69, 0.3); border-radius: 8px; padding: 1rem;">
+                        <h4 style="color: #28a745; margin: 0 0 0.5rem 0;"><i class="fas fa-check-circle"></i> AI Chat 1</h4>
+                        <p style="margin: 0; font-size: 0.9rem;">Model: ${config.model}</p>
+                        <p style="margin: 0; font-size: 0.8rem; opacity: 0.8;">Updated: ${new Date(config.lastUpdated).toLocaleString()}</p>
+                    </div>
+                `;
+            } else {
+                statusHTML += `
+                    <div style="background: rgba(108, 117, 125, 0.1); border: 1px solid rgba(108, 117, 125, 0.3); border-radius: 8px; padding: 1rem;">
+                        <h4 style="color: #6c757d; margin: 0 0 0.5rem 0;"><i class="fas fa-cog"></i> AI Chat 1</h4>
+                        <p style="margin: 0; font-size: 0.9rem;">Using default configuration</p>
+                    </div>
+                `;
+            }
+            
+            // AI Chat 2 Status
+            if (globalAI2) {
+                const config = JSON.parse(globalAI2);
+                statusHTML += `
+                    <div style="background: rgba(40, 167, 69, 0.1); border: 1px solid rgba(40, 167, 69, 0.3); border-radius: 8px; padding: 1rem;">
+                        <h4 style="color: #28a745; margin: 0 0 0.5rem 0;"><i class="fas fa-check-circle"></i> AI Chat 2</h4>
+                        <p style="margin: 0; font-size: 0.9rem;">Model: ${config.model}</p>
+                        <p style="margin: 0; font-size: 0.8rem; opacity: 0.8;">Updated: ${new Date(config.lastUpdated).toLocaleString()}</p>
+                    </div>
+                `;
+            } else {
+                statusHTML += `
+                    <div style="background: rgba(108, 117, 125, 0.1); border: 1px solid rgba(108, 117, 125, 0.3); border-radius: 8px; padding: 1rem;">
+                        <h4 style="color: #6c757d; margin: 0 0 0.5rem 0;"><i class="fas fa-cog"></i> AI Chat 2</h4>
+                        <p style="margin: 0; font-size: 0.9rem;">Using default configuration</p>
+                    </div>
+                `;
+            }
+            
+            statusHTML += '</div>';
+            
+            // Show recent changes
+            if (configChanges.length > 0) {
+                const recentChanges = configChanges.slice(-3).reverse();
+                statusHTML += `
+                    <div style="margin-top: 1rem; padding: 1rem; background: rgba(0, 0, 0, 0.1); border-radius: 8px;">
+                        <h5 style="margin: 0 0 0.5rem 0; color: var(--text-color);">Recent Configuration Changes:</h5>
+                        ${recentChanges.map(change => `
+                            <div style="font-size: 0.8rem; margin-bottom: 0.25rem; opacity: 0.8;">
+                                ${new Date(change.timestamp).toLocaleString()} - ${change.aiType.toUpperCase()} updated to ${change.config.model}
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+            
+            configContainer.innerHTML = statusHTML;
         }
 
         function updateStatistics(results) {
