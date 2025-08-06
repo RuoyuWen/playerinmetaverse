@@ -333,10 +333,17 @@
             const totalResponses = results.length;
             const giftTasks = results.filter(r => r.task === 'gift_selection').length;
             const restaurantTasks = results.filter(r => r.task === 'restaurant_selection').length;
+            const gameTasks = results.filter(r => r.task === 'ai_conversation_game').length;
             
             document.getElementById('total-responses').textContent = totalResponses;
             document.getElementById('gift-tasks').textContent = giftTasks;
             document.getElementById('restaurant-tasks').textContent = restaurantTasks;
+            
+            // Update restaurant label to show game tasks if we have any
+            if (gameTasks > 0) {
+                document.getElementById('restaurant-tasks').textContent = gameTasks;
+                document.querySelector('#restaurant-tasks').parentNode.querySelector('.stat-label').textContent = 'AI Game Tasks';
+            }
             
             if (results.length === 0) {
                 noResults.style.display = 'block';
@@ -352,7 +359,25 @@
                 
                 resultsGrid.innerHTML = results.map((result, index) => {
                     const date = new Date(result.timestamp).toLocaleString();
-                    const taskName = result.task === 'gift_selection' ? '🎁 Gift Selection' : '🍽️ Restaurant Selection';
+                    let taskName, answerDisplay;
+                    
+                    // Determine task type and display format
+                    if (result.task === 'gift_selection') {
+                        taskName = '🎁 Gift Selection';
+                        answerDisplay = `Answer: ${result.answer}${result.answerContent ? ` - ${result.answerContent}` : ''}`;
+                    } else if (result.task === 'restaurant_selection') {
+                        taskName = '🍽️ Restaurant Selection';
+                        answerDisplay = `Answer: ${result.answer}${result.answerContent ? ` - ${result.answerContent}` : ''}`;
+                    } else if (result.task === 'ai_conversation_game') {
+                        taskName = '🎮 AI Game';
+                        const gameResultIcon = result.gameResult === 'success' ? '🎉' : '💀';
+                        const gameResultText = result.gameResult === 'success' ? 'Victory' : 'Game Over';
+                        answerDisplay = `Result: ${gameResultIcon} ${gameResultText}`;
+                    } else {
+                        taskName = '❓ Unknown Task';
+                        answerDisplay = result.answer ? `Answer: ${result.answer}` : 'No answer recorded';
+                    }
+                    
                     const source = result.taskType || (result.id.endsWith('ai') ? 'AI Chat 1' : 'AI Chat 2');
                     const hasChat = result.chatHistory && result.chatHistory.length > 0;
                     
@@ -364,9 +389,10 @@
                             </div>
                             <div class="result-task">${taskName} • ${source}</div>
                             <div class="result-answer">
-                                Answer: ${result.answer}${result.answerContent ? ` - ${result.answerContent}` : ''}
+                                ${answerDisplay}
                             </div>
                             ${result.conversationRounds ? `<div style="font-size: 0.8rem; color: #888; margin-top: 0.5rem;">💬 ${result.conversationRounds} conversation rounds</div>` : ''}
+                            ${result.finalState ? `<div style="font-size: 0.8rem; color: #888; margin-top: 0.5rem;">🎯 ${result.finalState}</div>` : ''}
                             
                             ${hasChat ? `
                                 <a href="#" class="download-link" onclick="downloadChatRecord(${index}); return false;">
@@ -398,9 +424,26 @@
             // Create formatted text content
             let textContent = `AI Chat Record: ${result.id}\n`;
             textContent += `==========================================\n\n`;
-            textContent += `Task: ${result.task === 'gift_selection' ? 'Gift Selection' : 'Restaurant Selection'}\n`;
+            
+            // Task type and result
+            if (result.task === 'gift_selection') {
+                textContent += `Task: Gift Selection\n`;
+                textContent += `Answer: ${result.answer}${result.answerContent ? ` - ${result.answerContent}` : ''}\n`;
+            } else if (result.task === 'restaurant_selection') {
+                textContent += `Task: Restaurant Selection\n`;
+                textContent += `Answer: ${result.answer}${result.answerContent ? ` - ${result.answerContent}` : ''}\n`;
+            } else if (result.task === 'ai_conversation_game') {
+                textContent += `Task: AI Conversation Game\n`;
+                textContent += `Game Result: ${result.gameResult === 'success' ? '🎉 Victory' : '💀 Game Over'}\n`;
+                textContent += `Final State: ${result.finalState || 'N/A'}\n`;
+            } else {
+                textContent += `Task: ${result.task || 'Unknown'}\n`;
+                if (result.answer) {
+                    textContent += `Answer: ${result.answer}\n`;
+                }
+            }
+            
             textContent += `Source: ${result.taskType || (result.id.endsWith('ai') ? 'AI Chat 1' : 'AI Chat 2')}\n`;
-            textContent += `Answer: ${result.answer}${result.answerContent ? ` - ${result.answerContent}` : ''}\n`;
             textContent += `Timestamp: ${new Date(result.timestamp).toLocaleString()}\n`;
             textContent += `Conversation Rounds: ${result.conversationRounds || 'N/A'}\n\n`;
             
