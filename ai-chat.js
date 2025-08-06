@@ -264,18 +264,34 @@ class AIChat {
         try {
             // Call OpenAI API
             const response = await this.callOpenAI(message);
-            this.addMessage(response, 'assistant');
             
-            // Increment conversation rounds AFTER successful AI response
-            this.conversationRounds++;
-            console.log(`💬 Round ${this.conversationRounds} completed`);
+            // Handle different response classes
+            const responseClass = response.class || 'none';
+            const content = response.content || response;
             
-            // Check if task should be enabled after AI responds
-            if (this.conversationRounds >= 3 && !this.taskEnabled) {
-                console.log('✅ 3 rounds reached - enabling task!');
-                setTimeout(() => {
-                    this.enableTask();
-                }, 500); // Small delay to ensure message is displayed first
+            // Display the content as conversation
+            this.addMessage(content, 'assistant');
+            
+            // Handle different response states
+            if (responseClass === 'fail') {
+                this.handleFailState();
+                return;
+            } else if (responseClass === 'success') {
+                this.handleSuccessState();
+                return;
+            } else if (responseClass === 'none') {
+                // Continue normal conversation
+                // Increment conversation rounds AFTER successful AI response
+                this.conversationRounds++;
+                console.log(`💬 Round ${this.conversationRounds} completed`);
+                
+                // Check if task should be enabled after AI responds
+                if (this.conversationRounds >= 3 && !this.taskEnabled) {
+                    console.log('✅ 3 rounds reached - enabling task!');
+                    setTimeout(() => {
+                        this.enableTask();
+                    }, 500); // Small delay to ensure message is displayed first
+                }
             }
         } catch (error) {
             console.error('AI Chat Error:', error);
@@ -314,7 +330,8 @@ class AIChat {
                 top_p: apiParams.top_p || 0.9,
                 frequency_penalty: apiParams.frequency_penalty || 0.0,
                 presence_penalty: apiParams.presence_penalty || 0.0,
-                stream: false
+                stream: false,
+                response_format: { type: "json_object" }
             })
         });
 
@@ -326,8 +343,21 @@ class AIChat {
         const data = await response.json();
         const assistantMessage = data.choices[0].message.content;
         
+        // Parse JSON response
+        let parsedResponse;
+        try {
+            parsedResponse = JSON.parse(assistantMessage);
+        } catch (error) {
+            console.error('Failed to parse JSON response:', error);
+            // Fallback to plain text if JSON parsing fails
+            parsedResponse = {
+                content: assistantMessage,
+                class: "none"
+            };
+        }
+        
         // Add assistant response to conversation history
-        this.messages.push({ role: 'assistant', content: assistantMessage });
+        this.messages.push({ role: 'assistant', content: parsedResponse.content || assistantMessage });
 
         // Keep conversation history reasonable (从配置文件获取历史长度限制)
         const maxHistory = this.config.maxHistoryLength || 20;
@@ -335,7 +365,7 @@ class AIChat {
             this.messages = this.messages.slice(-maxHistory);
         }
 
-        return assistantMessage;
+        return parsedResponse;
     }
 
     addMessage(message, sender) {
@@ -430,6 +460,65 @@ class AIChat {
         
         // Add a message about task activation
         this.addMessage('🎯 Great! You\'ve had a good conversation. Now you can complete the task below:', 'assistant');
+        this.scrollToBottom();
+    }
+
+    handleFailState() {
+        console.log('💀 Game Over - Fail state triggered');
+        
+        // Display game over message
+        this.addMessage('🎮 GAME OVER', 'assistant');
+        
+        // Disable chat functionality
+        this.chatInput.disabled = true;
+        this.sendBtn.disabled = true;
+        this.chatInput.placeholder = 'Game Over - Chat disabled';
+        this.sendBtn.innerHTML = '<i class="fas fa-ban"></i> Disabled';
+        this.sendBtn.style.opacity = '0.5';
+        this.sendBtn.style.cursor = 'not-allowed';
+        
+        // Also disable task if enabled
+        if (this.taskInput) {
+            this.taskInput.disabled = true;
+        }
+        if (this.submitBtn) {
+            this.submitBtn.disabled = true;
+        }
+        
+        this.scrollToBottom();
+    }
+
+    handleSuccessState() {
+        console.log('🎉 Game Success - Success state triggered');
+        
+        // Display success message
+        this.addMessage('🎉 Congratulations! Game completed successfully!', 'assistant');
+        
+        // Create and show completion button
+        const completionButton = document.createElement('button');
+        completionButton.textContent = 'Complete';
+        completionButton.className = 'submit-btn';
+        completionButton.style.margin = '10px auto';
+        completionButton.style.display = 'block';
+        completionButton.onclick = () => {
+            this.addMessage('✅ Task completed successfully!', 'assistant');
+            completionButton.disabled = true;
+            completionButton.textContent = 'Completed ✓';
+            
+            // Disable chat after completion
+            this.chatInput.disabled = true;
+            this.sendBtn.disabled = true;
+            this.chatInput.placeholder = 'Task completed - Chat disabled';
+            this.sendBtn.innerHTML = '<i class="fas fa-check"></i> Completed';
+            this.sendBtn.style.opacity = '0.5';
+        };
+        
+        // Add button to the chat container or task section
+        const taskSection = document.getElementById('task-section');
+        if (taskSection) {
+            taskSection.appendChild(completionButton);
+        }
+        
         this.scrollToBottom();
     }
 
