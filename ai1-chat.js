@@ -13,10 +13,22 @@ class AI1Chat {
         this.conversationRounds = 0;
         this.taskEnabled = false;
         
+        // Restaurant selection options
+        this.restaurantOptions = [
+            'Greek Restaurant - Specializes in grilled lamb skewers, salads, and grilled bread',
+            'Brazilian BBQ Restaurant - Rich buffet barbecue, tropical flavor side dishes',
+            'Moroccan Restaurant - Signature tagine, exotic spice flavors',
+            'Mexican Restaurant - Mexican burritos, grilled corn, avocado sauce',
+            'Hungarian Restaurant - Traditional beef stew, potato pancakes'
+        ];
+        
+        this.optionMapping = {}; // Will store A->actual option mapping
+        
         this.initializeElements();
         this.bindEvents();
         this.loadApiKey();
         this.initializeUI();
+        this.randomizeOptions();
     }
 
     loadConfig() {
@@ -351,11 +363,13 @@ class AI1Chat {
         const result = {
             id: resultId + 'ai1',
             answer: answer,
+            answerContent: this.optionMapping[answer], // Store the actual content
             timestamp: new Date().toISOString(),
             task: 'restaurant_selection',
             chatHistory: chatHistory,
             conversationRounds: this.conversationRounds,
-            taskType: 'AI Chat 2'
+            taskType: 'AI Chat 2',
+            optionMapping: this.optionMapping // Store full mapping for reference
         };
 
         console.log('📊 Complete result object (AI1):', result);
@@ -391,6 +405,30 @@ class AI1Chat {
         // Generate 6-digit sequential ID
         const existingResults = JSON.parse(localStorage.getItem('airesults') || '[]');
         return String(existingResults.length + 1).padStart(6, '0');
+    }
+
+    // Randomize restaurant options and update DOM
+    randomizeOptions() {
+        // Shuffle the restaurant options
+        const shuffled = [...this.restaurantOptions].sort(() => Math.random() - 0.5);
+        const letters = ['A', 'B', 'C', 'D', 'E'];
+        
+        // Create mapping
+        letters.forEach((letter, index) => {
+            this.optionMapping[letter] = shuffled[index];
+        });
+        
+        // Update DOM
+        const taskOptions = document.querySelector('.task-options');
+        if (taskOptions) {
+            const optionElements = taskOptions.querySelectorAll('.option');
+            optionElements.forEach((element, index) => {
+                const letter = letters[index];
+                element.innerHTML = `<span class="option-label">${letter}.</span> ${shuffled[index]}`;
+            });
+        }
+        
+        console.log('🎲 Restaurant options randomized:', this.optionMapping);
     }
 }
 

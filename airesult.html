@@ -363,7 +363,9 @@
                                 <span class="result-timestamp">${date}</span>
                             </div>
                             <div class="result-task">${taskName} • ${source}</div>
-                            <div class="result-answer">Answer: ${result.answer}</div>
+                            <div class="result-answer">
+                                Answer: ${result.answer}${result.answerContent ? ` - ${result.answerContent}` : ''}
+                            </div>
                             ${result.conversationRounds ? `<div style="font-size: 0.8rem; color: #888; margin-top: 0.5rem;">💬 ${result.conversationRounds} conversation rounds</div>` : ''}
                             
                             ${hasChat ? `
@@ -398,9 +400,18 @@
             textContent += `==========================================\n\n`;
             textContent += `Task: ${result.task === 'gift_selection' ? 'Gift Selection' : 'Restaurant Selection'}\n`;
             textContent += `Source: ${result.taskType || (result.id.endsWith('ai') ? 'AI Chat 1' : 'AI Chat 2')}\n`;
-            textContent += `Answer: ${result.answer}\n`;
+            textContent += `Answer: ${result.answer}${result.answerContent ? ` - ${result.answerContent}` : ''}\n`;
             textContent += `Timestamp: ${new Date(result.timestamp).toLocaleString()}\n`;
             textContent += `Conversation Rounds: ${result.conversationRounds || 'N/A'}\n\n`;
+            
+            // Add option mapping if available
+            if (result.optionMapping) {
+                textContent += `Option Mapping:\n`;
+                Object.entries(result.optionMapping).forEach(([letter, content]) => {
+                    textContent += `${letter}. ${content}\n`;
+                });
+                textContent += `\n`;
+            }
             
             textContent += `Chat History:\n`;
             textContent += `-`.repeat(20) + `\n\n`;

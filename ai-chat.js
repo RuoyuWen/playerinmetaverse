@@ -13,10 +13,22 @@ class AIChat {
         this.conversationRounds = 0;
         this.taskEnabled = false;
         
+        // Gift selection options
+        this.giftOptions = [
+            'Adjustable brightness reading lamp',
+            'Creative portable water bottle', 
+            'Desktop mini plant (easy-care cactus)',
+            'Vintage style notebook',
+            'Scented candle gift box'
+        ];
+        
+        this.optionMapping = {}; // Will store A->actual option mapping
+        
         this.initializeElements();
         this.bindEvents();
         this.loadApiKey();
         this.initializeUI();
+        this.randomizeOptions();
     }
 
     loadConfig() {
@@ -351,11 +363,13 @@ class AIChat {
         const result = {
             id: resultId + 'ai',
             answer: answer,
+            answerContent: this.optionMapping[answer], // Store the actual content
             timestamp: new Date().toISOString(),
             task: 'gift_selection',
             chatHistory: chatHistory,
             conversationRounds: this.conversationRounds,
-            taskType: 'AI Chat 1'
+            taskType: 'AI Chat 1',
+            optionMapping: this.optionMapping // Store full mapping for reference
         };
 
         console.log('📊 Complete result object:', result);
@@ -391,6 +405,30 @@ class AIChat {
         // Generate 6-digit sequential ID
         const existingResults = JSON.parse(localStorage.getItem('airesults') || '[]');
         return String(existingResults.length + 1).padStart(6, '0');
+    }
+
+    // Randomize gift options and update DOM
+    randomizeOptions() {
+        // Shuffle the gift options
+        const shuffled = [...this.giftOptions].sort(() => Math.random() - 0.5);
+        const letters = ['A', 'B', 'C', 'D', 'E'];
+        
+        // Create mapping
+        letters.forEach((letter, index) => {
+            this.optionMapping[letter] = shuffled[index];
+        });
+        
+        // Update DOM
+        const taskOptions = document.querySelector('.task-options');
+        if (taskOptions) {
+            const optionElements = taskOptions.querySelectorAll('.option');
+            optionElements.forEach((element, index) => {
+                const letter = letters[index];
+                element.innerHTML = `<span class="option-label">${letter}.</span> ${shuffled[index]}`;
+            });
+        }
+        
+        console.log('🎲 Gift options randomized:', this.optionMapping);
     }
 }
 
