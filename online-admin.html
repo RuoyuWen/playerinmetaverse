@@ -256,6 +256,30 @@
             font-family: 'Source Code Pro', monospace;
             color: #00d4ff;
         }
+
+        .clear-results-btn {
+            background: linear-gradient(135deg, #ff6b35, #f7931e);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0.5rem;
+        }
+
+        .clear-results-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 53, 0.4);
+        }
+
+        .clear-results-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
     </style>
 </head>
 <body>
@@ -394,6 +418,34 @@
                     </div>
                 </div>
 
+                <!-- Cloud Results Management -->
+                <div class="config-editor">
+                    <h3><i class="fas fa-cloud-download-alt"></i> Cloud Results Management</h3>
+                    
+                    <div style="text-align: center; margin-bottom: 2rem;">
+                        <button class="save-btn" onclick="loadCloudResults()" id="load-results-btn">
+                            <i class="fas fa-download"></i> Load Results from Cloud
+                        </button>
+                        <button class="refresh-btn" onclick="viewCloudResults()" id="view-results-btn">
+                            <i class="fas fa-eye"></i> View Cloud Results
+                        </button>
+                        <button class="clear-results-btn" onclick="clearCloudResults()" id="clear-cloud-btn" style="background: linear-gradient(135deg, #dc3545, #c82333); margin: 0.5rem;">
+                            <i class="fas fa-trash-alt"></i> Clear Cloud Results
+                        </button>
+                    </div>
+
+                    <!-- Results Display Area -->
+                    <div id="cloud-results-display" style="display: none;">
+                        <h4 style="color: var(--secondary-color); margin-bottom: 1rem;">☁️ Cloud Results</h4>
+                        <div id="cloud-results-content" style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px; max-height: 400px; overflow-y: auto; font-family: 'Source Code Pro', monospace; font-size: 0.8rem; white-space: pre-wrap;"></div>
+                        <div style="text-align: center; margin-top: 1rem;">
+                            <button class="refresh-btn" onclick="downloadCloudResults()" style="font-size: 0.8rem;">
+                                <i class="fas fa-download"></i> Download as JSON
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Setup Instructions -->
                 <div class="setup-instructions">
                     <h4><i class="fas fa-wrench"></i> Setup Instructions (One-time)</h4>
@@ -411,6 +463,7 @@
                     </ol>
                     <p style="margin-top: 1rem; color: #00d4ff;">
                         <strong>Alternative:</strong> You can also use Firebase, MongoDB Atlas, or any other cloud JSON storage service.
+                        <br><strong>Results Storage:</strong> Chat results are automatically saved to a separate cloud storage bin for admin access.
                     </p>
                 </div>
             </div>
@@ -558,6 +611,157 @@
                 notification.classList.remove('show');
                 setTimeout(() => notification.remove(), 300);
             }, 5000);
+        }
+
+        // Cloud Results Management Functions
+        async function loadCloudResults() {
+            const loadBtn = document.getElementById('load-results-btn');
+            loadBtn.disabled = true;
+            loadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+
+            try {
+                const RESULTS_ENDPOINT = 'https://api.jsonbin.io/v3/b/6892ab887b4b8670d8ae42e0';
+                const API_KEY = '$2a$10$XIZ3tMFNAQ56XbxSVUR2NeboaNtWqUvRveuIUkDQ1ceUUjPgHQzBq';
+                
+                const response = await fetch(`${RESULTS_ENDPOINT}/latest`, {
+                    method: 'GET',
+                    headers: {
+                        'X-Master-Key': API_KEY
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                const results = data.record?.results || [];
+                
+                showNotification(`Loaded ${results.length} results from cloud`, 'success');
+                console.log('☁️ Cloud results loaded:', results);
+                
+                // Store in localStorage for local access
+                localStorage.setItem('cloudResults', JSON.stringify(results));
+                
+            } catch (error) {
+                console.error('❌ Failed to load cloud results:', error);
+                showNotification('Failed to load cloud results: ' + error.message, 'error');
+            } finally {
+                loadBtn.disabled = false;
+                loadBtn.innerHTML = '<i class="fas fa-download"></i> Load Results from Cloud';
+            }
+        }
+
+        async function viewCloudResults() {
+            const viewBtn = document.getElementById('view-results-btn');
+            viewBtn.disabled = true;
+            viewBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+
+            try {
+                const RESULTS_ENDPOINT = 'https://api.jsonbin.io/v3/b/6892ab887b4b8670d8ae42e0';
+                const API_KEY = '$2a$10$XIZ3tMFNAQ56XbxSVUR2NeboaNtWqUvRveuIUkDQ1ceUUjPgHQzBq';
+                
+                const response = await fetch(`${RESULTS_ENDPOINT}/latest`, {
+                    method: 'GET',
+                    headers: {
+                        'X-Master-Key': API_KEY
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                const results = data.record?.results || [];
+                
+                // Display results
+                const displayArea = document.getElementById('cloud-results-display');
+                const contentArea = document.getElementById('cloud-results-content');
+                
+                displayArea.style.display = 'block';
+                contentArea.textContent = JSON.stringify(results, null, 2);
+                
+                showNotification(`Viewing ${results.length} cloud results`, 'success');
+                
+                // Store current results for download
+                window.currentCloudResults = results;
+                
+            } catch (error) {
+                console.error('❌ Failed to view cloud results:', error);
+                showNotification('Failed to view cloud results: ' + error.message, 'error');
+            } finally {
+                viewBtn.disabled = false;
+                viewBtn.innerHTML = '<i class="fas fa-eye"></i> View Cloud Results';
+            }
+        }
+
+        async function clearCloudResults() {
+            if (!confirm('Are you sure you want to clear ALL cloud results? This action cannot be undone!')) {
+                return;
+            }
+
+            const clearBtn = document.getElementById('clear-cloud-btn');
+            clearBtn.disabled = true;
+            clearBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Clearing...';
+
+            try {
+                const RESULTS_ENDPOINT = 'https://api.jsonbin.io/v3/b/6892ab887b4b8670d8ae42e0';
+                const API_KEY = '$2a$10$XIZ3tMFNAQ56XbxSVUR2NeboaNtWqUvRveuIUkDQ1ceUUjPgHQzBq';
+                
+                const emptyData = {
+                    version: Date.now(),
+                    lastUpdated: new Date().toISOString(),
+                    results: []
+                };
+
+                const response = await fetch(RESULTS_ENDPOINT, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': API_KEY
+                    },
+                    body: JSON.stringify(emptyData)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                showNotification('Cloud results cleared successfully', 'warning');
+                
+                // Clear display
+                const displayArea = document.getElementById('cloud-results-display');
+                displayArea.style.display = 'none';
+                
+            } catch (error) {
+                console.error('❌ Failed to clear cloud results:', error);
+                showNotification('Failed to clear cloud results: ' + error.message, 'error');
+            } finally {
+                clearBtn.disabled = false;
+                clearBtn.innerHTML = '<i class="fas fa-trash-alt"></i> Clear Cloud Results';
+            }
+        }
+
+        function downloadCloudResults() {
+            if (!window.currentCloudResults || window.currentCloudResults.length === 0) {
+                showNotification('No cloud results to download. Please view results first.', 'warning');
+                return;
+            }
+
+            const filename = `cloud_results_${new Date().toISOString().split('T')[0]}.json`;
+            const blob = new Blob([JSON.stringify(window.currentCloudResults, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showNotification('Cloud results downloaded successfully', 'success');
         }
     </script>
 </body>

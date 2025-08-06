@@ -711,7 +711,7 @@ class AIChat {
         console.log('🎲 Gift options randomized with seed:', sessionSeed, this.optionMapping);
     }
 
-    // Save result to central storage (GitHub Gist)
+    // Save result to central storage (Cloud-based using JSONBin)
     async saveToCentralStorage(result) {
         try {
             // Add session info for tracking
@@ -724,32 +724,84 @@ class AIChat {
                 ipHash: await this.getSimpleFingerprint() // Simple fingerprint for tracking
             };
 
-            // Use a webhook service or simple storage endpoint
-            const STORAGE_ENDPOINT = 'https://api.github.com/gists';
+            console.log('🌐 Attempting to save to central cloud storage:', enhancedResult);
             
-            // Create gist data
-            const gistData = {
-                description: `AI Chat Result - ${result.id}`,
-                public: false,
-                files: {
-                    [`result_${result.id}.json`]: {
-                        content: JSON.stringify(enhancedResult, null, 2)
-                    }
-                }
-            };
-
-            console.log('🌐 Attempting to save to central storage:', enhancedResult);
+            // Try to save to cloud storage (using same system as global config)
+            const cloudSaved = await this.saveToCloudStorage(enhancedResult);
             
-            // Note: This requires a GitHub token, which should be handled by your backend
-            // For now, we'll use a simple localStorage backup and console logging
+            if (cloudSaved) {
+                console.log('☁️ Successfully saved to cloud storage');
+            } else {
+                console.log('⚠️ Cloud save failed, using localStorage backup');
+            }
+            
+            // Always save to localStorage as backup
             const centralResults = JSON.parse(localStorage.getItem('centralResults') || '[]');
             centralResults.push(enhancedResult);
             localStorage.setItem('centralResults', JSON.stringify(centralResults));
             
-            console.log('📡 Saved to central storage simulation:', enhancedResult);
+            console.log('📡 Saved to central storage (local backup):', enhancedResult);
             
         } catch (error) {
             console.error('❌ Failed to save to central storage:', error);
+        }
+    }
+
+    // Save individual result to cloud storage
+    async saveToCloudStorage(result) {
+        try {
+            // Use a dedicated JSONBin for storing chat results
+            const RESULTS_ENDPOINT = 'https://api.jsonbin.io/v3/b/6892ab887b4b8670d8ae42e0'; // Results storage bin
+            const API_KEY = '$2a$10$XIZ3tMFNAQ56XbxSVUR2NeboaNtWqUvRveuIUkDQ1ceUUjPgHQzBq'; // Same API key as config
+            
+            // Get existing results from cloud
+            let existingResults = [];
+            try {
+                const getResponse = await fetch(`${RESULTS_ENDPOINT}/latest`, {
+                    method: 'GET',
+                    headers: {
+                        'X-Master-Key': API_KEY
+                    }
+                });
+                
+                if (getResponse.ok) {
+                    const data = await getResponse.json();
+                    existingResults = data.record?.results || [];
+                }
+            } catch (e) {
+                console.log('📋 No existing results found, starting fresh');
+            }
+            
+            // Add new result
+            existingResults.push(result);
+            
+            // Save updated results back to cloud
+            const saveData = {
+                version: Date.now(),
+                lastUpdated: new Date().toISOString(),
+                results: existingResults
+            };
+            
+            const response = await fetch(RESULTS_ENDPOINT, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Master-Key': API_KEY
+                },
+                body: JSON.stringify(saveData)
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const responseData = await response.json();
+            console.log('✅ Result saved to cloud successfully:', responseData);
+            return true;
+            
+        } catch (error) {
+            console.error('❌ Failed to save result to cloud:', error);
+            return false;
         }
     }
 
