@@ -7,7 +7,7 @@
 class OnlineGlobalConfig {
     constructor() {
         this.configEndpoint = 'https://api.jsonbin.io/v3/b/6892ab887b4b8670d8ae42df'; // Your JSONBin ID
-        this.apiKey = '$2a$10$5TnfTLmPf748ZYyP4QUtNeN.IrUikxZfISRpo17ROvabgGg9SLjuS'; // Your JSONBin API key
+        this.apiKey = '$2a$10$XIZ3tMFNAQ56XbxSVUR2NeboaNtWqUvRveuIUkDQ1ceUUjPgHQzBq'; // Your correct JSONBin API key
         this.fallbackConfig = this.getDefaultConfig();
         this.currentConfig = null;
         this.configVersion = null;
