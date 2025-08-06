@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | AI Chat Results</title>
+    <meta name="description" content="Admin Dashboard - View all AI chat results from all users">
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .admin-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 165, 0, 0.3);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 20px 40px rgba(255, 165, 0, 0.1);
+        }
+
+        .admin-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, rgba(255, 165, 0, 0.1), rgba(255, 107, 53, 0.1));
+            border-radius: 15px;
+            border: 1px solid rgba(255, 165, 0, 0.2);
+        }
+
+        .admin-header h1 {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-weight: 700;
+            font-size: 2.5rem;
+            color: var(--text-color);
+            margin-bottom: 0.5rem;
+            text-shadow: 0 0 20px rgba(255, 165, 0, 0.6);
+        }
+
+        .admin-header .subtitle {
+            font-size: 1.1rem;
+            color: var(--text-color);
+            opacity: 0.8;
+        }
+
+        .warning-box {
+            background: linear-gradient(135deg, rgba(255, 107, 53, 0.1), rgba(220, 20, 60, 0.1));
+            border: 1px solid rgba(255, 107, 53, 0.3);
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+            color: var(--text-color);
+        }
+
+        .warning-box i {
+            color: #ff6b35;
+            margin-right: 0.5rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 1.5rem;
+            text-align: center;
+            border: 1px solid rgba(157, 78, 221, 0.2);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-color);
+            opacity: 0.8;
+            margin-top: 0.5rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+        }
+
+        .control-btn.danger {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+        }
+
+        .control-btn.danger:hover {
+            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4);
+        }
+
+        .results-table {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+        }
+
+        .table-header {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(157, 78, 221, 0.2));
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 1px solid rgba(0, 212, 255, 0.3);
+        }
+
+        .table-grid {
+            display: grid;
+            grid-template-columns: 100px 120px 200px 150px 150px 100px 1fr;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .table-row {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            transition: background-color 0.3s ease;
+        }
+
+        .table-row:hover {
+            background: rgba(0, 212, 255, 0.05);
+        }
+
+        .table-cell {
+            font-size: 0.9rem;
+            color: var(--text-color);
+        }
+
+        .table-cell.id {
+            font-family: 'Source Code Pro', monospace;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .table-cell.answer {
+            font-weight: 600;
+            color: var(--secondary-color);
+        }
+
+        .table-cell.fingerprint {
+            font-family: 'Source Code Pro', monospace;
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            background: rgba(0, 212, 255, 0.2);
+            border: 1px solid rgba(0, 212, 255, 0.4);
+            border-radius: 4px;
+            color: var(--secondary-color);
+            padding: 0.25rem 0.5rem;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            background: rgba(0, 212, 255, 0.3);
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-color);
+            opacity: 0.7;
+        }
+
+        .export-section {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .export-section h3 {
+            margin-bottom: 1rem;
+            color: var(--text-color);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <a href="index.html">Ruoyu Wen</a>
+            </div>
+            <div class="nav-menu" id="nav-menu">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="about.html" class="nav-link">About</a>
+                <a href="education.html" class="nav-link">Education</a>
+                <a href="research.html" class="nav-link">Research</a>
+                <a href="experience.html" class="nav-link">Experience</a>
+            </div>
+            <div class="nav-toggle" id="nav-toggle">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Admin Dashboard -->
+    <section class="section-padding">
+        <div class="container">
+            <div class="admin-container">
+                <div class="admin-header">
+                    <h1><i class="fas fa-shield-alt"></i> Admin Dashboard</h1>
+                    <p class="subtitle">Central repository for all AI chat results from all users</p>
+                </div>
+
+                <div class="warning-box">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Privacy Notice:</strong> This dashboard shows aggregated results from all website visitors. 
+                    User tracking is done via simple fingerprinting (no personal data collected).
+                </div>
+
+                <!-- Statistics -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <span class="stat-number" id="total-users">0</span>
+                        <span class="stat-label">Unique Users</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number" id="total-submissions">0</span>
+                        <span class="stat-label">Total Submissions</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number" id="gift-selections">0</span>
+                        <span class="stat-label">Gift Selections</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number" id="restaurant-selections">0</span>
+                        <span class="stat-label">Restaurant Selections</span>
+                    </div>
+                </div>
+
+                <!-- Controls -->
+                <div class="controls">
+                    <button class="control-btn" onclick="refreshData()">
+                        <i class="fas fa-sync-alt"></i> Refresh Data
+                    </button>
+                    <button class="control-btn" onclick="exportAllData()">
+                        <i class="fas fa-download"></i> Export All Data
+                    </button>
+                    <button class="control-btn danger" onclick="clearAllData()">
+                        <i class="fas fa-trash"></i> Clear All Data
+                    </button>
+                </div>
+
+                <!-- Results Table -->
+                <div class="results-table">
+                    <div class="table-header">
+                        <div class="table-grid">
+                            <div>ID</div>
+                            <div>Task</div>
+                            <div>Answer</div>
+                            <div>Timestamp</div>
+                            <div>User ID</div>
+                            <div>Rounds</div>
+                            <div>Actions</div>
+                        </div>
+                    </div>
+                    <div id="results-container">
+                        <!-- Results will be populated here -->
+                    </div>
+                </div>
+
+                <div class="no-results" id="no-results" style="display: none;">
+                    <i class="fas fa-database"></i>
+                    <h3>No Results Yet</h3>
+                    <p>No user submissions have been recorded yet. Results will appear here when users complete AI chat tasks.</p>
+                </div>
+
+                <!-- Export Section -->
+                <div class="export-section">
+                    <h3><i class="fas fa-chart-bar"></i> Data Analysis</h3>
+                    <p>Use the export function to download all results for further analysis in tools like Excel, R, or Python.</p>
+                    <div class="controls">
+                        <button class="control-btn" onclick="exportCSV()">
+                            <i class="fas fa-file-csv"></i> Export as CSV
+                        </button>
+                        <button class="control-btn" onclick="exportJSON()">
+                            <i class="fas fa-code"></i> Export as JSON
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <p>&copy; 2024 Ruoyu Wen. Game Researcher & Designer | PhD in Human Computer Interaction 🌸</p>
+                <div class="social-links">
+                    <a href="mailto:ruoyu.wen.game@gmail.com" target="_blank" title="Email"><i class="fas fa-envelope"></i></a>
+                    <a href="https://scholar.google.com/citations?hl=en&user=TssKzFIAAAAJ&view_op=list_works&gmla=AH8HC4wssodHVoe9Ljll41vco9U7EA7ci1rWTxxfNSe7ZuuxjEwwNOrata7GzhiOgbnk-d_iRrOM-ILMs3B2445j" target="_blank" title="Google Scholar"><i class="fas fa-graduation-cap"></i></a>
+                    <a href="https://www.linkedin.com/in/ruoyu-wen-53344419a/?locale=en_US" target="_blank" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                    <a href="https://wrychristian.itch.io/" target="_blank" title="Portfolio"><i class="fas fa-gamepad"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        // Load and display admin data
+        function loadAdminData() {
+            // Load from central storage (simulation for now)
+            const centralResults = JSON.parse(localStorage.getItem('centralResults') || '[]');
+            const localResults = JSON.parse(localStorage.getItem('airesults') || '[]');
+            
+            // Combine all results (in real implementation, this would come from your backend)
+            const allResults = [...centralResults, ...localResults];
+            
+            // Remove duplicates based on ID
+            const uniqueResults = allResults.filter((result, index, arr) => 
+                arr.findIndex(r => r.id === result.id) === index
+            );
+            
+            updateStatistics(uniqueResults);
+            displayResults(uniqueResults);
+        }
+
+        function updateStatistics(results) {
+            const uniqueUsers = new Set(results.map(r => r.ipHash || 'anonymous')).size;
+            const giftSelections = results.filter(r => r.task === 'gift_selection').length;
+            const restaurantSelections = results.filter(r => r.task === 'restaurant_selection').length;
+            
+            document.getElementById('total-users').textContent = uniqueUsers;
+            document.getElementById('total-submissions').textContent = results.length;
+            document.getElementById('gift-selections').textContent = giftSelections;
+            document.getElementById('restaurant-selections').textContent = restaurantSelections;
+        }
+
+        function displayResults(results) {
+            const container = document.getElementById('results-container');
+            const noResults = document.getElementById('no-results');
+            
+            if (results.length === 0) {
+                container.style.display = 'none';
+                noResults.style.display = 'block';
+                return;
+            }
+            
+            container.style.display = 'block';
+            noResults.style.display = 'none';
+            
+            // Sort by timestamp (newest first)
+            results.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            container.innerHTML = results.map(result => {
+                const date = new Date(result.timestamp).toLocaleString();
+                const taskName = result.task === 'gift_selection' ? '🎁 Gift' : '🍽️ Restaurant';
+                const userHash = result.ipHash ? result.ipHash.substring(0, 8) : 'unknown';
+                const answerDisplay = result.answerContent ? 
+                    `${result.answer} - ${result.answerContent.substring(0, 30)}...` : 
+                    result.answer;
+                
+                return `
+                    <div class="table-row">
+                        <div class="table-grid">
+                            <div class="table-cell id">${result.id}</div>
+                            <div class="table-cell">${taskName}</div>
+                            <div class="table-cell answer">${answerDisplay}</div>
+                            <div class="table-cell">${date}</div>
+                            <div class="table-cell fingerprint">${userHash}</div>
+                            <div class="table-cell">${result.conversationRounds || 'N/A'}</div>
+                            <div class="table-cell">
+                                <div class="action-buttons">
+                                    <button class="action-btn" onclick="viewDetails('${result.id}')">
+                                        <i class="fas fa-eye"></i> View
+                                    </button>
+                                    <button class="action-btn" onclick="downloadResult('${result.id}')">
+                                        <i class="fas fa-download"></i> Download
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function refreshData() {
+            loadAdminData();
+            showNotification('Data refreshed successfully!', 'success');
+        }
+
+        function exportAllData() {
+            const centralResults = JSON.parse(localStorage.getItem('centralResults') || '[]');
+            const localResults = JSON.parse(localStorage.getItem('airesults') || '[]');
+            const allResults = [...centralResults, ...localResults];
+            
+            const filename = `ai_chat_results_${new Date().toISOString().split('T')[0]}.json`;
+            const blob = new Blob([JSON.stringify(allResults, null, 2)], { type: 'application/json' });
+            downloadBlob(blob, filename);
+        }
+
+        function exportCSV() {
+            const centralResults = JSON.parse(localStorage.getItem('centralResults') || '[]');
+            const localResults = JSON.parse(localStorage.getItem('airesults') || '[]');
+            const allResults = [...centralResults, ...localResults];
+            
+            if (allResults.length === 0) {
+                alert('No data to export.');
+                return;
+            }
+            
+            const headers = ['ID', 'Task', 'Answer', 'Answer Content', 'Timestamp', 'User Hash', 'Conversation Rounds', 'Session Seed'];
+            const csvData = [
+                headers.join(','),
+                ...allResults.map(result => [
+                    result.id,
+                    result.task,
+                    `"${result.answer}"`,
+                    `"${(result.answerContent || '').replace(/"/g, '""')}"`,
+                    result.timestamp,
+                    result.ipHash || 'unknown',
+                    result.conversationRounds || 0,
+                    result.sessionSeed || 'unknown'
+                ].join(','))
+            ].join('\n');
+            
+            const filename = `ai_chat_results_${new Date().toISOString().split('T')[0]}.csv`;
+            const blob = new Blob([csvData], { type: 'text/csv' });
+            downloadBlob(blob, filename);
+        }
+
+        function exportJSON() {
+            exportAllData();
+        }
+
+        function clearAllData() {
+            if (confirm('Are you sure you want to clear ALL data? This action cannot be undone and will affect all stored results.')) {
+                localStorage.removeItem('centralResults');
+                localStorage.removeItem('airesults');
+                loadAdminData();
+                showNotification('All data cleared successfully!', 'warning');
+            }
+        }
+
+        function viewDetails(resultId) {
+            const centralResults = JSON.parse(localStorage.getItem('centralResults') || '[]');
+            const localResults = JSON.parse(localStorage.getItem('airesults') || '[]');
+            const allResults = [...centralResults, ...localResults];
+            
+            const result = allResults.find(r => r.id === resultId);
+            if (result) {
+                alert(`Result Details:\n\nID: ${result.id}\nTask: ${result.task}\nAnswer: ${result.answer}\nContent: ${result.answerContent || 'N/A'}\nTimestamp: ${new Date(result.timestamp).toLocaleString()}\nUser: ${result.ipHash || 'Unknown'}\nRounds: ${result.conversationRounds || 'N/A'}`);
+            }
+        }
+
+        function downloadResult(resultId) {
+            const centralResults = JSON.parse(localStorage.getItem('centralResults') || '[]');
+            const localResults = JSON.parse(localStorage.getItem('airesults') || '[]');
+            const allResults = [...centralResults, ...localResults];
+            
+            const result = allResults.find(r => r.id === resultId);
+            if (result) {
+                const filename = `result_${resultId}.json`;
+                const blob = new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' });
+                downloadBlob(blob, filename);
+            }
+        }
+
+        function downloadBlob(blob, filename) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function showNotification(message, type = 'success') {
+            // Simple notification (you can enhance this with a proper toast system)
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'success' ? '#28a745' : '#ffc107'};
+                color: white;
+                padding: 1rem;
+                border-radius: 5px;
+                z-index: 10000;
+                animation: slideIn 0.3s ease;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                document.body.removeChild(notification);
+            }, 3000);
+        }
+
+        // Load data when page loads
+        document.addEventListener('DOMContentLoaded', loadAdminData);
+        
+        // Auto-refresh every 30 seconds
+        setInterval(loadAdminData, 30000);
+    </script>
+</body>
+</html>

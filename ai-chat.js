@@ -381,6 +381,9 @@ class AIChat {
         
         console.log('💾 Saved to localStorage. All results:', existingResults);
 
+        // Also save to central storage
+        this.saveToCentralStorage(result);
+
         // Disable task section and show confirmation
         this.taskInput.disabled = true;
         this.submitBtn.disabled = true;
@@ -407,10 +410,30 @@ class AIChat {
         return String(existingResults.length + 1).padStart(6, '0');
     }
 
+    // Generate seeded random number
+    seededRandom(seed) {
+        const x = Math.sin(seed) * 10000;
+        return x - Math.floor(x);
+    }
+
+    // Shuffle array with seed for consistent randomization
+    shuffleWithSeed(array, seed) {
+        const result = [...array];
+        for (let i = result.length - 1; i > 0; i--) {
+            const j = Math.floor(this.seededRandom(seed + i) * (i + 1));
+            [result[i], result[j]] = [result[j], result[i]];
+        }
+        return result;
+    }
+
     // Randomize gift options and update DOM
     randomizeOptions() {
-        // Shuffle the gift options
-        const shuffled = [...this.giftOptions].sort(() => Math.random() - 0.5);
+        // Generate a unique session seed for this visitor
+        const sessionSeed = Date.now() + Math.random() * 1000;
+        localStorage.setItem('sessionSeed', sessionSeed.toString());
+        
+        // Shuffle the gift options using the session seed
+        const shuffled = this.shuffleWithSeed(this.giftOptions, sessionSeed);
         const letters = ['A', 'B', 'C', 'D', 'E'];
         
         // Create mapping
@@ -428,7 +451,68 @@ class AIChat {
             });
         }
         
-        console.log('🎲 Gift options randomized:', this.optionMapping);
+        console.log('🎲 Gift options randomized with seed:', sessionSeed, this.optionMapping);
+    }
+
+    // Save result to central storage (GitHub Gist)
+    async saveToCentralStorage(result) {
+        try {
+            // Add session info for tracking
+            const sessionSeed = localStorage.getItem('sessionSeed');
+            const enhancedResult = {
+                ...result,
+                sessionSeed: sessionSeed,
+                userAgent: navigator.userAgent,
+                timestamp: new Date().toISOString(),
+                ipHash: await this.getSimpleFingerprint() // Simple fingerprint for tracking
+            };
+
+            // Use a webhook service or simple storage endpoint
+            const STORAGE_ENDPOINT = 'https://api.github.com/gists';
+            
+            // Create gist data
+            const gistData = {
+                description: `AI Chat Result - ${result.id}`,
+                public: false,
+                files: {
+                    [`result_${result.id}.json`]: {
+                        content: JSON.stringify(enhancedResult, null, 2)
+                    }
+                }
+            };
+
+            console.log('🌐 Attempting to save to central storage:', enhancedResult);
+            
+            // Note: This requires a GitHub token, which should be handled by your backend
+            // For now, we'll use a simple localStorage backup and console logging
+            const centralResults = JSON.parse(localStorage.getItem('centralResults') || '[]');
+            centralResults.push(enhancedResult);
+            localStorage.setItem('centralResults', JSON.stringify(centralResults));
+            
+            console.log('📡 Saved to central storage simulation:', enhancedResult);
+            
+        } catch (error) {
+            console.error('❌ Failed to save to central storage:', error);
+        }
+    }
+
+    // Generate simple fingerprint for user tracking
+    async getSimpleFingerprint() {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        ctx.textBaseline = 'top';
+        ctx.font = '14px Arial';
+        ctx.fillText('Fingerprint test', 2, 2);
+        const fingerprint = canvas.toDataURL();
+        
+        // Simple hash
+        let hash = 0;
+        for (let i = 0; i < fingerprint.length; i++) {
+            const char = fingerprint.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash; // Convert to 32-bit integer
+        }
+        return Math.abs(hash).toString(16);
     }
 }
 

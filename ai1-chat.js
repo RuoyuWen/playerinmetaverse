@@ -381,6 +381,9 @@ class AI1Chat {
         
         console.log('💾 Saved to localStorage (AI1). All results:', existingResults);
 
+        // Also save to central storage
+        this.saveToCentralStorage(result);
+
         // Disable task section and show confirmation
         this.taskInput.disabled = true;
         this.submitBtn.disabled = true;
@@ -407,10 +410,38 @@ class AI1Chat {
         return String(existingResults.length + 1).padStart(6, '0');
     }
 
+    // Generate seeded random number
+    seededRandom(seed) {
+        const x = Math.sin(seed) * 10000;
+        return x - Math.floor(x);
+    }
+
+    // Shuffle array with seed for consistent randomization
+    shuffleWithSeed(array, seed) {
+        const result = [...array];
+        for (let i = result.length - 1; i > 0; i--) {
+            const j = Math.floor(this.seededRandom(seed + i) * (i + 1));
+            [result[i], result[j]] = [result[j], result[i]];
+        }
+        return result;
+    }
+
     // Randomize restaurant options and update DOM
     randomizeOptions() {
-        // Shuffle the restaurant options
-        const shuffled = [...this.restaurantOptions].sort(() => Math.random() - 0.5);
+        // Get or generate session seed (same as AI Chat 1 for consistency)
+        let sessionSeed = localStorage.getItem('sessionSeed');
+        if (!sessionSeed) {
+            sessionSeed = Date.now() + Math.random() * 1000;
+            localStorage.setItem('sessionSeed', sessionSeed.toString());
+        } else {
+            sessionSeed = parseFloat(sessionSeed);
+        }
+        
+        // Use a different offset for restaurant vs gift to ensure different randomization
+        const restaurantSeed = sessionSeed + 12345;
+        
+        // Shuffle the restaurant options using the session seed
+        const shuffled = this.shuffleWithSeed(this.restaurantOptions, restaurantSeed);
         const letters = ['A', 'B', 'C', 'D', 'E'];
         
         // Create mapping
@@ -428,7 +459,53 @@ class AI1Chat {
             });
         }
         
-        console.log('🎲 Restaurant options randomized:', this.optionMapping);
+        console.log('🎲 Restaurant options randomized with seed:', restaurantSeed, this.optionMapping);
+    }
+
+    // Save result to central storage (same as AI Chat 1)
+    async saveToCentralStorage(result) {
+        try {
+            // Add session info for tracking
+            const sessionSeed = localStorage.getItem('sessionSeed');
+            const enhancedResult = {
+                ...result,
+                sessionSeed: sessionSeed,
+                userAgent: navigator.userAgent,
+                timestamp: new Date().toISOString(),
+                ipHash: await this.getSimpleFingerprint() // Simple fingerprint for tracking
+            };
+
+            console.log('🌐 Attempting to save to central storage (AI1):', enhancedResult);
+            
+            // Use the same central storage as AI Chat 1
+            const centralResults = JSON.parse(localStorage.getItem('centralResults') || '[]');
+            centralResults.push(enhancedResult);
+            localStorage.setItem('centralResults', JSON.stringify(centralResults));
+            
+            console.log('📡 Saved to central storage simulation (AI1):', enhancedResult);
+            
+        } catch (error) {
+            console.error('❌ Failed to save to central storage (AI1):', error);
+        }
+    }
+
+    // Generate simple fingerprint for user tracking (same as AI Chat 1)
+    async getSimpleFingerprint() {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        ctx.textBaseline = 'top';
+        ctx.font = '14px Arial';
+        ctx.fillText('Fingerprint test', 2, 2);
+        const fingerprint = canvas.toDataURL();
+        
+        // Simple hash
+        let hash = 0;
+        for (let i = 0; i < fingerprint.length; i++) {
+            const char = fingerprint.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash; // Convert to 32-bit integer
+        }
+        return Math.abs(hash).toString(16);
     }
 }
 
