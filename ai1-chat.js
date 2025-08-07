@@ -264,22 +264,38 @@ class AI1Chat {
         try {
             // Call OpenAI API
             const response = await this.callOpenAI(message);
-            this.addMessage(response, 'assistant');
             
-            // Increment conversation rounds AFTER successful AI response
-            this.conversationRounds++;
-            console.log(`🍽️ AI1 Round ${this.conversationRounds} completed`);
+            // Handle different response classes
+            const responseClass = response.class || 'none';
+            const content = response.content || response;
             
-            // Check if task should be enabled after AI responds
-            if (this.conversationRounds >= 3 && !this.taskEnabled) {
-                console.log('✅ AI1: 3 rounds reached - enabling restaurant task!');
-                setTimeout(() => {
-                    this.enableTask();
-                }, 500); // Small delay to ensure message is displayed first
+            // Display the content as conversation
+            this.addMessage(content, 'assistant');
+            
+            // Handle different response states
+            if (responseClass === 'fail') {
+                this.handleFailState();
+                return;
+            } else if (responseClass === 'success') {
+                this.handleSuccessState();
+                return;
+            } else if (responseClass === 'none') {
+                // Continue normal conversation
+                // Increment conversation rounds AFTER successful AI response
+                this.conversationRounds++;
+                console.log(`🍽️ Tom Round ${this.conversationRounds} completed`);
+                
+                // Check if task should be enabled after AI responds
+                if (this.conversationRounds >= 3 && !this.taskEnabled) {
+                    console.log('✅ Tom: 3 rounds reached - enabling task!');
+                    setTimeout(() => {
+                        this.enableTask();
+                    }, 500); // Small delay to ensure message is displayed first
+                }
             }
         } catch (error) {
             console.error('AI Chat Error:', error);
-            this.showError('Sorry, the AI assistant is temporarily unavailable. Please check your API Key or try again later.');
+            this.showError('抱歉，Tom暂时无法回应。请检查API Key或稍后重试。');
         } finally {
             this.showTyping(false);
         }
@@ -314,7 +330,8 @@ class AI1Chat {
                 top_p: apiParams.top_p || 0.9,
                 frequency_penalty: apiParams.frequency_penalty || 0.0,
                 presence_penalty: apiParams.presence_penalty || 0.0,
-                stream: false
+                stream: false,
+                response_format: { type: "json_object" }
             })
         });
 
@@ -326,8 +343,21 @@ class AI1Chat {
         const data = await response.json();
         const assistantMessage = data.choices[0].message.content;
         
+        // Parse JSON response
+        let parsedResponse;
+        try {
+            parsedResponse = JSON.parse(assistantMessage);
+        } catch (error) {
+            console.error('Failed to parse JSON response:', error);
+            // Fallback to plain text if JSON parsing fails
+            parsedResponse = {
+                content: assistantMessage,
+                class: "none"
+            };
+        }
+        
         // Add assistant response to conversation history
-        this.messages.push({ role: 'assistant', content: assistantMessage });
+        this.messages.push({ role: 'assistant', content: parsedResponse.content || assistantMessage });
 
         // Keep conversation history reasonable (从配置文件获取历史长度限制)
         const maxHistory = this.config.maxHistoryLength || 20;
@@ -335,7 +365,7 @@ class AI1Chat {
             this.messages = this.messages.slice(-maxHistory);
         }
 
-        return assistantMessage;
+        return parsedResponse;
     }
 
     addMessage(message, sender) {
@@ -445,6 +475,140 @@ class AI1Chat {
         // Add a message about task activation
         this.addMessage('🎯 Excellent! After our conversation, you can now complete the restaurant selection task below:', 'assistant');
         this.scrollToBottom();
+    }
+
+    handleFailState() {
+        console.log('💀 Game Over - Fail state triggered');
+        
+        // Display game over message
+        this.addMessage('🎮 GAME OVER', 'assistant');
+        
+        // Disable chat functionality
+        this.chatInput.disabled = true;
+        this.sendBtn.disabled = true;
+        this.chatInput.placeholder = 'Game Over - Chat disabled';
+        this.sendBtn.innerHTML = '<i class="fas fa-ban"></i> Disabled';
+        this.sendBtn.style.opacity = '0.5';
+        this.sendBtn.style.cursor = 'not-allowed';
+        
+        // Also disable task if enabled
+        if (this.taskInput) {
+            this.taskInput.disabled = true;
+        }
+        if (this.submitBtn) {
+            this.submitBtn.disabled = true;
+        }
+        
+        // Create and show completion button for fail state
+        this.showCompletionButton('fail');
+        
+        this.scrollToBottom();
+    }
+
+    handleSuccessState() {
+        console.log('🎉 Game Success - Success state triggered');
+        
+        // Display success message
+        this.addMessage('🎉 Congratulations! Game completed successfully!', 'assistant');
+        
+        // Disable chat functionality
+        this.chatInput.disabled = true;
+        this.sendBtn.disabled = true;
+        this.chatInput.placeholder = 'Task completed - Chat disabled';
+        this.sendBtn.innerHTML = '<i class="fas fa-check"></i> Completed';
+        this.sendBtn.style.opacity = '0.5';
+        
+        // Create and show completion button for success state
+        this.showCompletionButton('success');
+        
+        this.scrollToBottom();
+    }
+
+    showCompletionButton(gameResult) {
+        // Remove any existing completion button
+        const existingButton = document.getElementById('completion-button');
+        if (existingButton) {
+            existingButton.remove();
+        }
+
+        // Create completion button
+        const completionButton = document.createElement('button');
+        completionButton.id = 'completion-button';
+        completionButton.textContent = 'Complete';
+        completionButton.className = 'submit-btn';
+        completionButton.style.margin = '10px auto';
+        completionButton.style.display = 'block';
+        completionButton.style.background = gameResult === 'success' 
+            ? 'linear-gradient(135deg, #28a745, #20c997)' 
+            : 'linear-gradient(135deg, #dc3545, #c82333)';
+        
+        completionButton.onclick = () => {
+            this.saveGameResult(gameResult);
+            completionButton.disabled = true;
+            completionButton.textContent = 'Completed ✓';
+            completionButton.style.opacity = '0.5';
+        };
+        
+        // Add button to the task section or chat container
+        const taskSection = document.getElementById('task-section');
+        const chatContainer = document.getElementById('chat-container');
+        
+        if (taskSection) {
+            taskSection.appendChild(completionButton);
+        } else if (chatContainer && chatContainer.parentNode) {
+            chatContainer.parentNode.appendChild(completionButton);
+        }
+    }
+
+    saveGameResult(gameResult) {
+        console.log(`💾 Saving game result: ${gameResult}`);
+        
+        // Generate unique ID
+        const resultId = this.generateUniqueId();
+        
+        // Collect chat history
+        const chatHistory = this.messages.map(msg => ({
+            role: msg.role,
+            content: msg.content,
+            timestamp: new Date().toISOString()
+        }));
+        
+        console.log('📝 Chat history being saved:', chatHistory);
+        console.log('💬 Total messages:', this.messages.length);
+        
+        const result = {
+            id: resultId + 'ai1',
+            gameResult: gameResult, // 'success' or 'fail'
+            timestamp: new Date().toISOString(),
+            task: 'ai_conversation_game',
+            chatHistory: chatHistory,
+            conversationRounds: this.conversationRounds,
+            taskType: 'AI Chat 2 - Game Mode',
+            finalState: gameResult === 'success' ? 'Game Won' : 'Game Over'
+        };
+
+        console.log('📊 Complete result object:', result);
+
+        // Save to localStorage
+        const existingResults = JSON.parse(localStorage.getItem('airesults') || '[]');
+        existingResults.push(result);
+        localStorage.setItem('airesults', JSON.stringify(existingResults));
+        
+        console.log('💾 Saved to localStorage. All results:', existingResults);
+
+        // Also save to central storage
+        this.saveToCentralStorage(result);
+        
+        // Show completion message
+        const statusMessage = gameResult === 'success' 
+            ? '🎉 Game completed successfully!' 
+            : '💀 Game over recorded!';
+        this.addMessage(`✅ ${statusMessage} Your result "${gameResult}" has been saved with ID: ${result.id}`, 'assistant');
+        
+        // Show link to results page
+        setTimeout(() => {
+            this.addMessage('📊 View all results at: <a href="airesult.html" target="_blank" style="color: var(--secondary-color);">Results Page</a>', 'assistant');
+        }, 1000);
     }
 
     submitTask() {
