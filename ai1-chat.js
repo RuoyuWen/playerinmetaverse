@@ -342,6 +342,14 @@ class AI1Chat {
         const messageDiv = document.createElement('div');
         messageDiv.className = `message ${sender}`;
         
+        // Create avatar
+        const avatarDiv = document.createElement('div');
+        avatarDiv.className = 'message-avatar';
+        
+        // Create content wrapper
+        const contentWrapper = document.createElement('div');
+        contentWrapper.className = 'message-wrapper';
+        
         const contentDiv = document.createElement('div');
         contentDiv.className = 'message-content';
         
@@ -350,12 +358,18 @@ class AI1Chat {
         const assistantLabel = this.config.ui?.assistantLabel || 'AI Assistant';
         
         if (sender === 'user') {
+            // User avatar - neutral
+            avatarDiv.innerHTML = `<div class="avatar user-avatar">👤</div>`;
             contentDiv.innerHTML = `<strong>${userLabel}:</strong> ${this.escapeHtml(message)}`;
         } else {
+            // AI Chat 2 - Male avatar
+            avatarDiv.innerHTML = `<div class="avatar ai-avatar male-avatar">👨‍💻</div>`;
             contentDiv.innerHTML = `<strong>${assistantLabel}:</strong> ${this.formatMessage(message)}`;
         }
         
-        messageDiv.appendChild(contentDiv);
+        contentWrapper.appendChild(contentDiv);
+        messageDiv.appendChild(avatarDiv);
+        messageDiv.appendChild(contentWrapper);
         this.chatContainer.appendChild(messageDiv);
         this.scrollToBottom();
     }
