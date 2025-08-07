@@ -385,7 +385,7 @@ class AI1Chat {
         
         // 从配置文件获取标签文本
         const userLabel = this.config.ui?.userLabel || 'You';
-        const assistantLabel = this.config.ui?.assistantLabel || 'AI Assistant';
+        const assistantLabel = this.config.ui?.assistantLabel || 'Tom';
         
         if (sender === 'user') {
             // User avatar - neutral

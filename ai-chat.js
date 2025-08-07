@@ -384,8 +384,8 @@ class AIChat {
         contentDiv.className = 'message-content';
         
         // 从配置文件获取标签文本
-        const userLabel = this.config.ui?.userLabel || '您';
-        const assistantLabel = this.config.ui?.assistantLabel || 'AI助手';
+        const userLabel = this.config.ui?.userLabel || 'You';
+        const assistantLabel = this.config.ui?.assistantLabel || 'Lucy';
         
         if (sender === 'user') {
             // User avatar - neutral

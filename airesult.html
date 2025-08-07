@@ -460,7 +460,7 @@
             textContent += `-`.repeat(20) + `\n\n`;
             
             result.chatHistory.forEach((msg, index) => {
-                const speaker = msg.role === 'user' ? 'You' : 'AI Assistant';
+                const speaker = msg.role === 'user' ? 'You' : (result.taskType && result.taskType.includes('AI Chat 2') ? 'Tom' : 'Lucy');
                 textContent += `[${index + 1}] ${speaker}: ${msg.content}\n\n`;
             });
             
