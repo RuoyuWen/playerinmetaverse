@@ -10,25 +10,15 @@ class AI1Chat {
         this.messages = [];
         this.isTyping = false;
         this.config = this.loadConfig();
-        this.conversationRounds = 0;
-        this.taskEnabled = false;
-        
-        // Restaurant selection options
-        this.restaurantOptions = [
-            'Greek Restaurant - Specializes in grilled lamb skewers, salads, and grilled bread',
-            'Brazilian BBQ Restaurant - Rich buffet barbecue, tropical flavor side dishes',
-            'Moroccan Restaurant - Signature tagine, exotic spice flavors',
-            'Mexican Restaurant - Mexican burritos, grilled corn, avocado sauce',
-            'Hungarian Restaurant - Traditional beef stew, potato pancakes'
-        ];
-        
-        this.optionMapping = {}; // Will store A->actual option mapping
-        
+
         this.initializeElements();
         this.bindEvents();
         this.loadApiKey();
+        
+        // 确保每次页面刷新都是干净的状态
+        this.clearSessionData();
+        
         this.initializeUI();
-        this.randomizeOptions();
         
         // 确保在线配置立即生效
         this.ensureOnlineConfigActive();
@@ -175,10 +165,7 @@ class AI1Chat {
         this.typingIndicator = document.getElementById('typing-indicator');
         this.typingText = document.getElementById('typing-text');
         this.apiKeyInput = document.getElementById('api-key');
-        this.taskSection = document.getElementById('task-section');
-        this.taskInput = document.getElementById('task-answer');
-        this.submitBtn = document.getElementById('submit-task');
-        this.taskHint = document.getElementById('task-hint');
+
     }
 
     bindEvents() {
@@ -201,17 +188,7 @@ class AI1Chat {
             this.chatInput.style.height = this.chatInput.scrollHeight + 'px';
         });
 
-        // Task-related event listeners
-        this.taskInput.addEventListener('input', (e) => {
-            const value = e.target.value.toUpperCase();
-            if (['A', 'B', 'C', 'D', 'E'].includes(value)) {
-                this.submitBtn.style.display = 'block';
-            } else {
-                this.submitBtn.style.display = 'none';
-            }
-        });
 
-        this.submitBtn.addEventListener('click', () => this.submitTask());
     }
 
     loadApiKey() {
@@ -240,11 +217,7 @@ class AI1Chat {
         const message = this.chatInput.value.trim();
         if (!message) return;
 
-        // Check if chat is disabled after task submission
-        if (this.chatInput.disabled) {
-            this.showError('Chat has been disabled after task submission.');
-            return;
-        }
+
 
         if (!this.apiKey) {
             this.showError('Please enter your API Key first!');
@@ -281,18 +254,7 @@ class AI1Chat {
                 return;
             } else if (responseClass === 'none') {
                 // Continue normal conversation
-                // Increment conversation rounds AFTER successful AI response
-                this.conversationRounds++;
-                console.log(`🍽️ Tom Round ${this.conversationRounds} completed`);
-                
-                // Check if task should be enabled after AI responds
-                if (this.conversationRounds >= 3 && !this.taskEnabled) {
-                    console.log('✅ Tom: 3 rounds reached - enabling task!');
-                    setTimeout(() => {
-                        this.enableTask();
-                    }, 500); // Small delay to ensure message is displayed first
-                }
-            }
+
         } catch (error) {
             console.error('AI Chat Error:', error);
             this.showError('抱歉，Tom暂时无法回应。请检查API Key或稍后重试。');
@@ -452,30 +414,7 @@ class AI1Chat {
             .replace(/\n/g, '<br>');
     }
 
-    enableTask() {
-        console.log('🍽️ Enabling restaurant task - 3 rounds completed!');
-        
-        this.taskEnabled = true;
-        
-        if (this.taskInput) {
-            this.taskInput.disabled = false;
-            this.taskInput.placeholder = 'Enter A, B, C, D, or E';
-            // Add visual indication that task is now enabled
-            this.taskInput.style.borderColor = '#9d4edd';
-            this.taskInput.style.opacity = '1';
-            this.taskInput.style.background = 'rgba(0, 0, 0, 0.3)';
-            this.taskInput.style.boxShadow = '0 0 10px rgba(157, 78, 221, 0.3)';
-        }
-        
-        // Hide the hint message
-        if (this.taskHint) {
-            this.taskHint.style.display = 'none';
-        }
-        
-        // Add a message about task activation
-        this.addMessage('🎯 Excellent! After our conversation, you can now complete the restaurant selection task below:', 'assistant');
-        this.scrollToBottom();
-    }
+
 
     handleFailState() {
         console.log('💀 Game Over - Fail state triggered');
@@ -491,13 +430,7 @@ class AI1Chat {
         this.sendBtn.style.opacity = '0.5';
         this.sendBtn.style.cursor = 'not-allowed';
         
-        // Also disable task if enabled
-        if (this.taskInput) {
-            this.taskInput.disabled = true;
-        }
-        if (this.submitBtn) {
-            this.submitBtn.disabled = true;
-        }
+
         
         // Create and show completion button for fail state
         this.showCompletionButton('fail');
@@ -549,13 +482,10 @@ class AI1Chat {
             completionButton.style.opacity = '0.5';
         };
         
-        // Add button to the task section or chat container
-        const taskSection = document.getElementById('task-section');
+        // Add button to the chat container
         const chatContainer = document.getElementById('chat-container');
         
-        if (taskSection) {
-            taskSection.appendChild(completionButton);
-        } else if (chatContainer && chatContainer.parentNode) {
+        if (chatContainer && chatContainer.parentNode) {
             chatContainer.parentNode.appendChild(completionButton);
         }
     }
@@ -582,7 +512,7 @@ class AI1Chat {
             timestamp: new Date().toISOString(),
             task: 'ai_conversation_game',
             chatHistory: chatHistory,
-            conversationRounds: this.conversationRounds,
+            conversationRounds: 0,
             taskType: 'AI Chat 2 - Game Mode',
             finalState: gameResult === 'success' ? 'Game Won' : 'Game Over'
         };
@@ -611,69 +541,7 @@ class AI1Chat {
         }, 1000);
     }
 
-    submitTask() {
-        const answer = this.taskInput.value.toUpperCase();
-        if (!['A', 'B', 'C', 'D', 'E'].includes(answer)) {
-            alert('Please enter a valid choice: A, B, C, D, or E');
-            return;
-        }
 
-        // Generate unique ID and record the result
-        const resultId = this.generateUniqueId();
-        
-        // 收集聊天记录
-        const chatHistory = this.messages.map(msg => ({
-            role: msg.role,
-            content: msg.content,
-            timestamp: new Date().toISOString()
-        }));
-        
-        console.log('📝 Chat history being saved (AI1):', chatHistory);
-        console.log('💬 Total messages (AI1):', this.messages.length);
-        
-        const result = {
-            id: resultId + 'ai1',
-            answer: answer,
-            answerContent: this.optionMapping[answer], // Store the actual content
-            timestamp: new Date().toISOString(),
-            task: 'restaurant_selection',
-            chatHistory: chatHistory,
-            conversationRounds: this.conversationRounds,
-            taskType: 'AI Chat 2',
-            optionMapping: this.optionMapping // Store full mapping for reference
-        };
-
-        console.log('📊 Complete result object (AI1):', result);
-
-        // Save to localStorage
-        const existingResults = JSON.parse(localStorage.getItem('airesults') || '[]');
-        existingResults.push(result);
-        localStorage.setItem('airesults', JSON.stringify(existingResults));
-        
-        console.log('💾 Saved to localStorage (AI1). All results:', existingResults);
-
-        // Also save to central storage
-        this.saveToCentralStorage(result);
-
-        // Disable task section and show confirmation
-        this.taskInput.disabled = true;
-        this.submitBtn.disabled = true;
-        this.submitBtn.textContent = 'Submitted ✓';
-        
-        // Disable chat functionality after task submission
-        this.chatInput.disabled = true;
-        this.sendBtn.disabled = true;
-        this.chatInput.placeholder = 'Chat disabled after task submission';
-        this.sendBtn.innerHTML = '<i class="fas fa-ban"></i> Disabled';
-        
-        this.addMessage(`✅ Task completed! Your answer "${answer}" has been recorded with ID: ${result.id}`, 'assistant');
-        this.addMessage('🔒 Chat functionality has been disabled after task submission.', 'assistant');
-        
-        // Show link to results page
-        setTimeout(() => {
-            this.addMessage('📊 View all results at: <a href="airesult.html" target="_blank" style="color: var(--secondary-color);">Results Page</a>', 'assistant');
-        }, 1000);
-    }
 
     generateUniqueId() {
         // Generate 6-digit sequential ID
@@ -681,57 +549,43 @@ class AI1Chat {
         return String(existingResults.length + 1).padStart(6, '0');
     }
 
-    // Generate seeded random number
-    seededRandom(seed) {
-        const x = Math.sin(seed) * 10000;
-        return x - Math.floor(x);
+    // 清除会话数据，确保每次刷新都是干净状态
+    clearSessionData() {
+        console.log('🧹 Clearing AI1 session data for fresh start...');
+        
+        // 清除可能存在的会话相关数据
+        localStorage.removeItem('sessionSeed');
+        localStorage.removeItem('ai1_chat_messages');
+        localStorage.removeItem('ai1_chat_state');
+        localStorage.removeItem('ai1_conversation_history');
+        localStorage.removeItem('ai1_chat_context');
+        
+        // 重置消息数组 - 这是关键！
+        this.messages = [];
+        
+        // 清除聊天容器内容
+        if (this.chatContainer) {
+            this.chatContainer.innerHTML = '';
+        }
+        
+        // 重置聊天状态
+        this.isTyping = false;
+        
+        // 确保输入框是启用状态
+        if (this.chatInput) {
+            this.chatInput.disabled = false;
+            this.chatInput.placeholder = 'Type your message...';
+        }
+        if (this.sendBtn) {
+            this.sendBtn.disabled = false;
+            this.sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Send';
+        }
+        
+        console.log('✅ AI1 session data cleared, ready for fresh conversation');
+        console.log('📝 Messages array reset:', this.messages);
     }
 
-    // Shuffle array with seed for consistent randomization
-    shuffleWithSeed(array, seed) {
-        const result = [...array];
-        for (let i = result.length - 1; i > 0; i--) {
-            const j = Math.floor(this.seededRandom(seed + i) * (i + 1));
-            [result[i], result[j]] = [result[j], result[i]];
-        }
-        return result;
-    }
 
-    // Randomize restaurant options and update DOM
-    randomizeOptions() {
-        // Get or generate session seed (same as AI Chat 1 for consistency)
-        let sessionSeed = localStorage.getItem('sessionSeed');
-        if (!sessionSeed) {
-            sessionSeed = Date.now() + Math.random() * 1000;
-            localStorage.setItem('sessionSeed', sessionSeed.toString());
-        } else {
-            sessionSeed = parseFloat(sessionSeed);
-        }
-        
-        // Use a different offset for restaurant vs gift to ensure different randomization
-        const restaurantSeed = sessionSeed + 12345;
-        
-        // Shuffle the restaurant options using the session seed
-        const shuffled = this.shuffleWithSeed(this.restaurantOptions, restaurantSeed);
-        const letters = ['A', 'B', 'C', 'D', 'E'];
-        
-        // Create mapping
-        letters.forEach((letter, index) => {
-            this.optionMapping[letter] = shuffled[index];
-        });
-        
-        // Update DOM
-        const taskOptions = document.querySelector('.task-options');
-        if (taskOptions) {
-            const optionElements = taskOptions.querySelectorAll('.option');
-            optionElements.forEach((element, index) => {
-                const letter = letters[index];
-                element.innerHTML = `<span class="option-label">${letter}.</span> ${shuffled[index]}`;
-            });
-        }
-        
-        console.log('🎲 Restaurant options randomized with seed:', restaurantSeed, this.optionMapping);
-    }
 
     // Save result to central storage (same as AI Chat 1)
     async saveToCentralStorage(result) {
