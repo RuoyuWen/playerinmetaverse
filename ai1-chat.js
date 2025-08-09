@@ -37,12 +37,13 @@ class AI1Chat {
                 // 强制应用在线配置，但确保使用正确的Tom配置
                 if (onlineConfig.systemPrompt) {
                     // 检查是否是Lucy的配置，如果是则使用默认的Tom配置
-                    if (onlineConfig.systemPrompt.includes('Lucy') || onlineConfig.systemPrompt.includes('magician') || onlineConfig.systemPrompt.includes('Ruoyu Wen')) {
+                    const systemPrompt = onlineConfig.systemPrompt;
+                    if (systemPrompt.includes('Lucy') || systemPrompt.includes('magician') || systemPrompt.includes('Ruoyu Wen') || systemPrompt.includes('"role": "Lucy"')) {
                         console.log('⚠️ Detected Lucy/Ruoyu config, using default Tom config instead');
                         this.config.systemPrompt = window.AI1_CONFIG?.systemPrompt || this.config.systemPrompt;
                     } else {
                         // 再次检查是否是Tom的配置
-                        if (onlineConfig.systemPrompt.includes('Tom')) {
+                        if (systemPrompt.includes('Tom')) {
                             this.config.systemPrompt = onlineConfig.systemPrompt;
                         } else {
                             console.log('⚠️ Unknown config detected, using default Tom config');
@@ -83,12 +84,13 @@ class AI1Chat {
                 if (onlineConfig.model) config.model = onlineConfig.model;
                 if (onlineConfig.systemPrompt) {
                     // 检查是否是Lucy的配置，如果是则使用默认的Tom配置
-                    if (onlineConfig.systemPrompt.includes('Lucy') || onlineConfig.systemPrompt.includes('magician') || onlineConfig.systemPrompt.includes('Ruoyu Wen')) {
+                    const systemPrompt = onlineConfig.systemPrompt;
+                    if (systemPrompt.includes('Lucy') || systemPrompt.includes('magician') || systemPrompt.includes('Ruoyu Wen') || systemPrompt.includes('"role": "Lucy"')) {
                         console.log('⚠️ Detected Lucy/Ruoyu config in online config, using default Tom config instead');
                         config.systemPrompt = window.AI1_CONFIG?.systemPrompt || config.systemPrompt;
                     } else {
                         // 再次检查是否是Tom的配置
-                        if (onlineConfig.systemPrompt.includes('Tom')) {
+                        if (systemPrompt.includes('Tom')) {
                             config.systemPrompt = onlineConfig.systemPrompt;
                         } else {
                             console.log('⚠️ Unknown config detected, using default Tom config');
@@ -116,12 +118,13 @@ class AI1Chat {
                 if (globalConfig.model) config.model = globalConfig.model;
                 if (globalConfig.systemPrompt) {
                     // 检查是否是Lucy的配置，如果是则使用默认的Tom配置
-                    if (globalConfig.systemPrompt.includes('Lucy') || globalConfig.systemPrompt.includes('magician') || globalConfig.systemPrompt.includes('Ruoyu Wen')) {
+                    const systemPrompt = globalConfig.systemPrompt;
+                    if (systemPrompt.includes('Lucy') || systemPrompt.includes('magician') || systemPrompt.includes('Ruoyu Wen') || systemPrompt.includes('"role": "Lucy"')) {
                         console.log('⚠️ Detected Lucy/Ruoyu config in global config, using default Tom config instead');
                         config.systemPrompt = window.AI1_CONFIG?.systemPrompt || config.systemPrompt;
                     } else {
                         // 再次检查是否是Tom的配置
-                        if (globalConfig.systemPrompt.includes('Tom')) {
+                        if (systemPrompt.includes('Tom')) {
                             config.systemPrompt = globalConfig.systemPrompt;
                         } else {
                             console.log('⚠️ Unknown config detected, using default Tom config');
@@ -158,12 +161,13 @@ class AI1Chat {
                 if (parsed.model) config.model = parsed.model;
                 if (parsed.systemPrompt) {
                     // 检查是否是Lucy的配置，如果是则使用默认的Tom配置
-                    if (parsed.systemPrompt.includes('Lucy') || parsed.systemPrompt.includes('magician') || parsed.systemPrompt.includes('Ruoyu Wen')) {
+                    const systemPrompt = parsed.systemPrompt;
+                    if (systemPrompt.includes('Lucy') || systemPrompt.includes('magician') || systemPrompt.includes('Ruoyu Wen') || systemPrompt.includes('"role": "Lucy"')) {
                         console.log('⚠️ Detected Lucy/Ruoyu config in localStorage, using default Tom config instead');
                         config.systemPrompt = window.AI1_CONFIG?.systemPrompt || config.systemPrompt;
                     } else {
                         // 再次检查是否是Tom的配置
-                        if (parsed.systemPrompt.includes('Tom')) {
+                        if (systemPrompt.includes('Tom')) {
                             config.systemPrompt = parsed.systemPrompt;
                         } else {
                             console.log('⚠️ Unknown config detected, using default Tom config');
@@ -199,12 +203,13 @@ class AI1Chat {
                         if (parsed.model) config.model = parsed.model;
                         if (parsed.systemPrompt) {
                             // 检查是否是Lucy的配置，如果是则使用默认的Tom配置
-                            if (parsed.systemPrompt.includes('Lucy') || parsed.systemPrompt.includes('magician') || parsed.systemPrompt.includes('Ruoyu Wen')) {
+                            const systemPrompt = parsed.systemPrompt;
+                            if (systemPrompt.includes('Lucy') || systemPrompt.includes('magician') || systemPrompt.includes('Ruoyu Wen') || systemPrompt.includes('"role": "Lucy"')) {
                                 console.log('⚠️ Detected Lucy/Ruoyu config in legacy config, using default Tom config instead');
                                 config.systemPrompt = window.AI1_CONFIG?.systemPrompt || config.systemPrompt;
                             } else {
                                 // 再次检查是否是Tom的配置
-                                if (parsed.systemPrompt.includes('Tom')) {
+                                if (systemPrompt.includes('Tom')) {
                                     config.systemPrompt = parsed.systemPrompt;
                                 } else {
                                     console.log('⚠️ Unknown config detected, using default Tom config');
