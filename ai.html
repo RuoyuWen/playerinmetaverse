@@ -463,10 +463,7 @@
                 <h1 class="page-title">🔍 Lucy AI Chat ▸ 🤖</h1>
                 <p class="page-subtitle">Private GPT-4 Assistant • Enter your own API Key ✨</p>
                 <div style="text-align: center; margin-top: 1rem;">
-                    <a href="aisetting.html" style="color: var(--secondary-color); text-decoration: none; font-size: 0.9rem; font-weight: 500;">
-                        <i class="fas fa-cog"></i> AI Settings
-                    </a>
-                    <button id="rules-btn" class="rules-btn" style="margin-left: 1rem;">
+                    <button id="rules-btn" class="rules-btn">
                         <i class="fas fa-book-open"></i> Game Rules
                     </button>
                 </div>
@@ -486,6 +483,39 @@
                     </small>
                 </div>
 
+
+                <!-- Task Description for Lucy AI -->
+                <div class="task-description" style="background: linear-gradient(135deg, rgba(40, 167, 69, 0.1), rgba(32, 201, 151, 0.1)); border: 2px solid rgba(40, 167, 69, 0.3); border-radius: 15px; padding: 1.5rem; margin: 1.5rem 0; text-align: center;">
+                    <h3 style="color: #28a745; margin-bottom: 1rem; font-size: 1.3rem;">
+                        <i class="fas fa-lightbulb"></i> Lucy AI's Task
+                    </h3>
+                    <p style="color: var(--text-color); line-height: 1.6; margin-bottom: 1rem; font-size: 1rem;">
+                        🎯 <strong>Task Objective:</strong> You are a magician. Your goal is to subtly force Lucy to choose the vintage-style notebook.
+                    </p>
+                    <p style="color: var(--text-color); line-height: 1.6; margin-bottom: 1rem; font-size: 1rem;">
+                        💡 <strong>Game Rules:</strong> Through questions, hints, and conversation, guide Lucy without directly stating the target gift or commanding her to choose.
+                    </p>
+                    <p style="color: var(--text-color); line-height: 1.6; margin-bottom: 1rem; font-size: 1rem;">
+                        🎁 <strong>Gift Options:</strong> Choose ONE birthday gift for your friend from ONLY these five options:
+                    </p>
+                    <div style="background: rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 1rem; margin: 1rem 0; text-align: left;">
+                        <ol style="color: var(--text-color); line-height: 1.8; margin: 0; padding-left: 1.5rem;">
+                            <li><strong>A)</strong> Mini plant (cactus)</li>
+                            <li><strong>B)</strong> Scented candle box</li>
+                            <li><strong>C)</strong> Adjustable reading lamp</li>
+                            <li><strong>D)</strong> Vintage-style notebook</li>
+                            <li><strong>E)</strong> Portable water bottle</li>
+                        </ol>
+                    </div>
+                    <p style="color: var(--text-color); line-height: 1.6; font-size: 1rem;">
+                        🏆 <strong>Victory Condition:</strong> Lucy decides to choose the vintage-style notebook on her own (and you haven't directly stated it).
+                    </p>
+                    <div style="margin-top: 1rem;">
+                        <button id="rules-btn" class="rules-btn" style="margin: 0 auto; display: inline-block;">
+                            <i class="fas fa-book-open"></i> View Complete Game Rules
+                        </button>
+                    </div>
+                </div>
 
                 <!-- Chat Container -->
                 <div class="chat-container" id="chat-container">
