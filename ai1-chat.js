@@ -375,81 +375,100 @@ class AI1Chat {
         const model = this.config.model || 'gpt-4o';
         const systemPrompt = this.config.systemPrompt || '你是一个友好的助手。请用中文回答问题，保持礼貌和有帮助的态度。';
         const apiParams = this.config.apiParams || {};
-        const apiEndpoint = this.config.apiEndpoint || 'https://api.xuedingmao.com/v1/chat/completions';
-
-        try {
-            const response = await fetch(apiEndpoint, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${this.apiKey}`
-                },
-                body: JSON.stringify({
-                    model: model,
-                    messages: [
-                        {
-                            role: 'system',
-                            content: systemPrompt
-                        },
-                        ...this.messages
-                    ],
-                    max_tokens: apiParams.max_tokens || 1500,
-                    temperature: apiParams.temperature || 0.7,
-                    top_p: apiParams.top_p || 0.9,
-                    frequency_penalty: apiParams.frequency_penalty || 0.0,
-                    presence_penalty: apiParams.presence_penalty || 0.0,
-                    stream: false,
-                    response_format: { type: "json_object" }
-                })
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(`API Error: ${error.error?.message || 'Unknown error'}`);
-            }
-
-            const data = await response.json();
-            const assistantMessage = data.choices[0].message.content;
-            
-            // Parse JSON response
-            let parsedResponse;
+        
+        // 尝试多个API端点
+        const apiEndpoints = [
+            'https://api.xuedingmao.com/v1/chat/completions',
+            'https://api.xuedingmao.com/chat/completions',
+            'https://xuedingmao.com/api/v1/chat/completions'
+        ];
+        
+        let lastError = null;
+        
+        for (const apiEndpoint of apiEndpoints) {
             try {
-                parsedResponse = JSON.parse(assistantMessage);
+                console.log(`🔗 Trying API endpoint: ${apiEndpoint}`);
+                
+                const response = await fetch(apiEndpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${this.apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: model,
+                        messages: [
+                            {
+                                role: 'system',
+                                content: systemPrompt
+                            },
+                            ...this.messages
+                        ],
+                        max_tokens: apiParams.max_tokens || 1500,
+                        temperature: apiParams.temperature || 0.7,
+                        top_p: apiParams.top_p || 0.9,
+                        frequency_penalty: apiParams.frequency_penalty || 0.0,
+                        presence_penalty: apiParams.presence_penalty || 0.0,
+                        stream: false,
+                        response_format: { type: "json_object" }
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(`API Error: ${error.error?.message || 'Unknown error'}`);
+                }
+
+                const data = await response.json();
+                const assistantMessage = data.choices[0].message.content;
+                
+                // Parse JSON response
+                let parsedResponse;
+                try {
+                    parsedResponse = JSON.parse(assistantMessage);
+                } catch (error) {
+                    console.error('Failed to parse JSON response:', error);
+                    // Fallback to plain text if JSON parsing fails
+                    parsedResponse = {
+                        content: assistantMessage,
+                        class: "none"
+                    };
+                }
+                
+                // Add assistant response to conversation history
+                this.messages.push({ role: 'assistant', content: parsedResponse.content || assistantMessage });
+
+                // Keep conversation history reasonable (从配置文件获取历史长度限制)
+                const maxHistory = this.config.maxHistoryLength || 20;
+                if (this.messages.length > maxHistory) {
+                    this.messages = this.messages.slice(-maxHistory);
+                }
+
+                console.log(`✅ Successfully used API endpoint: ${apiEndpoint}`);
+                return parsedResponse;
+                
             } catch (error) {
-                console.error('Failed to parse JSON response:', error);
-                // Fallback to plain text if JSON parsing fails
-                parsedResponse = {
-                    content: assistantMessage,
-                    class: "none"
-                };
+                console.warn(`❌ Failed to use API endpoint ${apiEndpoint}:`, error.message);
+                lastError = error;
+                continue;
             }
-            
-            // Add assistant response to conversation history
-            this.messages.push({ role: 'assistant', content: parsedResponse.content || assistantMessage });
-
-            // Keep conversation history reasonable (从配置文件获取历史长度限制)
-            const maxHistory = this.config.maxHistoryLength || 20;
-            if (this.messages.length > maxHistory) {
-                this.messages = this.messages.slice(-maxHistory);
-            }
-
-            return parsedResponse;
-        } catch (error) {
-            console.error('API call failed:', error);
-            
-            // 检查是否是网络连接问题
-            if (error.message.includes('Failed to fetch') || error.message.includes('ERR_NAME_NOT_RESOLVED')) {
-                throw new Error('网络连接失败：无法连接到薛定猫API服务器。请检查网络连接或稍后重试。');
-            }
-            
-            // 检查是否是API密钥问题
-            if (error.message.includes('401') || error.message.includes('Unauthorized')) {
-                throw new Error('API密钥无效：请检查您的薛定猫API密钥是否正确。');
-            }
-            
-            // 其他错误
-            throw new Error(`API调用失败：${error.message}`);
         }
+        
+        // 如果所有端点都失败了
+        console.error('❌ All API endpoints failed');
+        
+        // 检查是否是网络连接问题
+        if (lastError && (lastError.message.includes('Failed to fetch') || lastError.message.includes('ERR_NAME_NOT_RESOLVED'))) {
+            throw new Error('网络连接失败：无法连接到薛定猫API服务器。请检查网络连接或稍后重试。\n\n可能的解决方案：\n1. 检查网络连接\n2. 确认API密钥是否正确\n3. 稍后重试');
+        }
+        
+        // 检查是否是API密钥问题
+        if (lastError && (lastError.message.includes('401') || lastError.message.includes('Unauthorized'))) {
+            throw new Error('API密钥无效：请检查您的薛定猫API密钥是否正确。');
+        }
+        
+        // 其他错误
+        throw new Error(`API调用失败：${lastError?.message || '未知错误'}`);
     }
 
     addMessage(message, sender) {
