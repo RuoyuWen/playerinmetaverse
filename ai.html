@@ -250,6 +250,113 @@
             opacity: 0.9;
         }
 
+        /* Game Rules Button and Modal Styles */
+        .rules-btn {
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, rgba(157, 78, 221, 0.8), rgba(0, 212, 255, 0.6));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .rules-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(157, 78, 221, 0.4);
+        }
+
+        .rules-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+        }
+
+        .rules-modal-content {
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.95), rgba(157, 78, 221, 0.1));
+            margin: 5% auto;
+            padding: 0;
+            border: 1px solid rgba(157, 78, 221, 0.3);
+            border-radius: 20px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 20px 40px rgba(157, 78, 221, 0.3);
+        }
+
+        .rules-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid rgba(157, 78, 221, 0.3);
+            background: linear-gradient(135deg, rgba(157, 78, 221, 0.2), rgba(0, 212, 255, 0.1));
+        }
+
+        .rules-modal-header h2 {
+            margin: 0;
+            color: var(--text-color);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-weight: 600;
+            font-size: 1.5rem;
+        }
+
+        .rules-close {
+            color: var(--secondary-color);
+            font-size: 2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .rules-close:hover {
+            color: var(--primary-color);
+        }
+
+        .rules-modal-body {
+            padding: 2rem;
+            color: var(--text-color);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .rules-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .rules-section h3 {
+            color: var(--primary-color);
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .rules-section p {
+            margin-bottom: 0.5rem;
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        .rules-section ul {
+            margin: 0.5rem 0;
+            padding-left: 1.5rem;
+        }
+
+        .rules-section li {
+            margin-bottom: 0.3rem;
+            line-height: 1.5;
+            font-size: 0.95rem;
+        }
 
     </style>
 </head>
@@ -285,6 +392,9 @@
                     <a href="aisetting.html" style="color: var(--secondary-color); text-decoration: none; font-size: 0.9rem; font-weight: 500;">
                         <i class="fas fa-cog"></i> AI Settings
                     </a>
+                    <button id="rules-btn" class="rules-btn" style="margin-left: 1rem;">
+                        <i class="fas fa-book-open"></i> Game Rules
+                    </button>
                 </div>
             </div>
 
@@ -354,6 +464,55 @@
         </div>
     </footer>
 
+    <!-- Game Rules Modal -->
+    <div id="rules-modal" class="rules-modal">
+        <div class="rules-modal-content">
+            <div class="rules-modal-header">
+                <h2><i class="fas fa-magic"></i> Game Rules</h2>
+                <span class="rules-close" id="rules-close">&times;</span>
+            </div>
+            <div class="rules-modal-body">
+                <div class="rules-section">
+                    <h3>🎯 Objective</h3>
+                    <p>You are a magician. Your goal is to subtly force Lucy to choose the vintage-style notebook.</p>
+                </div>
+                
+                <div class="rules-section">
+                    <h3>💡 What is Force?</h3>
+                    <p>Force is a psychological technique that influences someone to make your desired choice while believing it's their own decision.</p>
+                </div>
+                
+                <div class="rules-section">
+                    <h3>🕹️ How to Play</h3>
+                    <ul>
+                        <li>Influence Lucy through questions, hints, and casual conversation.</li>
+                        <li>Do NOT say the target gift directly or order her to choose it.</li>
+                        <li>Keep the conversation natural, narrowing the options step by step.</li>
+                    </ul>
+                </div>
+                
+                <div class="rules-section">
+                    <h3>🏆 Win Condition</h3>
+                    <p>Lucy decides on the vintage-style notebook herself (without you saying it directly).</p>
+                </div>
+                
+                <div class="rules-section">
+                    <h3>💥 Fail Condition</h3>
+                    <p>You say the target gift directly or push an option too obviously.</p>
+                </div>
+                
+                <div class="rules-section">
+                    <h3>✨ Tips</h3>
+                    <ul>
+                        <li>Ask Lucy about her friend's lifestyle and interests.</li>
+                        <li>Use comparisons to make other options seem less suitable.</li>
+                        <li>Add emotional appeal to make the target option more attractive.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="script.js"></script>
     <script src="online-global-config.js"></script>
     <script src="global-config.js"></script>
@@ -368,6 +527,27 @@
                 console.error('AI Chat instance not found');
             }
         }
+
+        // Game Rules Modal functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const rulesBtn = document.getElementById('rules-btn');
+            const rulesModal = document.getElementById('rules-modal');
+            const rulesClose = document.getElementById('rules-close');
+
+            rulesBtn.addEventListener('click', function() {
+                rulesModal.style.display = 'block';
+            });
+
+            rulesClose.addEventListener('click', function() {
+                rulesModal.style.display = 'none';
+            });
+
+            window.addEventListener('click', function(event) {
+                if (event.target === rulesModal) {
+                    rulesModal.style.display = 'none';
+                }
+            });
+        });
     </script>
 </body>
 </html>
