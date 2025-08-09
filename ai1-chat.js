@@ -250,7 +250,7 @@ class AI1Chat {
         }
         
         // Always use transit API endpoint regardless of other config
-        config.apiEndpoint = 'https://api.xuedingmao.com/v1/chat/completions';
+        config.apiEndpoint = 'https://xuedingmao.online/v1/chat/completions';
         
         return config;
     }
@@ -376,11 +376,12 @@ class AI1Chat {
         const systemPrompt = this.config.systemPrompt || '你是一个友好的助手。请用中文回答问题，保持礼貌和有帮助的态度。';
         const apiParams = this.config.apiParams || {};
         
-        // 尝试多个API端点
+        // 尝试多个API端点 - 根据薛定猫API官方文档
         const apiEndpoints = [
-            'https://api.xuedingmao.com/v1/chat/completions',
-            'https://api.xuedingmao.com/chat/completions',
-            'https://xuedingmao.com/api/v1/chat/completions'
+            'https://xuedingmao.online/v1/chat/completions',
+            'https://xuedingmao.online/v1',
+            'https://xuedingmao.online',
+            'https://api.xuedingmao.com/v1/chat/completions' // 备用端点
         ];
         
         let lastError = null;

@@ -7,7 +7,7 @@
 const AI1_CONFIG = {
     // 中转模型配置 - 使用薛定猫API
     model: 'gpt-4o', // 中转模型支持的模型名称（将被online-admin覆盖）
-    apiEndpoint: 'https://api.xuedingmao.com/v1/chat/completions', // 薛定猫API端点（固定）
+    apiEndpoint: 'https://xuedingmao.online/v1/chat/completions', // 薛定猫API端点（根据官方文档）
     
     // 系统提示词 - 在这里自定义AI助手的行为（将被online-admin覆盖）
     systemPrompt: `你是Tom，一个需要帮助做决定的AI助手。你必须始终返回JSON格式的回答。
