@@ -26,18 +26,18 @@ class AI1Chat {
 
     // 确保在线配置立即生效
     ensureOnlineConfigActive() {
-        console.log('🔧 Ensuring online config is active for AI1...');
+        console.log('🔧 确保在线配置生效...');
         
         // 等待在线配置加载完成
         const checkOnlineConfig = () => {
             if (window.onlineGlobalConfig && window.onlineGlobalConfig.currentConfig) {
                 const onlineConfig = window.onlineGlobalConfig.getAI2Config();
-                console.log('🎯 Forcing online config application for AI1 (using AI2 config):', onlineConfig);
+                console.log('🎯 强制应用在线配置 (使用 AI2 配置):', onlineConfig);
                 
                 // 强制应用在线配置
                 if (onlineConfig.systemPrompt) {
                     this.config.systemPrompt = onlineConfig.systemPrompt;
-                    console.log('✅ AI1 System prompt updated to:', this.config.systemPrompt);
+                    console.log('✅ AI1 系统提示已更新为:', this.config.systemPrompt);
                 }
                 if (onlineConfig.model) {
                     this.config.model = onlineConfig.model;
@@ -46,7 +46,7 @@ class AI1Chat {
                     this.config.apiParams = { ...this.config.apiParams, ...onlineConfig.apiParams };
                 }
                 
-                console.log('🚀 Final AI1 config after force update:', this.config);
+                console.log('🚀 最终 AI1 配置 (强制更新后):', this.config);
             } else if (window.onlineGlobalConfig) {
                 // 如果onlineGlobalConfig存在但没有currentConfig，尝试加载
                 console.log('🔄 Online global config exists but no current config, trying to load...');
@@ -67,18 +67,18 @@ class AI1Chat {
     loadConfig() {
         // Load default config first
         let config = JSON.parse(JSON.stringify(window.AI1_CONFIG || {}));
-        console.log('📋 Default AI1 config loaded:', config);
+        console.log('📋 加载默认 AI1 配置:', config);
         
         try {
             // PRIORITY 1: Check for ONLINE GLOBAL configuration
             if (window.onlineGlobalConfig && window.onlineGlobalConfig.currentConfig) {
                 const onlineConfig = window.onlineGlobalConfig.getAI2Config();
-                console.log('☁️ Loading ONLINE GLOBAL AI1 config (using AI2 config):', onlineConfig);
+                console.log('☁️ 加载 ONLINE GLOBAL AI1 配置 (使用 AI2 配置):', onlineConfig);
                 
                 if (onlineConfig.model) config.model = onlineConfig.model;
                 if (onlineConfig.systemPrompt) {
                     config.systemPrompt = onlineConfig.systemPrompt;
-                    console.log('✅ Using AI2 config from online admin');
+                    console.log('✅ 使用来自在线管理员的 AI2 配置');
                 }
                 if (onlineConfig.apiParams) {
                     config.apiParams = { ...config.apiParams, ...onlineConfig.apiParams };
@@ -89,7 +89,7 @@ class AI1Chat {
                     config.ui = window.AI1_CONFIG?.ui || {};
                 }
                 
-                console.log('✅ AI1 config updated with ONLINE GLOBAL settings (AI2 config):', config);
+                console.log('✅ AI1 配置已更新 (包含 ONLINE GLOBAL 设置):', config);
                 console.log('🕐 Online config version:', window.onlineGlobalConfig.configVersion);
             } else if (window.onlineGlobalConfig) {
                 // 如果onlineGlobalConfig存在但没有currentConfig，尝试加载
@@ -102,12 +102,12 @@ class AI1Chat {
             // PRIORITY 2: Check for FILE-BASED GLOBAL configuration from global-config.js
             else if (window.GLOBAL_AI1_CONFIG) {
                 const globalConfig = window.GLOBAL_AI1_CONFIG;
-                console.log('🌍 Loading FILE-BASED GLOBAL AI1 config:', globalConfig);
+                console.log('🌍 加载 FILE-BASED GLOBAL AI1 配置:', globalConfig);
                 
                 if (globalConfig.model) config.model = globalConfig.model;
                 if (globalConfig.systemPrompt) {
                     config.systemPrompt = globalConfig.systemPrompt;
-                    console.log('✅ Using global config');
+                    console.log('✅ 使用全局配置');
                 }
                 if (globalConfig.maxTokens) {
                     config.apiParams = config.apiParams || {};
@@ -123,22 +123,22 @@ class AI1Chat {
                     config.ui = window.AI1_CONFIG?.ui || {};
                 }
                 
-                console.log('✅ AI1 config updated with TRUE GLOBAL settings:', config);
+                console.log('✅ AI1 配置已更新 (包含 TRUE GLOBAL 设置):', config);
                 console.log('🕐 Global config version:', window.GLOBAL_CONFIG_VERSION);
             } else {
                 // PRIORITY 2: Fallback to localStorage global config
                 const globalConfigStr = localStorage.getItem('global_ai1_config');
-                console.log('🌐 Checking for localStorage global_ai1_config:', globalConfigStr);
+                console.log('🌐 检查 localStorage global_ai1_config:', globalConfigStr);
                 
                 if (globalConfigStr) {
                     const parsed = JSON.parse(globalConfigStr);
-                    console.log('🔧 Loading localStorage GLOBAL AI1 config:', parsed);
+                    console.log('🔧 加载 localStorage GLOBAL AI1 配置:', parsed);
                 
                 // Override specific settings
                 if (parsed.model) config.model = parsed.model;
                 if (parsed.systemPrompt) {
                     config.systemPrompt = parsed.systemPrompt;
-                    console.log('✅ Using legacy config');
+                    console.log('✅ 使用旧版配置');
                 }
                 if (parsed.maxTokens) {
                     config.apiParams = config.apiParams || {};
@@ -154,21 +154,21 @@ class AI1Chat {
                     config.ui = window.AI1_CONFIG?.ui || {};
                 }
                 
-                    console.log('✅ AI1 config updated with localStorage GLOBAL settings:', config);
+                    console.log('✅ AI1 配置已更新 (包含 localStorage GLOBAL 设置):', config);
                 } else {
                     // PRIORITY 3: Fallback to legacy user-specific config
                     const customConfigStr = localStorage.getItem('ai1_custom_config');
-                    console.log('🔍 Checking localStorage for ai1_custom_config (legacy):', customConfigStr);
+                    console.log('🔍 检查 localStorage 中的 ai1_custom_config (旧版):', customConfigStr);
                     
                     if (customConfigStr) {
                         const parsed = JSON.parse(customConfigStr);
-                        console.log('🔧 Loading legacy custom AI1 config:', parsed);
+                        console.log('🔧 加载旧版自定义 AI1 配置:', parsed);
                         
                         // Override specific settings
                         if (parsed.model) config.model = parsed.model;
                         if (parsed.systemPrompt) {
                             config.systemPrompt = parsed.systemPrompt;
-                            console.log('✅ Using legacy config');
+                            console.log('✅ 使用旧版配置');
                         }
                         if (parsed.maxTokens) {
                             config.apiParams = config.apiParams || {};
@@ -184,9 +184,9 @@ class AI1Chat {
                             config.ui = window.AI1_CONFIG?.ui || {};
                         }
                         
-                        console.log('✅ AI1 config updated with legacy custom settings:', config);
+                        console.log('✅ AI1 配置已更新 (包含旧版自定义设置):', config);
                     } else {
-                        console.log('ℹ️ No custom AI1 config found, using defaults');
+                        console.log('ℹ️ 未找到自定义 AI1 配置，使用默认值');
                         // 确保ui配置存在
                         if (!config.ui) {
                             config.ui = window.AI1_CONFIG?.ui || {};
@@ -195,7 +195,7 @@ class AI1Chat {
                 }
             }
         } catch (error) {
-            console.error('❌ Error loading custom AI1 config:', error);
+            console.error('❌ 加载自定义 AI1 配置时出错:', error);
             // 确保ui配置存在
             if (!config.ui) {
                 config.ui = window.AI1_CONFIG?.ui || {};
@@ -210,9 +210,8 @@ class AI1Chat {
 
     // Add method to refresh config
     refreshConfig() {
-        console.log('🔄 Refreshing AI1 configuration...');
+        console.log('🔄 刷新 AI1 配置...');
         this.config = this.loadConfig();
-        this.addMessage('🔄 Configuration refreshed! New settings will apply to future conversations.', 'assistant');
     }
 
     initializeElements() {
@@ -260,8 +259,8 @@ class AI1Chat {
         // 设置UI文本从配置文件
         if (this.config.ui) {
             this.apiKeyInput.placeholder = this.config.ui.apiKeyPlaceholder || 'sk-proj-...';
-            this.sendBtn.innerHTML = `<i class="fas fa-paper-plane"></i> ${this.config.ui.sendButtonText || 'Send'}`;
-            this.typingText.textContent = this.config.ui.typingText || 'AI is thinking...';
+            this.sendBtn.innerHTML = `<i class="fas fa-paper-plane"></i> ${this.config.ui.sendButtonText || '发送'}`;
+            this.typingText.textContent = this.config.ui.typingText || 'AI 正在思考...';
             
             // 添加欢迎消息（确保在清除会话数据后显示）
             if (this.config.ui.welcomeMessage && this.chatContainer.children.length === 0) {
@@ -277,7 +276,7 @@ class AI1Chat {
 
 
         if (!this.apiKey) {
-            this.showError('Please enter your API Key first!');
+            this.showError('请先输入您的 API 密钥！');
             return;
         }
 
@@ -341,7 +340,7 @@ class AI1Chat {
         
         for (const apiEndpoint of apiEndpoints) {
             try {
-                console.log(`🔗 Trying API endpoint: ${apiEndpoint}`);
+                console.log(`🔗 尝试 API 端点: ${apiEndpoint}`);
                 
                 const response = await fetch(apiEndpoint, {
                     method: 'POST',
@@ -398,18 +397,18 @@ class AI1Chat {
                     this.messages = this.messages.slice(-maxHistory);
                 }
 
-                console.log(`✅ Successfully used API endpoint: ${apiEndpoint}`);
+                console.log(`✅ 成功使用 API 端点: ${apiEndpoint}`);
                 return parsedResponse;
                 
             } catch (error) {
-                console.warn(`❌ Failed to use API endpoint ${apiEndpoint}:`, error.message);
+                console.warn(`❌ 无法使用 API 端点 ${apiEndpoint}:`, error.message);
                 lastError = error;
                 continue;
             }
         }
         
         // 如果所有端点都失败了
-        console.error('❌ All API endpoints failed');
+        console.error('❌ 所有 API 端点都失败了');
         
         // 检查是否是网络连接问题
         if (lastError && (lastError.message.includes('Failed to fetch') || lastError.message.includes('ERR_NAME_NOT_RESOLVED'))) {
@@ -441,7 +440,7 @@ class AI1Chat {
         contentDiv.className = 'message-content';
         
         // 从配置文件获取标签文本
-        const userLabel = this.config.ui?.userLabel || 'You';
+        const userLabel = this.config.ui?.userLabel || '你';
         const assistantLabel = this.config.ui?.assistantLabel || 'Tom';
         
         if (sender === 'user') {
@@ -470,8 +469,8 @@ class AI1Chat {
         contentDiv.className = 'message-content';
         
         // 使用配置文件中的错误消息或默认消息
-        const finalErrorMessage = errorMessage || this.config.ui?.errorMessage || 'Sorry, the AI assistant is temporarily unavailable. Please check your API Key or try again later.';
-        contentDiv.innerHTML = `<strong>❌ Error:</strong> ${finalErrorMessage}`;
+        const finalErrorMessage = errorMessage || this.config.ui?.errorMessage || '抱歉，AI助手暂时无法使用。请检查您的API密钥或稍后再试。';
+        contentDiv.innerHTML = `<strong>❌ 错误:</strong> ${finalErrorMessage}`;
         
         messageDiv.appendChild(contentDiv);
         this.chatContainer.appendChild(messageDiv);
@@ -512,16 +511,16 @@ class AI1Chat {
 
 
     handleFailState() {
-        console.log('💀 Game Over - Fail state triggered');
+        console.log('💀 游戏失败 - 触发失败状态');
         
         // Display game over message
-        this.addMessage('🎮 GAME OVER', 'assistant');
+        this.addMessage('🎮 游戏结束', 'assistant');
         
         // Disable chat functionality
         this.chatInput.disabled = true;
         this.sendBtn.disabled = true;
-        this.chatInput.placeholder = 'Game Over - Chat disabled';
-        this.sendBtn.innerHTML = '<i class="fas fa-ban"></i> Disabled';
+        this.chatInput.placeholder = '游戏结束 - 聊天已禁用';
+        this.sendBtn.innerHTML = '<i class="fas fa-ban"></i> 已禁用';
         this.sendBtn.style.opacity = '0.5';
         this.sendBtn.style.cursor = 'not-allowed';
         
@@ -534,16 +533,16 @@ class AI1Chat {
     }
 
     handleSuccessState() {
-        console.log('🎉 Game Success - Success state triggered');
+        console.log('🎉 游戏成功 - 触发成功状态');
         
         // Display success message
-        this.addMessage('🎉 Congratulations! Game completed successfully!', 'assistant');
+        this.addMessage('🎉 恭喜！游戏成功完成！', 'assistant');
         
         // Disable chat functionality
         this.chatInput.disabled = true;
         this.sendBtn.disabled = true;
-        this.chatInput.placeholder = 'Task completed - Chat disabled';
-        this.sendBtn.innerHTML = '<i class="fas fa-check"></i> Completed';
+        this.chatInput.placeholder = '任务完成 - 聊天已禁用';
+        this.sendBtn.innerHTML = '<i class="fas fa-check"></i> 已完成';
         this.sendBtn.style.opacity = '0.5';
         
         // Create and show completion button for success state
@@ -562,7 +561,7 @@ class AI1Chat {
         // Create completion button
         const completionButton = document.createElement('button');
         completionButton.id = 'completion-button';
-        completionButton.textContent = 'Complete';
+        completionButton.textContent = '完成';
         completionButton.className = 'submit-btn';
         completionButton.style.margin = '10px auto';
         completionButton.style.display = 'block';
@@ -573,7 +572,7 @@ class AI1Chat {
         completionButton.onclick = () => {
             this.saveGameResult(gameResult);
             completionButton.disabled = true;
-            completionButton.textContent = 'Completed ✓';
+            completionButton.textContent = '已完成 ✓';
             completionButton.style.opacity = '0.5';
         };
         
@@ -586,7 +585,7 @@ class AI1Chat {
     }
 
     saveGameResult(gameResult) {
-        console.log(`💾 Saving game result: ${gameResult}`);
+        console.log(`💾 保存游戏结果: ${gameResult}`);
         
         // Generate unique ID
         const resultId = this.generateUniqueId();
@@ -598,8 +597,8 @@ class AI1Chat {
             timestamp: new Date().toISOString()
         }));
         
-        console.log('📝 Chat history being saved:', chatHistory);
-        console.log('💬 Total messages:', this.messages.length);
+        console.log('📝 正在保存的聊天历史:', chatHistory);
+        console.log('💬 总消息数:', this.messages.length);
         
         const result = {
             id: resultId + 'ai1',
@@ -608,31 +607,31 @@ class AI1Chat {
             task: 'ai_conversation_game',
             chatHistory: chatHistory,
             conversationRounds: 0,
-            taskType: 'AI Chat 1 - Game Mode',
-            finalState: gameResult === 'success' ? 'Game Won' : 'Game Over'
+            taskType: 'AI Chat 1 - 游戏模式',
+            finalState: gameResult === 'success' ? '游戏胜利' : '游戏结束'
         };
 
-        console.log('📊 Complete result object:', result);
+        console.log('📊 完整结果对象:', result);
 
         // Save to localStorage
         const existingResults = JSON.parse(localStorage.getItem('airesults') || '[]');
         existingResults.push(result);
         localStorage.setItem('airesults', JSON.stringify(existingResults));
         
-        console.log('💾 Saved to localStorage. All results:', existingResults);
+        console.log('💾 已保存到 localStorage. 所有结果:', existingResults);
 
         // Also save to central storage
         this.saveToCentralStorage(result);
         
         // Show completion message
         const statusMessage = gameResult === 'success' 
-            ? '🎉 Game completed successfully!' 
-            : '💀 Game over recorded!';
-        this.addMessage(`✅ ${statusMessage} Your result "${gameResult}" has been saved with ID: ${result.id}`, 'assistant');
+            ? '🎉 游戏成功完成！' 
+            : '💀 游戏结束已记录！';
+        this.addMessage(`✅ ${statusMessage} 您的结果 "${gameResult}" 已保存，ID为: ${result.id}`, 'assistant');
         
         // Show link to results page
         setTimeout(() => {
-            this.addMessage('📊 View all results at: <a href="airesult.html" target="_blank" style="color: var(--secondary-color);">Results Page</a>', 'assistant');
+            this.addMessage('📊 查看所有结果: <a href="airesult.html" target="_blank" style="color: var(--secondary-color);">结果页面</a>', 'assistant');
         }, 1000);
     }
 
@@ -646,7 +645,7 @@ class AI1Chat {
 
     // 清除会话数据，确保每次刷新都是干净状态
     clearSessionData() {
-        console.log('🧹 Clearing AI1 session data for fresh start...');
+        console.log('🧹 清除 AI1 会话数据，准备全新对话...');
         
         // 清除可能存在的会话相关数据
         localStorage.removeItem('sessionSeed');
@@ -669,15 +668,15 @@ class AI1Chat {
         // 确保输入框是启用状态
         if (this.chatInput) {
             this.chatInput.disabled = false;
-            this.chatInput.placeholder = 'Type your message...';
+            this.chatInput.placeholder = '输入您的消息...';
         }
         if (this.sendBtn) {
             this.sendBtn.disabled = false;
-            this.sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Send';
+            this.sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i> 发送';
         }
         
-        console.log('✅ AI1 session data cleared, ready for fresh conversation');
-        console.log('📝 Messages array reset:', this.messages);
+        console.log('✅ AI1 会话数据已清除，准备全新对话');
+        console.log('📝 消息数组已重置:', this.messages);
     }
 
 
@@ -695,17 +694,17 @@ class AI1Chat {
                 ipHash: await this.getSimpleFingerprint() // Simple fingerprint for tracking
             };
 
-            console.log('🌐 Attempting to save to central storage (AI1):', enhancedResult);
+            console.log('🌐 尝试将结果保存到中央存储 (AI1):', enhancedResult);
             
             // Use the same central storage as AI Chat 1
             const centralResults = JSON.parse(localStorage.getItem('centralResults') || '[]');
             centralResults.push(enhancedResult);
             localStorage.setItem('centralResults', JSON.stringify(centralResults));
             
-            console.log('📡 Saved to central storage simulation (AI1):', enhancedResult);
+            console.log('📡 已保存到中央存储模拟 (AI1):', enhancedResult);
             
         } catch (error) {
-            console.error('❌ Failed to save to central storage (AI1):', error);
+            console.error('❌ 无法保存到中央存储 (AI1):', error);
         }
     }
 

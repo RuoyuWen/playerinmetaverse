@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tom AI Chat | Ruoyu Wen</title>
-    <meta name="description" content="Tom AI Chat Page - GPT-4 Assistant">
+    <title>Tom AI 聊天 | Ruoyu Wen</title>
+    <meta name="description" content="Tom AI 聊天页面 - GPT-4 助手">
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -261,11 +261,11 @@
                 <a href="index.html">Ruoyu Wen</a>
             </div>
             <div class="nav-menu" id="nav-menu">
-                <a href="index.html" class="nav-link">Home</a>
-                <a href="about.html" class="nav-link">About</a>
-                <a href="education.html" class="nav-link">Education</a>
-                <a href="research.html" class="nav-link">Research</a>
-                <a href="experience.html" class="nav-link">Experience</a>
+                <a href="index.html" class="nav-link">首页</a>
+                <a href="about.html" class="nav-link">关于</a>
+                <a href="education.html" class="nav-link">教育</a>
+                <a href="research.html" class="nav-link">研究</a>
+                <a href="experience.html" class="nav-link">经验</a>
             </div>
             <div class="nav-toggle" id="nav-toggle">
                 <span class="bar"></span>
@@ -279,11 +279,11 @@
     <section class="section-padding">
         <div class="container">
             <div class="page-header">
-                <h1 class="page-title">🔍 Tom AI Chat ▸ 🤖</h1>
-                <p class="page-subtitle">Private GPT-4 Assistant • Version 2 ✨ (Transit Model)</p>
+                <h1 class="page-title">🔍 Tom AI 聊天 ▸ 🤖</h1>
+                <p class="page-subtitle">私人 GPT-4 助手 • 版本 2 ✨ (中转模型)</p>
                 <div style="text-align: center; margin-top: 1rem;">
                     <a href="aisetting.html" style="color: var(--secondary-color); text-decoration: none; font-size: 0.9rem; font-weight: 500;">
-                        <i class="fas fa-cog"></i> AI Settings
+                        <i class="fas fa-cog"></i> AI 设置
                     </a>
                 </div>
             </div>
@@ -291,14 +291,14 @@
             <div class="ai-container">
                 <!-- API Key Setup -->
                 <div class="security-warning">
-                    <h3><i class="fas fa-key"></i> Transit API Key Setup</h3>
-                    <p>💡 Please enter your 薛定猫 Transit API Key to start chatting</p>
-                    <p>🔒 API Key is only stored locally in your browser and won't be uploaded to the server</p>
-                    <p>⚠️ Note: Using API key directly in frontend has security risks, recommended for personal testing only</p>
-                    <label for="api-key">Transit API Key:</label>
-                    <input type="password" id="api-key" class="api-key-input" placeholder="sk-... (Transit API Key)" />
+                    <h3><i class="fas fa-key"></i> 中转 API 密钥设置</h3>
+                    <p>💡 请输入您的薛定猫中转 API 密钥开始聊天</p>
+                    <p>🔒 API 密钥仅存储在您的浏览器本地，不会上传到服务器</p>
+                    <p>⚠️ 注意：在前端直接使用 API 密钥存在安全风险，仅建议用于个人测试</p>
+                    <label for="api-key">中转 API 密钥:</label>
+                    <input type="password" id="api-key" class="api-key-input" placeholder="sk-... (中转 API 密钥)" />
                     <small style="color: #888; font-size: 0.9em; margin-top: 0.5rem; display: block;">
-                        💡 Get API Key: Visit <a href="https://s.apifox.cn/0cc9d8a3-2430-47aa-bf45-98c5e07f58cf/doc-6962779" target="_blank" style="color: var(--secondary-color);">薛定猫API官方文档</a>
+                        💡 获取 API 密钥：访问 <a href="https://s.apifox.cn/0cc9d8a3-2430-47aa-bf45-98c5e07f58cf/doc-6962779" target="_blank" style="color: var(--secondary-color);">薛定猫API官方文档</a>
                     </small>
                 </div>
 
@@ -312,7 +312,7 @@
                 <!-- Typing Indicator -->
                 <div class="typing-indicator" id="typing-indicator">
                     <i class="fas fa-robot"></i>
-                    <span id="typing-text">AI is thinking...</span>
+                    <span id="typing-text">AI 正在思考...</span>
                     <div class="typing-dots">
                         <div class="typing-dot"></div>
                         <div class="typing-dot"></div>
@@ -325,14 +325,14 @@
                     <textarea 
                         id="chat-input" 
                         class="chat-input" 
-                        placeholder="Enter your question..." 
+                        placeholder="请输入您的问题..." 
                         rows="2"
                     ></textarea>
                     <button id="send-btn" class="send-btn">
                         <i class="fas fa-paper-plane"></i>
-                        Send
+                        发送
                     </button>
-                    <button onclick="refreshAI1Config()" style="padding: 0.5rem; margin-left: 0.5rem; background: linear-gradient(135deg, #28a745, #20c997); color: white; border: none; border-radius: 8px; font-size: 0.8rem; cursor: pointer;" title="Refresh configuration from settings">
+                    <button onclick="refreshAI1Config()" style="padding: 0.5rem; margin-left: 0.5rem; background: linear-gradient(135deg, #28a745, #20c997); color: white; border: none; border-radius: 8px; font-size: 0.8rem; cursor: pointer;" title="从设置刷新配置">
                         <i class="fas fa-sync-alt"></i>
                     </button>
                 </div>
@@ -344,12 +344,12 @@
     <footer class="footer">
         <div class="container">
             <div class="footer-content">
-                <p>&copy; 2024 Ruoyu Wen. Game Researcher & Designer | PhD in Human Computer Interaction 🌸</p>
+                <p>&copy; 2024 Ruoyu Wen. 游戏研究员 & 设计师 | 人机交互博士 🌸</p>
                 <div class="social-links">
-                    <a href="mailto:ruoyu.wen.game@gmail.com" target="_blank" title="Email"><i class="fas fa-envelope"></i></a>
+                    <a href="mailto:ruoyu.wen.game@gmail.com" target="_blank" title="邮箱"><i class="fas fa-envelope"></i></a>
                     <a href="https://scholar.google.com/citations?hl=en&user=TssKzFIAAAAJ&view_op=list_works&gmla=AH8HC4wssodHVoe9Ljll41vco9U7EA7ci1rWTxxfNSe7ZuuxjEwwNOrata7GzhiOgbnk-d_iRrOM-ILMs3B2445j" target="_blank" title="Google Scholar"><i class="fas fa-graduation-cap"></i></a>
                     <a href="https://www.linkedin.com/in/ruoyu-wen-53344419a/?locale=en_US" target="_blank" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
-                    <a href="https://wrychristian.itch.io/" target="_blank" title="Portfolio"><i class="fas fa-gamepad"></i></a>
+                    <a href="https://wrychristian.itch.io/" target="_blank" title="作品集"><i class="fas fa-gamepad"></i></a>
                 </div>
             </div>
         </div>

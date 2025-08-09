@@ -48,12 +48,12 @@ JSON格式要求：
 
     // UI text configuration
     ui: {
-        welcomeMessage: "Hey! I'm Tom! 🚀 I need your help to make a decision. Can you assist me? (Using Transit Model)",
-        errorMessage: "Sorry, Tom is temporarily unavailable. Please check your API Key or try again later.",
-        apiKeyPlaceholder: "sk-... (Transit API Key)",
-        sendButtonText: "Send",
-        typingText: "Tom is thinking...",
-        userLabel: "You",
+        welcomeMessage: "嘿！我是Tom！🚀 我需要你的帮助来做决定。你能协助我吗？(使用中转模型)",
+        errorMessage: "抱歉，Tom暂时无法使用。请检查您的API密钥或稍后再试。",
+        apiKeyPlaceholder: "sk-... (中转API密钥)",
+        sendButtonText: "发送",
+        typingText: "Tom正在思考...",
+        userLabel: "你",
         assistantLabel: "Tom"
     }
 };
