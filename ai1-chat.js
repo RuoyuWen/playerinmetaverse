@@ -31,8 +31,8 @@ class AI1Chat {
         // 等待在线配置加载完成
         const checkOnlineConfig = () => {
             if (window.onlineGlobalConfig && window.onlineGlobalConfig.currentConfig) {
-                const onlineConfig = window.onlineGlobalConfig.getAI1Config();
-                console.log('🎯 Forcing online config application for AI1:', onlineConfig);
+                const onlineConfig = window.onlineGlobalConfig.getAI2Config();
+                console.log('🎯 Forcing online config application for AI1 (using AI2 config):', onlineConfig);
                 
                 // 强制应用在线配置，但确保使用正确的Tom配置
                 if (onlineConfig.systemPrompt) {
@@ -43,11 +43,11 @@ class AI1Chat {
                         this.config.systemPrompt = window.AI1_CONFIG?.systemPrompt || this.config.systemPrompt;
                     } else if (systemPrompt.includes('Tom')) {
                         // 使用Tom配置
-                        console.log('✅ Using Tom config from online admin');
+                        console.log('✅ Using Tom config from online admin (AI2)');
                         this.config.systemPrompt = onlineConfig.systemPrompt;
                     } else {
                         // 检查是否是有效的配置（不是Lucy配置）
-                        console.log('✅ Using valid config from online admin');
+                        console.log('✅ Using valid config from online admin (AI2)');
                         this.config.systemPrompt = onlineConfig.systemPrompt;
                     }
                     console.log('✅ AI1 System prompt forcefully updated to:', this.config.systemPrompt);
@@ -85,8 +85,8 @@ class AI1Chat {
         try {
             // PRIORITY 1: Check for ONLINE GLOBAL configuration
             if (window.onlineGlobalConfig && window.onlineGlobalConfig.currentConfig) {
-                const onlineConfig = window.onlineGlobalConfig.getAI1Config();
-                console.log('☁️ Loading ONLINE GLOBAL AI1 config:', onlineConfig);
+                const onlineConfig = window.onlineGlobalConfig.getAI2Config();
+                console.log('☁️ Loading ONLINE GLOBAL AI1 config (using AI2 config):', onlineConfig);
                 
                 if (onlineConfig.model) config.model = onlineConfig.model;
                 if (onlineConfig.systemPrompt) {
@@ -114,7 +114,7 @@ class AI1Chat {
                     config.ui = window.AI1_CONFIG?.ui || {};
                 }
                 
-                console.log('✅ AI1 config updated with ONLINE GLOBAL settings:', config);
+                console.log('✅ AI1 config updated with ONLINE GLOBAL settings (AI2 config):', config);
                 console.log('🕐 Online config version:', window.onlineGlobalConfig.configVersion);
             } else if (window.onlineGlobalConfig) {
                 // 如果onlineGlobalConfig存在但没有currentConfig，尝试加载
