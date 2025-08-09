@@ -8,6 +8,67 @@
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script>
+        // Game Rules Modal functionality - Load early to avoid conflicts
+        function initGameRules() {
+            console.log('Initializing game rules...');
+            
+            const rulesBtn = document.getElementById('rules-btn');
+            const rulesModal = document.getElementById('rules-modal');
+            const rulesClose = document.getElementById('rules-close');
+            
+            console.log('Rules button found:', rulesBtn);
+            console.log('Rules modal found:', rulesModal);
+            console.log('Rules close found:', rulesClose);
+
+            if (rulesBtn) {
+                // Add both event listener and inline onclick as backup
+                rulesBtn.addEventListener('click', function() {
+                    console.log('Rules button clicked via event listener!');
+                    rulesModal.style.display = 'block';
+                });
+                
+                // Add inline onclick as backup
+                rulesBtn.onclick = function() {
+                    console.log('Rules button clicked via inline onclick!');
+                    rulesModal.style.display = 'block';
+                };
+                
+                console.log('Click handlers added to rules button');
+            } else {
+                console.error('Rules button not found!');
+            }
+
+            if (rulesClose) {
+                rulesClose.addEventListener('click', function() {
+                    console.log('Rules close clicked!');
+                    rulesModal.style.display = 'none';
+                });
+                console.log('Click event listener added to rules close');
+            } else {
+                console.error('Rules close not found!');
+            }
+
+            if (rulesModal) {
+                window.addEventListener('click', function(event) {
+                    if (event.target === rulesModal) {
+                        console.log('Clicked outside modal, closing...');
+                        rulesModal.style.display = 'none';
+                    }
+                });
+                console.log('Window click event listener added');
+            } else {
+                console.error('Rules modal not found!');
+            }
+        }
+        
+        // Try to initialize immediately and also on DOM ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initGameRules);
+        } else {
+            initGameRules();
+        }
+    </script>
     <style>
         .ai-container {
             max-width: 800px;
@@ -528,27 +589,6 @@
                 console.error('AI1 Chat instance not found');
             }
         }
-
-        // Game Rules Modal functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            const rulesBtn = document.getElementById('rules-btn');
-            const rulesModal = document.getElementById('rules-modal');
-            const rulesClose = document.getElementById('rules-close');
-
-            rulesBtn.addEventListener('click', function() {
-                rulesModal.style.display = 'block';
-            });
-
-            rulesClose.addEventListener('click', function() {
-                rulesModal.style.display = 'none';
-            });
-
-            window.addEventListener('click', function(event) {
-                if (event.target === rulesModal) {
-                    rulesModal.style.display = 'none';
-                }
-            });
-        });
     </script>
 </body>
 </html>
