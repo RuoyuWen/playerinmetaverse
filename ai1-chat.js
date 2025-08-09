@@ -34,9 +34,15 @@ class AI1Chat {
                 const onlineConfig = window.onlineGlobalConfig.getAI1Config();
                 console.log('🎯 Forcing online config application for AI1:', onlineConfig);
                 
-                // 强制应用在线配置
+                // 强制应用在线配置，但确保使用正确的Tom配置
                 if (onlineConfig.systemPrompt) {
-                    this.config.systemPrompt = onlineConfig.systemPrompt;
+                    // 检查是否是Lucy的配置，如果是则使用默认的Tom配置
+                    if (onlineConfig.systemPrompt.includes('Lucy') || onlineConfig.systemPrompt.includes('magician')) {
+                        console.log('⚠️ Detected Lucy config, using default Tom config instead');
+                        this.config.systemPrompt = window.AI1_CONFIG?.systemPrompt || this.config.systemPrompt;
+                    } else {
+                        this.config.systemPrompt = onlineConfig.systemPrompt;
+                    }
                     console.log('✅ AI1 System prompt forcefully updated to:', this.config.systemPrompt);
                 }
                 if (onlineConfig.model) {
@@ -69,7 +75,15 @@ class AI1Chat {
                 console.log('☁️ Loading ONLINE GLOBAL AI1 config:', onlineConfig);
                 
                 if (onlineConfig.model) config.model = onlineConfig.model;
-                if (onlineConfig.systemPrompt) config.systemPrompt = onlineConfig.systemPrompt;
+                if (onlineConfig.systemPrompt) {
+                    // 检查是否是Lucy的配置，如果是则使用默认的Tom配置
+                    if (onlineConfig.systemPrompt.includes('Lucy') || onlineConfig.systemPrompt.includes('magician')) {
+                        console.log('⚠️ Detected Lucy config in online config, using default Tom config instead');
+                        config.systemPrompt = window.AI1_CONFIG?.systemPrompt || config.systemPrompt;
+                    } else {
+                        config.systemPrompt = onlineConfig.systemPrompt;
+                    }
+                }
                 if (onlineConfig.apiParams) {
                     config.apiParams = { ...config.apiParams, ...onlineConfig.apiParams };
                 }
@@ -304,62 +318,79 @@ class AI1Chat {
         const apiParams = this.config.apiParams || {};
         const apiEndpoint = this.config.apiEndpoint || 'https://api.xuedingmao.com/v1/chat/completions';
 
-        const response = await fetch(apiEndpoint, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${this.apiKey}`
-            },
-            body: JSON.stringify({
-                model: model,
-                messages: [
-                    {
-                        role: 'system',
-                        content: systemPrompt
-                    },
-                    ...this.messages
-                ],
-                max_tokens: apiParams.max_tokens || 1500,
-                temperature: apiParams.temperature || 0.7,
-                top_p: apiParams.top_p || 0.9,
-                frequency_penalty: apiParams.frequency_penalty || 0.0,
-                presence_penalty: apiParams.presence_penalty || 0.0,
-                stream: false,
-                response_format: { type: "json_object" }
-            })
-        });
-
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(`API Error: ${error.error?.message || 'Unknown error'}`);
-        }
-
-        const data = await response.json();
-        const assistantMessage = data.choices[0].message.content;
-        
-        // Parse JSON response
-        let parsedResponse;
         try {
-            parsedResponse = JSON.parse(assistantMessage);
+            const response = await fetch(apiEndpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.apiKey}`
+                },
+                body: JSON.stringify({
+                    model: model,
+                    messages: [
+                        {
+                            role: 'system',
+                            content: systemPrompt
+                        },
+                        ...this.messages
+                    ],
+                    max_tokens: apiParams.max_tokens || 1500,
+                    temperature: apiParams.temperature || 0.7,
+                    top_p: apiParams.top_p || 0.9,
+                    frequency_penalty: apiParams.frequency_penalty || 0.0,
+                    presence_penalty: apiParams.presence_penalty || 0.0,
+                    stream: false,
+                    response_format: { type: "json_object" }
+                })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(`API Error: ${error.error?.message || 'Unknown error'}`);
+            }
+
+            const data = await response.json();
+            const assistantMessage = data.choices[0].message.content;
+            
+            // Parse JSON response
+            let parsedResponse;
+            try {
+                parsedResponse = JSON.parse(assistantMessage);
+            } catch (error) {
+                console.error('Failed to parse JSON response:', error);
+                // Fallback to plain text if JSON parsing fails
+                parsedResponse = {
+                    content: assistantMessage,
+                    class: "none"
+                };
+            }
+            
+            // Add assistant response to conversation history
+            this.messages.push({ role: 'assistant', content: parsedResponse.content || assistantMessage });
+
+            // Keep conversation history reasonable (从配置文件获取历史长度限制)
+            const maxHistory = this.config.maxHistoryLength || 20;
+            if (this.messages.length > maxHistory) {
+                this.messages = this.messages.slice(-maxHistory);
+            }
+
+            return parsedResponse;
         } catch (error) {
-            console.error('Failed to parse JSON response:', error);
-            // Fallback to plain text if JSON parsing fails
-            parsedResponse = {
-                content: assistantMessage,
-                class: "none"
-            };
+            console.error('API call failed:', error);
+            
+            // 检查是否是网络连接问题
+            if (error.message.includes('Failed to fetch') || error.message.includes('ERR_NAME_NOT_RESOLVED')) {
+                throw new Error('网络连接失败：无法连接到薛定猫API服务器。请检查网络连接或稍后重试。');
+            }
+            
+            // 检查是否是API密钥问题
+            if (error.message.includes('401') || error.message.includes('Unauthorized')) {
+                throw new Error('API密钥无效：请检查您的薛定猫API密钥是否正确。');
+            }
+            
+            // 其他错误
+            throw new Error(`API调用失败：${error.message}`);
         }
-        
-        // Add assistant response to conversation history
-        this.messages.push({ role: 'assistant', content: parsedResponse.content || assistantMessage });
-
-        // Keep conversation history reasonable (从配置文件获取历史长度限制)
-        const maxHistory = this.config.maxHistoryLength || 20;
-        if (this.messages.length > maxHistory) {
-            this.messages = this.messages.slice(-maxHistory);
-        }
-
-        return parsedResponse;
     }
 
     addMessage(message, sender) {
