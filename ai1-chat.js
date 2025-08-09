@@ -74,6 +74,11 @@ class AI1Chat {
                     config.apiParams = { ...config.apiParams, ...onlineConfig.apiParams };
                 }
                 
+                // 确保ui配置不被覆盖
+                if (!config.ui) {
+                    config.ui = window.AI1_CONFIG?.ui || {};
+                }
+                
                 console.log('✅ AI1 config updated with ONLINE GLOBAL settings:', config);
                 console.log('🕐 Online config version:', window.onlineGlobalConfig.configVersion);
             }
@@ -91,6 +96,11 @@ class AI1Chat {
                 if (globalConfig.temperature !== undefined) {
                     config.apiParams = config.apiParams || {};
                     config.apiParams.temperature = globalConfig.temperature;
+                }
+                
+                // 确保ui配置不被覆盖
+                if (!config.ui) {
+                    config.ui = window.AI1_CONFIG?.ui || {};
                 }
                 
                 console.log('✅ AI1 config updated with TRUE GLOBAL settings:', config);
@@ -116,6 +126,11 @@ class AI1Chat {
                     config.apiParams.temperature = parsed.temperature;
                 }
                 
+                // 确保ui配置不被覆盖
+                if (!config.ui) {
+                    config.ui = window.AI1_CONFIG?.ui || {};
+                }
+                
                     console.log('✅ AI1 config updated with localStorage GLOBAL settings:', config);
                 } else {
                     // PRIORITY 3: Fallback to legacy user-specific config
@@ -138,14 +153,27 @@ class AI1Chat {
                             config.apiParams.temperature = parsed.temperature;
                         }
                         
+                        // 确保ui配置不被覆盖
+                        if (!config.ui) {
+                            config.ui = window.AI1_CONFIG?.ui || {};
+                        }
+                        
                         console.log('✅ AI1 config updated with legacy custom settings:', config);
                     } else {
                         console.log('ℹ️ No custom AI1 config found, using defaults');
+                        // 确保ui配置存在
+                        if (!config.ui) {
+                            config.ui = window.AI1_CONFIG?.ui || {};
+                        }
                     }
                 }
             }
         } catch (error) {
             console.error('❌ Error loading custom AI1 config:', error);
+            // 确保ui配置存在
+            if (!config.ui) {
+                config.ui = window.AI1_CONFIG?.ui || {};
+            }
         }
         
         // Always use transit API endpoint regardless of other config
@@ -209,8 +237,8 @@ class AI1Chat {
             this.sendBtn.innerHTML = `<i class="fas fa-paper-plane"></i> ${this.config.ui.sendButtonText || 'Send'}`;
             this.typingText.textContent = this.config.ui.typingText || 'AI is thinking...';
             
-            // 添加欢迎消息
-            if (this.config.ui.welcomeMessage) {
+            // 添加欢迎消息（确保在清除会话数据后显示）
+            if (this.config.ui.welcomeMessage && this.chatContainer.children.length === 0) {
                 this.addMessage(this.config.ui.welcomeMessage, 'assistant');
             }
         }
@@ -567,7 +595,7 @@ class AI1Chat {
         // 重置消息数组 - 这是关键！
         this.messages = [];
         
-        // 清除聊天容器内容
+        // 清除聊天容器内容，但保留欢迎消息的位置
         if (this.chatContainer) {
             this.chatContainer.innerHTML = '';
         }
