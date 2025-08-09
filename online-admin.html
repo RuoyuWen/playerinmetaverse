@@ -347,76 +347,7 @@
                     </div>
                 </div>
 
-                <!-- Configuration Editor -->
-                <div class="config-editor">
-                    <h3><i class="fas fa-edit"></i> Global AI Configuration Editor</h3>
-                    
-                    <div class="editor-grid">
-                        <!-- AI Chat 1 Configuration -->
-                        <div>
-                            <h4 style="color: var(--primary-color); margin-bottom: 1rem;">AI Chat 1 Configuration</h4>
-                            
-                            <div class="form-group">
-                                <label class="form-label" for="ai1-model">Model:</label>
-                                <select id="ai1-model" class="form-select">
-                                    <option value="gpt-4.1">GPT-4.1</option>
-                                    <option value="gpt-4.1-mini">GPT-4.1 Mini</option>
-                                    <option value="gpt-4o">GPT-4o</option>
-                                </select>
-                            </div>
 
-                            <div class="form-group">
-                                <label class="form-label" for="ai1-max-tokens">Max Tokens:</label>
-                                <input type="number" id="ai1-max-tokens" class="form-input" min="100" max="4000" value="1500">
-                            </div>
-
-                            <div class="form-group">
-                                <label class="form-label" for="ai1-temperature">Temperature:</label>
-                                <input type="number" id="ai1-temperature" class="form-input" min="0" max="2" step="0.1" value="0.7">
-                            </div>
-
-                            <div class="form-group">
-                                <label class="form-label" for="ai1-system-prompt">System Prompt:</label>
-                                <textarea id="ai1-system-prompt" class="form-textarea" placeholder="Enter system prompt for AI Chat 1..."></textarea>
-                            </div>
-                        </div>
-
-                        <!-- AI Chat 2 Configuration -->
-                        <div>
-                            <h4 style="color: var(--secondary-color); margin-bottom: 1rem;">AI Chat 2 Configuration</h4>
-                            
-                            <div class="form-group">
-                                <label class="form-label" for="ai2-model">Model:</label>
-                                <select id="ai2-model" class="form-select">
-                                    <option value="gpt-4.1">GPT-4.1</option>
-                                    <option value="gpt-4.1-mini">GPT-4.1 Mini</option>
-                                    <option value="gpt-4o">GPT-4o</option>
-                                </select>
-                            </div>
-
-                            <div class="form-group">
-                                <label class="form-label" for="ai2-max-tokens">Max Tokens:</label>
-                                <input type="number" id="ai2-max-tokens" class="form-input" min="100" max="4000" value="1500">
-                            </div>
-
-                            <div class="form-group">
-                                <label class="form-label" for="ai2-temperature">Temperature:</label>
-                                <input type="number" id="ai2-temperature" class="form-input" min="0" max="2" step="0.1" value="0.7">
-                            </div>
-
-                            <div class="form-group">
-                                <label class="form-label" for="ai2-system-prompt">System Prompt:</label>
-                                <textarea id="ai2-system-prompt" class="form-textarea" placeholder="Enter system prompt for AI Chat 2..."></textarea>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div style="text-align: center; margin-top: 2rem;">
-                        <button class="save-btn" onclick="saveConfiguration()" id="save-btn">
-                            <i class="fas fa-cloud-upload-alt"></i> Save to Cloud (Apply Globally)
-                        </button>
-                    </div>
-                </div>
 
                 <!-- Cloud Results Management -->
                 <div class="config-editor">
