@@ -34,13 +34,17 @@ class AI1Chat {
                 const onlineConfig = window.onlineGlobalConfig.getAI2Config();
                 console.log('🎯 Forcing online config application for AI1 (using AI2 config):', onlineConfig);
                 
-                // 强制应用在线配置，但确保使用正确的Tom配置
+                // 强制应用在线配置，但确保使用正确的配置
                 if (onlineConfig.systemPrompt) {
                     // 检查是否是Lucy的配置，如果是则使用默认的Tom配置
                     const systemPrompt = onlineConfig.systemPrompt;
                     if (systemPrompt.includes('Lucy') || systemPrompt.includes('magician') || systemPrompt.includes('Ruoyu Wen') || systemPrompt.includes('"role": "Lucy"')) {
                         console.log('⚠️ Detected Lucy/Ruoyu config, using default Tom config instead');
                         this.config.systemPrompt = window.AI1_CONFIG?.systemPrompt || this.config.systemPrompt;
+                    } else if (systemPrompt.includes('Jerry')) {
+                        // 使用Jerry配置
+                        console.log('✅ Using Jerry config from online admin (AI2)');
+                        this.config.systemPrompt = onlineConfig.systemPrompt;
                     } else if (systemPrompt.includes('Tom')) {
                         // 使用Tom配置
                         console.log('✅ Using Tom config from online admin (AI2)');
@@ -95,6 +99,10 @@ class AI1Chat {
                     if (systemPrompt.includes('Lucy') || systemPrompt.includes('magician') || systemPrompt.includes('Ruoyu Wen') || systemPrompt.includes('"role": "Lucy"')) {
                         console.log('⚠️ Detected Lucy/Ruoyu config in online config, using default Tom config instead');
                         config.systemPrompt = window.AI1_CONFIG?.systemPrompt || config.systemPrompt;
+                    } else if (systemPrompt.includes('Jerry')) {
+                        // 使用Jerry配置
+                        console.log('✅ Using Jerry config from online admin (AI2)');
+                        config.systemPrompt = onlineConfig.systemPrompt;
                     } else if (systemPrompt.includes('Tom')) {
                         // 使用Tom配置
                         console.log('✅ Using Tom config from online admin');
@@ -136,6 +144,9 @@ class AI1Chat {
                     if (systemPrompt.includes('Lucy') || systemPrompt.includes('magician') || systemPrompt.includes('Ruoyu Wen') || systemPrompt.includes('"role": "Lucy"')) {
                         console.log('⚠️ Detected Lucy/Ruoyu config in global config, using default Tom config instead');
                         config.systemPrompt = window.AI1_CONFIG?.systemPrompt || config.systemPrompt;
+                    } else if (systemPrompt.includes('Jerry')) {
+                        console.log('✅ Using Jerry config from global config');
+                        config.systemPrompt = globalConfig.systemPrompt;
                     } else if (systemPrompt.includes('Tom')) {
                         console.log('✅ Using Tom config from global config');
                         config.systemPrompt = globalConfig.systemPrompt;
@@ -177,6 +188,9 @@ class AI1Chat {
                     if (systemPrompt.includes('Lucy') || systemPrompt.includes('magician') || systemPrompt.includes('Ruoyu Wen') || systemPrompt.includes('"role": "Lucy"')) {
                         console.log('⚠️ Detected Lucy/Ruoyu config in localStorage, using default Tom config instead');
                         config.systemPrompt = window.AI1_CONFIG?.systemPrompt || config.systemPrompt;
+                    } else if (systemPrompt.includes('Jerry')) {
+                        console.log('✅ Using Jerry config from localStorage');
+                        config.systemPrompt = parsed.systemPrompt;
                     } else if (systemPrompt.includes('Tom')) {
                         console.log('✅ Using Tom config from localStorage');
                         config.systemPrompt = parsed.systemPrompt;
@@ -217,6 +231,9 @@ class AI1Chat {
                             if (systemPrompt.includes('Lucy') || systemPrompt.includes('magician') || systemPrompt.includes('Ruoyu Wen') || systemPrompt.includes('"role": "Lucy"')) {
                                 console.log('⚠️ Detected Lucy/Ruoyu config in legacy config, using default Tom config instead');
                                 config.systemPrompt = window.AI1_CONFIG?.systemPrompt || config.systemPrompt;
+                            } else if (systemPrompt.includes('Jerry')) {
+                                console.log('✅ Using Jerry config from legacy config');
+                                config.systemPrompt = parsed.systemPrompt;
                             } else if (systemPrompt.includes('Tom')) {
                                 console.log('✅ Using Tom config from legacy config');
                                 config.systemPrompt = parsed.systemPrompt;
