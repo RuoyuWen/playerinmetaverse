@@ -41,14 +41,14 @@ class AI1Chat {
                     if (systemPrompt.includes('Lucy') || systemPrompt.includes('magician') || systemPrompt.includes('Ruoyu Wen') || systemPrompt.includes('"role": "Lucy"')) {
                         console.log('⚠️ Detected Lucy/Ruoyu config, using default Tom config instead');
                         this.config.systemPrompt = window.AI1_CONFIG?.systemPrompt || this.config.systemPrompt;
+                    } else if (systemPrompt.includes('Tom')) {
+                        // 使用Tom配置
+                        console.log('✅ Using Tom config from online admin');
+                        this.config.systemPrompt = onlineConfig.systemPrompt;
                     } else {
-                        // 再次检查是否是Tom的配置
-                        if (systemPrompt.includes('Tom')) {
-                            this.config.systemPrompt = onlineConfig.systemPrompt;
-                        } else {
-                            console.log('⚠️ Unknown config detected, using default Tom config');
-                            this.config.systemPrompt = window.AI1_CONFIG?.systemPrompt || this.config.systemPrompt;
-                        }
+                        // 检查是否是有效的配置（不是Lucy配置）
+                        console.log('✅ Using valid config from online admin');
+                        this.config.systemPrompt = onlineConfig.systemPrompt;
                     }
                     console.log('✅ AI1 System prompt forcefully updated to:', this.config.systemPrompt);
                 }
@@ -60,6 +60,13 @@ class AI1Chat {
                 }
                 
                 console.log('🚀 Final AI1 config after force update:', this.config);
+            } else if (window.onlineGlobalConfig) {
+                // 如果onlineGlobalConfig存在但没有currentConfig，尝试加载
+                console.log('🔄 Online global config exists but no current config, trying to load...');
+                window.onlineGlobalConfig.loadConfig().then(() => {
+                    // 重新检查配置
+                    setTimeout(checkOnlineConfig, 100);
+                });
             } else {
                 console.log('⏳ Online config not ready for AI1, retrying in 1 second...');
                 setTimeout(checkOnlineConfig, 1000);
@@ -77,7 +84,7 @@ class AI1Chat {
         
         try {
             // PRIORITY 1: Check for ONLINE GLOBAL configuration
-            if (window.onlineGlobalConfig) {
+            if (window.onlineGlobalConfig && window.onlineGlobalConfig.currentConfig) {
                 const onlineConfig = window.onlineGlobalConfig.getAI1Config();
                 console.log('☁️ Loading ONLINE GLOBAL AI1 config:', onlineConfig);
                 
@@ -88,14 +95,14 @@ class AI1Chat {
                     if (systemPrompt.includes('Lucy') || systemPrompt.includes('magician') || systemPrompt.includes('Ruoyu Wen') || systemPrompt.includes('"role": "Lucy"')) {
                         console.log('⚠️ Detected Lucy/Ruoyu config in online config, using default Tom config instead');
                         config.systemPrompt = window.AI1_CONFIG?.systemPrompt || config.systemPrompt;
+                    } else if (systemPrompt.includes('Tom')) {
+                        // 使用Tom配置
+                        console.log('✅ Using Tom config from online admin');
+                        config.systemPrompt = onlineConfig.systemPrompt;
                     } else {
-                        // 再次检查是否是Tom的配置
-                        if (systemPrompt.includes('Tom')) {
-                            config.systemPrompt = onlineConfig.systemPrompt;
-                        } else {
-                            console.log('⚠️ Unknown config detected, using default Tom config');
-                            config.systemPrompt = window.AI1_CONFIG?.systemPrompt || config.systemPrompt;
-                        }
+                        // 检查是否是有效的配置（不是Lucy配置）
+                        console.log('✅ Using valid config from online admin');
+                        config.systemPrompt = onlineConfig.systemPrompt;
                     }
                 }
                 if (onlineConfig.apiParams) {
@@ -109,6 +116,13 @@ class AI1Chat {
                 
                 console.log('✅ AI1 config updated with ONLINE GLOBAL settings:', config);
                 console.log('🕐 Online config version:', window.onlineGlobalConfig.configVersion);
+            } else if (window.onlineGlobalConfig) {
+                // 如果onlineGlobalConfig存在但没有currentConfig，尝试加载
+                console.log('🔄 Online global config exists but no current config, trying to load...');
+                window.onlineGlobalConfig.loadConfig().then(() => {
+                    // 重新加载配置
+                    this.refreshConfig();
+                });
             }
             // PRIORITY 2: Check for FILE-BASED GLOBAL configuration from global-config.js
             else if (window.GLOBAL_AI1_CONFIG) {
@@ -122,14 +136,12 @@ class AI1Chat {
                     if (systemPrompt.includes('Lucy') || systemPrompt.includes('magician') || systemPrompt.includes('Ruoyu Wen') || systemPrompt.includes('"role": "Lucy"')) {
                         console.log('⚠️ Detected Lucy/Ruoyu config in global config, using default Tom config instead');
                         config.systemPrompt = window.AI1_CONFIG?.systemPrompt || config.systemPrompt;
+                    } else if (systemPrompt.includes('Tom')) {
+                        console.log('✅ Using Tom config from global config');
+                        config.systemPrompt = globalConfig.systemPrompt;
                     } else {
-                        // 再次检查是否是Tom的配置
-                        if (systemPrompt.includes('Tom')) {
-                            config.systemPrompt = globalConfig.systemPrompt;
-                        } else {
-                            console.log('⚠️ Unknown config detected, using default Tom config');
-                            config.systemPrompt = window.AI1_CONFIG?.systemPrompt || config.systemPrompt;
-                        }
+                        console.log('✅ Using valid config from global config');
+                        config.systemPrompt = globalConfig.systemPrompt;
                     }
                 }
                 if (globalConfig.maxTokens) {
@@ -165,14 +177,12 @@ class AI1Chat {
                     if (systemPrompt.includes('Lucy') || systemPrompt.includes('magician') || systemPrompt.includes('Ruoyu Wen') || systemPrompt.includes('"role": "Lucy"')) {
                         console.log('⚠️ Detected Lucy/Ruoyu config in localStorage, using default Tom config instead');
                         config.systemPrompt = window.AI1_CONFIG?.systemPrompt || config.systemPrompt;
+                    } else if (systemPrompt.includes('Tom')) {
+                        console.log('✅ Using Tom config from localStorage');
+                        config.systemPrompt = parsed.systemPrompt;
                     } else {
-                        // 再次检查是否是Tom的配置
-                        if (systemPrompt.includes('Tom')) {
-                            config.systemPrompt = parsed.systemPrompt;
-                        } else {
-                            console.log('⚠️ Unknown config detected, using default Tom config');
-                            config.systemPrompt = window.AI1_CONFIG?.systemPrompt || config.systemPrompt;
-                        }
+                        console.log('✅ Using valid config from localStorage');
+                        config.systemPrompt = parsed.systemPrompt;
                     }
                 }
                 if (parsed.maxTokens) {
@@ -207,14 +217,12 @@ class AI1Chat {
                             if (systemPrompt.includes('Lucy') || systemPrompt.includes('magician') || systemPrompt.includes('Ruoyu Wen') || systemPrompt.includes('"role": "Lucy"')) {
                                 console.log('⚠️ Detected Lucy/Ruoyu config in legacy config, using default Tom config instead');
                                 config.systemPrompt = window.AI1_CONFIG?.systemPrompt || config.systemPrompt;
+                            } else if (systemPrompt.includes('Tom')) {
+                                console.log('✅ Using Tom config from legacy config');
+                                config.systemPrompt = parsed.systemPrompt;
                             } else {
-                                // 再次检查是否是Tom的配置
-                                if (systemPrompt.includes('Tom')) {
-                                    config.systemPrompt = parsed.systemPrompt;
-                                } else {
-                                    console.log('⚠️ Unknown config detected, using default Tom config');
-                                    config.systemPrompt = window.AI1_CONFIG?.systemPrompt || config.systemPrompt;
-                                }
+                                console.log('✅ Using valid config from legacy config');
+                                config.systemPrompt = parsed.systemPrompt;
                             }
                         }
                         if (parsed.maxTokens) {
