@@ -26,18 +26,18 @@ class AI1Chat {
 
     // 确保在线配置立即生效
     ensureOnlineConfigActive() {
-        console.log('🔧 Ensuring online config is active for AI2...');
+        console.log('🔧 Ensuring online config is active for AI1...');
         
         // 等待在线配置加载完成
         const checkOnlineConfig = () => {
             if (window.onlineGlobalConfig && window.onlineGlobalConfig.currentConfig) {
-                const onlineConfig = window.onlineGlobalConfig.getAI2Config();
-                console.log('🎯 Forcing online config application for AI2:', onlineConfig);
+                const onlineConfig = window.onlineGlobalConfig.getAI1Config();
+                console.log('🎯 Forcing online config application for AI1:', onlineConfig);
                 
                 // 强制应用在线配置
                 if (onlineConfig.systemPrompt) {
                     this.config.systemPrompt = onlineConfig.systemPrompt;
-                    console.log('✅ AI2 System prompt forcefully updated to:', this.config.systemPrompt);
+                    console.log('✅ AI1 System prompt forcefully updated to:', this.config.systemPrompt);
                 }
                 if (onlineConfig.model) {
                     this.config.model = onlineConfig.model;
@@ -46,9 +46,9 @@ class AI1Chat {
                     this.config.apiParams = { ...this.config.apiParams, ...onlineConfig.apiParams };
                 }
                 
-                console.log('🚀 Final AI2 config after force update:', this.config);
+                console.log('🚀 Final AI1 config after force update:', this.config);
             } else {
-                console.log('⏳ Online config not ready for AI2, retrying in 1 second...');
+                console.log('⏳ Online config not ready for AI1, retrying in 1 second...');
                 setTimeout(checkOnlineConfig, 1000);
             }
         };
@@ -60,13 +60,13 @@ class AI1Chat {
     loadConfig() {
         // Load default config first
         let config = JSON.parse(JSON.stringify(window.AI1_CONFIG || {}));
-        console.log('📋 Default AI2 config loaded:', config);
+        console.log('📋 Default AI1 config loaded:', config);
         
         try {
             // PRIORITY 1: Check for ONLINE GLOBAL configuration
             if (window.onlineGlobalConfig) {
-                const onlineConfig = window.onlineGlobalConfig.getAI2Config();
-                console.log('☁️ Loading ONLINE GLOBAL AI2 config:', onlineConfig);
+                const onlineConfig = window.onlineGlobalConfig.getAI1Config();
+                console.log('☁️ Loading ONLINE GLOBAL AI1 config:', onlineConfig);
                 
                 if (onlineConfig.model) config.model = onlineConfig.model;
                 if (onlineConfig.systemPrompt) config.systemPrompt = onlineConfig.systemPrompt;
@@ -74,13 +74,13 @@ class AI1Chat {
                     config.apiParams = { ...config.apiParams, ...onlineConfig.apiParams };
                 }
                 
-                console.log('✅ AI2 config updated with ONLINE GLOBAL settings:', config);
+                console.log('✅ AI1 config updated with ONLINE GLOBAL settings:', config);
                 console.log('🕐 Online config version:', window.onlineGlobalConfig.configVersion);
             }
             // PRIORITY 2: Check for FILE-BASED GLOBAL configuration from global-config.js
-            else if (window.GLOBAL_AI2_CONFIG) {
-                const globalConfig = window.GLOBAL_AI2_CONFIG;
-                console.log('🌍 Loading FILE-BASED GLOBAL AI2 config:', globalConfig);
+            else if (window.GLOBAL_AI1_CONFIG) {
+                const globalConfig = window.GLOBAL_AI1_CONFIG;
+                console.log('🌍 Loading FILE-BASED GLOBAL AI1 config:', globalConfig);
                 
                 if (globalConfig.model) config.model = globalConfig.model;
                 if (globalConfig.systemPrompt) config.systemPrompt = globalConfig.systemPrompt;
@@ -93,16 +93,16 @@ class AI1Chat {
                     config.apiParams.temperature = globalConfig.temperature;
                 }
                 
-                console.log('✅ AI2 config updated with TRUE GLOBAL settings:', config);
+                console.log('✅ AI1 config updated with TRUE GLOBAL settings:', config);
                 console.log('🕐 Global config version:', window.GLOBAL_CONFIG_VERSION);
             } else {
                 // PRIORITY 2: Fallback to localStorage global config
-                const globalConfigStr = localStorage.getItem('global_ai2_config');
-                console.log('🌐 Checking for localStorage global_ai2_config:', globalConfigStr);
+                const globalConfigStr = localStorage.getItem('global_ai1_config');
+                console.log('🌐 Checking for localStorage global_ai1_config:', globalConfigStr);
                 
                 if (globalConfigStr) {
                     const parsed = JSON.parse(globalConfigStr);
-                    console.log('🔧 Loading localStorage GLOBAL AI2 config:', parsed);
+                    console.log('🔧 Loading localStorage GLOBAL AI1 config:', parsed);
                 
                 // Override specific settings
                 if (parsed.model) config.model = parsed.model;
@@ -116,15 +116,15 @@ class AI1Chat {
                     config.apiParams.temperature = parsed.temperature;
                 }
                 
-                    console.log('✅ AI2 config updated with localStorage GLOBAL settings:', config);
+                    console.log('✅ AI1 config updated with localStorage GLOBAL settings:', config);
                 } else {
                     // PRIORITY 3: Fallback to legacy user-specific config
-                    const customConfigStr = localStorage.getItem('ai2_custom_config');
-                    console.log('🔍 Checking localStorage for ai2_custom_config (legacy):', customConfigStr);
+                    const customConfigStr = localStorage.getItem('ai1_custom_config');
+                    console.log('🔍 Checking localStorage for ai1_custom_config (legacy):', customConfigStr);
                     
                     if (customConfigStr) {
                         const parsed = JSON.parse(customConfigStr);
-                        console.log('🔧 Loading legacy custom AI2 config:', parsed);
+                        console.log('🔧 Loading legacy custom AI1 config:', parsed);
                         
                         // Override specific settings
                         if (parsed.model) config.model = parsed.model;
@@ -138,22 +138,25 @@ class AI1Chat {
                             config.apiParams.temperature = parsed.temperature;
                         }
                         
-                        console.log('✅ AI2 config updated with legacy custom settings:', config);
+                        console.log('✅ AI1 config updated with legacy custom settings:', config);
                     } else {
-                        console.log('ℹ️ No custom AI2 config found, using defaults');
+                        console.log('ℹ️ No custom AI1 config found, using defaults');
                     }
                 }
             }
         } catch (error) {
-            console.error('❌ Error loading custom AI2 config:', error);
+            console.error('❌ Error loading custom AI1 config:', error);
         }
+        
+        // Always use transit API endpoint regardless of other config
+        config.apiEndpoint = 'https://api.xuedingmao.com/v1/chat/completions';
         
         return config;
     }
 
     // Add method to refresh config
     refreshConfig() {
-        console.log('🔄 Refreshing AI2 configuration...');
+        console.log('🔄 Refreshing AI1 configuration...');
         this.config = this.loadConfig();
         this.addMessage('🔄 Configuration refreshed! New settings will apply to future conversations.', 'assistant');
     }
@@ -179,7 +182,7 @@ class AI1Chat {
         
         this.apiKeyInput.addEventListener('input', (e) => {
             this.apiKey = e.target.value;
-            localStorage.setItem('openai_api_key_v2', this.apiKey);
+            localStorage.setItem('transit_api_key_v2', this.apiKey);
         });
 
         // Auto-resize textarea
@@ -192,7 +195,7 @@ class AI1Chat {
     }
 
     loadApiKey() {
-        const savedKey = localStorage.getItem('openai_api_key_v2');
+        const savedKey = localStorage.getItem('transit_api_key_v2');
         if (savedKey) {
             this.apiKey = savedKey;
             this.apiKeyInput.value = savedKey;
@@ -235,7 +238,7 @@ class AI1Chat {
         this.showTyping(true);
 
         try {
-            // Call OpenAI API
+            // Call Transit API
             const response = await this.callOpenAI(message);
             
             // Handle different response classes
@@ -254,7 +257,7 @@ class AI1Chat {
                 return;
             } else if (responseClass === 'none') {
                 // Continue normal conversation
-
+            }
         } catch (error) {
             console.error('AI Chat Error:', error);
             this.showError('抱歉，Tom暂时无法回应。请检查API Key或稍后重试。');
@@ -271,8 +274,9 @@ class AI1Chat {
         const model = this.config.model || 'gpt-4o';
         const systemPrompt = this.config.systemPrompt || '你是一个友好的助手。请用中文回答问题，保持礼貌和有帮助的态度。';
         const apiParams = this.config.apiParams || {};
+        const apiEndpoint = this.config.apiEndpoint || 'https://api.xuedingmao.com/v1/chat/completions';
 
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        const response = await fetch(apiEndpoint, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -354,7 +358,7 @@ class AI1Chat {
             avatarDiv.innerHTML = `<div class="avatar user-avatar">👤</div>`;
             contentDiv.innerHTML = `<strong>${userLabel}:</strong> ${this.escapeHtml(message)}`;
         } else {
-            // AI Chat 2 - Male avatar
+            // AI Chat 1 - Male avatar
             avatarDiv.innerHTML = `<div class="avatar ai-avatar male-avatar">👨‍💻</div>`;
             contentDiv.innerHTML = `<strong>${assistantLabel}:</strong> ${this.formatMessage(message)}`;
         }
@@ -513,7 +517,7 @@ class AI1Chat {
             task: 'ai_conversation_game',
             chatHistory: chatHistory,
             conversationRounds: 0,
-            taskType: 'AI Chat 2 - Game Mode',
+            taskType: 'AI Chat 1 - Game Mode',
             finalState: gameResult === 'success' ? 'Game Won' : 'Game Over'
         };
 

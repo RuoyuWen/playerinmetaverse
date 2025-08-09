@@ -1,13 +1,15 @@
 /**
- * AI Chat Configuration - Version 2
- * 在这个文件中修改AI助手的配置
+ * AI Chat Configuration - Version 2 (Transit Model)
+ * 在这个文件中修改AI助手的配置 - 使用薛定猫API中转模型
+ * 注意：此配置将被online-admin的配置系统覆盖
  */
 
 const AI1_CONFIG = {
-    // OpenAI模型配置
-    model: 'gpt-4.1', // 最新的GPT-4模型，也可以使用 'gpt-4-turbo'
+    // 中转模型配置 - 使用薛定猫API
+    model: 'gpt-4o', // 中转模型支持的模型名称（将被online-admin覆盖）
+    apiEndpoint: 'https://api.xuedingmao.com/v1/chat/completions', // 薛定猫API端点（固定）
     
-    // 系统提示词 - 在这里自定义AI助手的行为
+    // 系统提示词 - 在这里自定义AI助手的行为（将被online-admin覆盖）
     systemPrompt: `你是Tom，一个需要帮助做决定的AI助手。你必须始终返回JSON格式的回答。
 
 你的角色：
@@ -32,7 +34,7 @@ JSON格式要求：
 对话初期：{"content": "谢谢你的帮助！", "class": "none"}
 任务完成时：{"content": "太棒了！你的建议真的帮了我很多。", "class": "success"}`,
 
-    // API请求参数
+    // API请求参数（将被online-admin覆盖）
     apiParams: {
         max_tokens: 1500,        // 最大响应长度
         temperature: 0.7,        // 创造性程度 (0-1)
@@ -46,9 +48,9 @@ JSON格式要求：
 
     // UI text configuration
     ui: {
-        welcomeMessage: "Hey! I'm Tom! 🚀 I need your help to make a decision. Can you assist me?",
+        welcomeMessage: "Hey! I'm Tom! 🚀 I need your help to make a decision. Can you assist me? (Using Transit Model)",
         errorMessage: "Sorry, Tom is temporarily unavailable. Please check your API Key or try again later.",
-        apiKeyPlaceholder: "sk-proj-...",
+        apiKeyPlaceholder: "sk-... (Transit API Key)",
         sendButtonText: "Send",
         typingText: "Tom is thinking...",
         userLabel: "You",
