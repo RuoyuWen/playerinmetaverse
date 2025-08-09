@@ -155,7 +155,6 @@ class AIChat {
     refreshConfig() {
         console.log('🔄 Refreshing AI1 configuration...');
         this.config = this.loadConfig();
-        this.addMessage('🔄 Configuration refreshed! New settings will apply to future conversations.', 'assistant');
     }
 
     initializeElements() {
