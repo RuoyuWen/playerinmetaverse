@@ -452,6 +452,23 @@
                         <br><strong>Results Storage:</strong> Chat results are automatically saved to a separate cloud storage bin for admin access.
                     </p>
                 </div>
+                <div class="controls">
+                    <button class="control-btn" onclick="refreshData()">
+                        <i class="fas fa-sync-alt"></i> Refresh Data
+                    </button>
+                    <button class="control-btn" onclick="exportAllData()">
+                        <i class="fas fa-download"></i> Export All Data
+                    </button>
+                    <button class="control-btn danger" onclick="clearAllData()">
+                        <i class="fas fa-trash"></i> Clear All Data
+                    </button>
+                    <button class="control-btn" onclick="loadCloudData()">
+                        <i class="fas fa-cloud"></i> Load Cloud Data
+                    </button>
+                    <button class="control-btn" onclick="resetCloudConfig()" style="background: linear-gradient(135deg, #ffc107, #fd7e14);">
+                        <i class="fas fa-cog"></i> Reset Cloud Config
+                    </button>
+                </div>
             </div>
         </div>
     </section>
@@ -748,6 +765,130 @@
             URL.revokeObjectURL(url);
             
             showNotification('Cloud results downloaded successfully', 'success');
+        }
+
+        // Load cloud data manually
+        async function loadCloudData() {
+            const loadBtn = document.querySelector('button[onclick="loadCloudData()"]');
+            const originalText = loadBtn.innerHTML;
+            
+            loadBtn.disabled = true;
+            loadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+            
+            try {
+                await loadCloudResults();
+                loadAdminData();
+                showNotification('Cloud data loaded successfully!', 'success');
+            } catch (error) {
+                showNotification('Failed to load cloud data: ' + error.message, 'error');
+            } finally {
+                loadBtn.disabled = false;
+                loadBtn.innerHTML = originalText;
+            }
+        }
+
+        // Reset cloud configuration to correct structure
+        async function resetCloudConfig() {
+            const resetBtn = document.querySelector('button[onclick="resetCloudConfig()"]');
+            const originalText = resetBtn.innerHTML;
+            
+            resetBtn.disabled = true;
+            resetBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Resetting...';
+            
+            try {
+                const RESULTS_ENDPOINT = 'https://api.jsonbin.io/v3/b/6892ab887b4b8670d8ae42df';
+                const API_KEY = '$2a$10$XIZ3tMFNAQ56XbxSVUR2NeboaNtWqUvRveuIUkDQ1ceUUjPgHQzBq';
+                
+                // Create correct configuration structure
+                const correctConfig = {
+                    version: Date.now(),
+                    lastUpdated: new Date().toISOString(),
+                    ai1: {
+                        model: 'gpt-4o',
+                        systemPrompt: `你是Tom，一个需要帮助做决定的AI助手。你必须始终返回JSON格式的回答。
+
+你的角色：
+- 你是Tom，一个友好的男性AI助手
+- 你需要用户帮助你做各种决定
+- 保持友好、有帮助的语调，用中文回答问题
+
+JSON格式要求：
+{
+  "content": "你的回答内容",
+  "class": "游戏状态"
+}
+
+游戏状态说明：
+- "success": 当用户给出了很好的建议、帮助解决了问题、或完成了帮助任务时
+- "fail": 当用户给出了不当的建议、说了冒犯性话语、或拒绝帮助时
+- "none": 正常对话，继续寻求帮助
+
+注意：在对话达到一定深度后，适当时候返回"success"来结束游戏。
+
+示例：
+对话初期：{"content": "谢谢你的帮助！", "class": "none"}
+任务完成时：{"content": "太棒了！你的建议真的帮了我很多。", "class": "success"}`,
+                        maxTokens: 1500,
+                        temperature: 0.7
+                    },
+                    ai2: {
+                        model: 'gpt-4.1',
+                        systemPrompt: `你是Lucy，一个需要帮助做决定的AI助手。你必须始终返回JSON格式的回答。
+
+你的角色：
+- 你是Lucy，一个友好的女性AI助手
+- 你需要用户帮助你做各种决定
+- 保持友好、有帮助的语调，用中文回答问题
+
+JSON格式要求：
+{
+  "content": "你的回答内容",
+  "class": "游戏状态"
+}
+
+游戏状态说明：
+- "success": 当用户给出了很好的建议、帮助解决了问题、或完成了帮助任务时
+- "fail": 当用户给出了不当的建议、说了冒犯性话语、或拒绝帮助时
+- "none": 正常对话，继续寻求帮助
+
+注意：在对话达到一定深度后，适当时候返回"success"来结束游戏。
+
+示例：
+对话初期：{"content": "谢谢你的帮助！", "class": "none"}
+任务完成时：{"content": "太棒了！你的建议真的帮了我很多。", "class": "success"}`,
+                        maxTokens: 1500,
+                        temperature: 0.7
+                    },
+                    results: []
+                };
+
+                const response = await fetch(RESULTS_ENDPOINT, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': API_KEY
+                    },
+                    body: JSON.stringify(correctConfig)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                showNotification('Cloud configuration reset successfully!', 'success');
+                
+                // Reload data to show the new structure
+                setTimeout(() => {
+                    loadAdminData();
+                }, 1000);
+                
+            } catch (error) {
+                console.error('❌ Failed to reset cloud config:', error);
+                showNotification('Failed to reset cloud config: ' + error.message, 'error');
+            } finally {
+                resetBtn.disabled = false;
+                resetBtn.innerHTML = originalText;
+            }
         }
     </script>
 </body>

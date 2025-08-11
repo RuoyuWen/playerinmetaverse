@@ -32,7 +32,8 @@ class OnlineGlobalConfig {
                 systemPrompt: `You are an AI assistant. Please help users with their questions.`,
                 maxTokens: 1500,
                 temperature: 0.7
-            }
+            },
+            results: [] // Add results array to match cloud structure
         };
     }
 
@@ -44,15 +45,20 @@ class OnlineGlobalConfig {
             // Try to load from cloud storage
             const cloudConfig = await this.fetchFromCloud();
             if (cloudConfig) {
-                this.currentConfig = cloudConfig;
-                this.configVersion = cloudConfig.version;
-                console.log('✅ Online global config loaded:', cloudConfig);
-                return cloudConfig;
+                // Validate cloud config structure
+                if (this.validateConfigStructure(cloudConfig)) {
+                    this.currentConfig = cloudConfig;
+                    this.configVersion = cloudConfig.version;
+                    console.log('✅ Online global config loaded:', cloudConfig);
+                    return cloudConfig;
+                } else {
+                    console.warn('⚠️ Cloud config has invalid structure, using fallback');
+                }
             }
             
             // Fallback to local storage cache
             const cachedConfig = this.loadFromCache();
-            if (cachedConfig) {
+            if (cachedConfig && this.validateConfigStructure(cachedConfig)) {
                 this.currentConfig = cachedConfig;
                 this.configVersion = cachedConfig.version;
                 console.log('📦 Using cached global config:', cachedConfig);
@@ -69,11 +75,26 @@ class OnlineGlobalConfig {
             console.error('❌ Error loading global config:', error);
             
             // Use cached or default config
-            const cachedConfig = this.loadFromCache() || this.fallbackConfig;
-            this.currentConfig = cachedConfig;
-            this.configVersion = cachedConfig.version;
-            return cachedConfig;
+            const cachedConfig = this.loadFromCache();
+            if (cachedConfig && this.validateConfigStructure(cachedConfig)) {
+                this.currentConfig = cachedConfig;
+                this.configVersion = cachedConfig.version;
+                return cachedConfig;
+            }
+            
+            this.currentConfig = this.fallbackConfig;
+            this.configVersion = this.fallbackConfig.version;
+            return this.fallbackConfig;
         }
+    }
+
+    // Validate configuration structure
+    validateConfigStructure(config) {
+        return config && 
+               config.ai1 && 
+               config.ai2 && 
+               typeof config.ai1.model === 'string' &&
+               typeof config.ai2.model === 'string';
     }
 
     // Fetch configuration from cloud storage
