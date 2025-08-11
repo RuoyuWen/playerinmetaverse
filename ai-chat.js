@@ -77,8 +77,15 @@ class AIChat {
         console.log('📋 Default AI1 config loaded:', config);
         
         try {
-            // PRIORITY 1: Check for ONLINE GLOBAL configuration
-            if (window.onlineGlobalConfig) {
+            // PRIORITY 1: Use LOCAL CONFIG FILES (ai-config.js) - Highest Priority
+            if (window.AI_CONFIG) {
+                console.log('📁 Using LOCAL AI1 config from ai-config.js');
+                // Local config is already loaded as default, no need to override
+                console.log('✅ AI1 config using LOCAL FILE settings:', config);
+                console.log('🕐 Source: Local config file (ai-config.js)');
+            }
+            // PRIORITY 2: Check for ONLINE GLOBAL configuration (if local not available)
+            else if (window.onlineGlobalConfig) {
                 const onlineConfig = window.onlineGlobalConfig.getAI1Config();
                 console.log('☁️ Loading ONLINE GLOBAL AI1 config:', onlineConfig);
                 

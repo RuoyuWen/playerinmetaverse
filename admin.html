@@ -313,8 +313,8 @@
 
                 <!-- Global Configuration Management -->
                 <div class="export-section">
-                    <h3><i class="fas fa-cogs"></i> Global AI Configuration</h3>
-                    <p>Manage AI settings that affect all website visitors. <a href="aisetting.html" target="_blank" style="color: var(--secondary-color);">Open Settings Panel</a></p>
+                    <h3><i class="fas fa-cogs"></i> Local AI Configuration</h3>
+                    <p>AI settings are now managed through local configuration files. <a href="ai1-config.js" target="_blank" style="color: var(--secondary-color);">View Tom AI Config</a> | <a href="ai-config.js" target="_blank" style="color: var(--secondary-color);">View Lucy AI Config</a></p>
                     <div id="config-status">
                         <!-- Configuration status will be populated here -->
                     </div>
@@ -440,44 +440,24 @@
         function displayConfigStatus() {
             const configContainer = document.getElementById('config-status');
             
-            // Get cloud configuration from localStorage
-            const cloudResults = localStorage.getItem('cloudResults');
-            let cloudConfig = null;
-            
-            if (cloudResults) {
-                try {
-                    // The cloudResults contains the full cloud config, not just results
-                    const parsed = JSON.parse(cloudResults);
-                    // Check if this is the full config structure or just results array
-                    if (parsed.ai1 && parsed.ai2) {
-                        cloudConfig = parsed;
-                    }
-                } catch (e) {
-                    console.log('Failed to parse cloud config from localStorage');
-                }
-            }
-            
-            // If no cloud config in localStorage, try to load from cloud
-            if (!cloudConfig) {
-                // Try to load from cloud storage to get current config
-                loadCloudResults().then(() => {
-                    // Reload the display after cloud data is loaded
-                    displayConfigStatus();
-                }).catch(error => {
-                    console.log('Failed to load cloud config for display');
-                });
-            }
-            
             let statusHTML = '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">';
             
-            // AI Chat 1 Status (Tom)
-            if (cloudConfig && cloudConfig.ai1) {
-                const config = cloudConfig.ai1;
+            // AI Chat 1 Status (Tom) - Check local config first
+            let tomConfig = null;
+            if (window.AI1_CONFIG) {
+                tomConfig = {
+                    model: window.AI1_CONFIG.model,
+                    systemPrompt: window.AI1_CONFIG.systemPrompt,
+                    source: 'Local Config File (ai1-config.js)'
+                };
+            }
+            
+            if (tomConfig) {
                 statusHTML += `
                     <div style="background: rgba(40, 167, 69, 0.1); border: 1px solid rgba(40, 167, 69, 0.3); border-radius: 8px; padding: 1rem;">
                         <h4 style="color: #28a745; margin: 0 0 0.5rem 0;"><i class="fas fa-check-circle"></i> Tom AI (AI1)</h4>
-                        <p style="margin: 0; font-size: 0.9rem;">Model: ${config.model}</p>
-                        <p style="margin: 0; font-size: 0.8rem; opacity: 0.8;">Updated: ${new Date(cloudConfig.lastUpdated).toLocaleString()}</p>
+                        <p style="margin: 0; font-size: 0.9rem;">Model: ${tomConfig.model}</p>
+                        <p style="margin: 0; font-size: 0.8rem; opacity: 0.8;">Source: ${tomConfig.source}</p>
                     </div>
                 `;
             } else {
@@ -489,14 +469,22 @@
                 `;
             }
             
-            // AI Chat 2 Status (Lucy)
-            if (cloudConfig && cloudConfig.ai2) {
-                const config = cloudConfig.ai2;
+            // AI Chat 2 Status (Lucy) - Check local config first
+            let lucyConfig = null;
+            if (window.AI_CONFIG) {
+                lucyConfig = {
+                    model: window.AI_CONFIG.model,
+                    systemPrompt: window.AI_CONFIG.systemPrompt,
+                    source: 'Local Config File (ai-config.js)'
+                };
+            }
+            
+            if (lucyConfig) {
                 statusHTML += `
                     <div style="background: rgba(40, 167, 69, 0.1); border: 1px solid rgba(40, 167, 69, 0.3); border-radius: 8px; padding: 1rem;">
                         <h4 style="color: #28a745; margin: 0 0 0.5rem 0;"><i class="fas fa-check-circle"></i> Lucy AI (AI2)</h4>
-                        <p style="margin: 0; font-size: 0.9rem;">Model: ${config.model}</p>
-                        <p style="margin: 0; font-size: 0.8rem; opacity: 0.8;">Updated: ${new Date(cloudConfig.lastUpdated).toLocaleString()}</p>
+                        <p style="margin: 0; font-size: 0.9rem;">Model: ${lucyConfig.model}</p>
+                        <p style="margin: 0; font-size: 0.8rem; opacity: 0.8;">Source: ${lucyConfig.source}</p>
                     </div>
                 `;
             } else {
@@ -510,16 +498,19 @@
             
             statusHTML += '</div>';
             
-            // Show cloud config info
-            if (cloudConfig) {
+            // Show local config info
+            if (tomConfig || lucyConfig) {
                 statusHTML += `
                     <div style="margin-top: 1rem; padding: 1rem; background: rgba(0, 0, 0, 0.1); border-radius: 8px;">
-                        <h5 style="margin: 0 0 0.5rem 0; color: var(--text-color);">Cloud Configuration Status:</h5>
+                        <h5 style="margin: 0 0 0.5rem 0; color: var(--text-color);">Local Configuration Status:</h5>
                         <div style="font-size: 0.8rem; margin-bottom: 0.25rem; opacity: 0.8;">
-                            Version: ${cloudConfig.version || 'N/A'} | Last Updated: ${new Date(cloudConfig.lastUpdated).toLocaleString()}
+                            Configuration Source: Local Config Files (ai1-config.js & ai-config.js)
                         </div>
                         <div style="font-size: 0.8rem; margin-bottom: 0.25rem; opacity: 0.8;">
-                            Results Count: ${(cloudConfig.results || []).length}
+                            Priority: Local files take precedence over online configuration
+                        </div>
+                        <div style="font-size: 0.8rem; margin-bottom: 0.25rem; opacity: 0.8;">
+                            To modify: Edit the local config files directly
                         </div>
                     </div>
                 `;

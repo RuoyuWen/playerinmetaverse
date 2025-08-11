@@ -77,8 +77,15 @@ class AI1Chat {
         console.log('📋 加载默认 AI1 配置:', config);
         
         try {
-            // PRIORITY 1: Check for ONLINE GLOBAL configuration
-            if (window.onlineGlobalConfig && window.onlineGlobalConfig.currentConfig) {
+            // PRIORITY 1: Use LOCAL CONFIG FILES (ai1-config.js) - Highest Priority
+            if (window.AI1_CONFIG) {
+                console.log('📁 使用本地 AI1 配置文件 (ai1-config.js)');
+                // Local config is already loaded as default, no need to override
+                console.log('✅ AI1 配置使用本地文件设置:', config);
+                console.log('🕐 来源: 本地配置文件 (ai1-config.js)');
+            }
+            // PRIORITY 2: Check for ONLINE GLOBAL configuration (if local not available)
+            else if (window.onlineGlobalConfig && window.onlineGlobalConfig.currentConfig) {
                 const onlineConfig = window.onlineGlobalConfig.getAI2Config();
                 console.log('☁️ 加载 ONLINE GLOBAL AI1 配置 (使用 AI2 配置):', onlineConfig);
                 

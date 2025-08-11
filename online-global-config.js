@@ -16,77 +16,85 @@ class OnlineGlobalConfig {
         this.loadConfig();
     }
 
-    // Default configuration fallback
+    // Default configuration fallback - Now uses local config files
     getDefaultConfig() {
+        // Check if local config files are available
+        let ai1Config = null;
+        let ai2Config = null;
+        
+        try {
+            // Try to get local AI1 config (Tom)
+            if (window.AI1_CONFIG) {
+                ai1Config = {
+                    model: window.AI1_CONFIG.model,
+                    systemPrompt: window.AI1_CONFIG.systemPrompt,
+                    maxTokens: window.AI1_CONFIG.apiParams.max_tokens,
+                    temperature: window.AI1_CONFIG.apiParams.temperature
+                };
+                console.log('📁 Local AI1 config loaded:', ai1Config);
+            }
+            
+            // Try to get local AI2 config (Lucy)
+            if (window.AI_CONFIG) {
+                ai2Config = {
+                    model: window.AI_CONFIG.model,
+                    systemPrompt: window.AI_CONFIG.systemPrompt,
+                    maxTokens: window.AI_CONFIG.apiParams.max_tokens,
+                    temperature: window.AI_CONFIG.apiParams.temperature
+                };
+                console.log('📁 Local AI2 config loaded:', ai2Config);
+            }
+        } catch (error) {
+            console.warn('⚠️ Failed to load local configs:', error);
+        }
+        
+        // Fallback to basic config if local configs are not available
+        if (!ai1Config) {
+            ai1Config = {
+                model: 'gpt-4o',
+                systemPrompt: '你是Tom，一个需要帮助做决定的AI助手。你必须始终返回JSON格式的回答。',
+                maxTokens: 1500,
+                temperature: 0.7
+            };
+        }
+        
+        if (!ai2Config) {
+            ai2Config = {
+                model: 'gpt-4.1',
+                systemPrompt: '你是Lucy，一个需要帮助做决定的AI助手。你必须始终返回JSON格式的回答。',
+                maxTokens: 1500,
+                temperature: 0.7
+            };
+        }
+        
         return {
             version: Date.now(),
             lastUpdated: new Date().toISOString(),
-            ai1: {
-                model: 'gpt-4o',
-                systemPrompt: `你是Tom，一个需要帮助做决定的AI助手。你必须始终返回JSON格式的回答。
-
-你的角色：
-- 你是Tom，一个友好的男性AI助手
-- 你需要用户帮助你做各种决定
-- 保持友好、有帮助的语调，用中文回答问题
-
-JSON格式要求：
-{
-  "content": "你的回答内容",
-  "class": "游戏状态"
-}
-
-游戏状态说明：
-- "success": 当用户给出了很好的建议、帮助解决了问题、或完成了帮助任务时
-- "fail": 当用户给出了不当的建议、说了冒犯性话语、或拒绝帮助时
-- "none": 正常对话，继续寻求帮助
-
-注意：在对话达到一定深度后，适当时候返回"success"来结束游戏。
-
-示例：
-对话初期：{"content": "谢谢你的帮助！", "class": "none"}
-任务完成时：{"content": "太棒了！你的建议真的帮了我很多。", "class": "success"}`,
-                maxTokens: 1500,
-                temperature: 0.7
-            },
-            ai2: {
-                model: 'gpt-4.1',
-                systemPrompt: `你是Lucy，一个需要帮助做决定的AI助手。你必须始终返回JSON格式的回答。
-
-你的角色：
-- 你是Lucy，一个友好的女性AI助手
-- 你需要用户帮助你做各种决定
-- 保持友好、有帮助的语调，用中文回答问题
-
-JSON格式要求：
-{
-  "content": "你的回答内容",
-  "class": "游戏状态"
-}
-
-游戏状态说明：
-- "success": 当用户给出了很好的建议、帮助解决了问题、或完成了帮助任务时
-- "fail": 当用户给出了不当的建议、说了冒犯性话语、或拒绝帮助时
-- "none": 正常对话，继续寻求帮助
-
-注意：在对话达到一定深度后，适当时候返回"success"来结束游戏。
-
-示例：
-对话初期：{"content": "谢谢你的帮助！", "class": "none"}
-任务完成时：{"content": "太棒了！你的建议真的帮了我很多。", "class": "success"}`,
-                maxTokens: 1500,
-                temperature: 0.7
-            },
-            results: [] // Add results array to match cloud structure
+            ai1: ai1Config,
+            ai2: ai2Config,
+            results: [],
+            source: 'local-config-files' // Indicate this is from local files
         };
     }
 
-    // Load configuration from cloud storage
+    // Load configuration - Now prioritizes local config files
     async loadConfig() {
         try {
-            console.log('🌐 Loading online global configuration...');
+            console.log('📁 Loading configuration (prioritizing local config files)...');
             
-            // Try to load from cloud storage
+            // First priority: Use local config files (ai1-config.js and ai-config.js)
+            if (window.AI1_CONFIG || window.AI_CONFIG) {
+                const localConfig = this.getDefaultConfig();
+                if (this.validateConfigStructure(localConfig)) {
+                    this.currentConfig = localConfig;
+                    this.configVersion = localConfig.version;
+                    console.log('✅ Local config files loaded and used:', localConfig);
+                    return localConfig;
+                }
+            }
+            
+            // Second priority: Try to load from cloud storage
+            console.log('🌐 Local configs not available, trying cloud storage...');
             const cloudConfig = await this.fetchFromCloud();
             if (cloudConfig) {
                 // Validate cloud config structure
@@ -94,13 +102,13 @@ JSON格式要求：
                     this.currentConfig = cloudConfig;
                     this.configVersion = cloudConfig.version;
                     console.log('✅ Online global config loaded:', cloudConfig);
-                    return cloudConfig;
+                    return localConfig;
                 } else {
                     console.warn('⚠️ Cloud config has invalid structure, using fallback');
                 }
             }
             
-            // Fallback to local storage cache
+            // Third priority: Try to load from cache
             const cachedConfig = this.loadFromCache();
             if (cachedConfig && this.validateConfigStructure(cachedConfig)) {
                 this.currentConfig = cachedConfig;
