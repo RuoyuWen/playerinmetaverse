@@ -24,7 +24,7 @@ class AIChat {
         this.ensureOnlineConfigActive();
     }
 
-    // 确保在线配置立即生效
+    // 确保在线配置激活
     ensureOnlineConfigActive() {
         console.log('🔧 Ensuring online config is active...');
         
@@ -55,6 +55,20 @@ class AIChat {
         
         // 立即检查，如果不可用则每秒重试
         checkOnlineConfig();
+        
+        // 同时设置一个更长的超时，确保最终能加载到配置
+        setTimeout(() => {
+            if (!window.onlineGlobalConfig || !window.onlineGlobalConfig.currentConfig) {
+                console.log('⚠️ Online config still not ready after timeout, forcing reload...');
+                if (window.onlineGlobalConfig) {
+                    window.onlineGlobalConfig.loadConfig().then(() => {
+                        checkOnlineConfig();
+                    }).catch(error => {
+                        console.warn('Failed to reload online config:', error);
+                    });
+                }
+            }
+        }, 5000); // 5秒后强制重试
     }
 
     loadConfig() {

@@ -515,7 +515,7 @@
                 
                 if (config && config.ai1 && config.ai2) {
                     // Populate AI1 form
-                    document.getElementById('ai1-model').value = config.ai1.model || 'gpt-4.1';
+                    document.getElementById('ai1-model').value = config.ai1.model || 'gpt-4o';
                     document.getElementById('ai1-max-tokens').value = config.ai1.maxTokens || 1500;
                     document.getElementById('ai1-temperature').value = config.ai1.temperature || 0.7;
                     document.getElementById('ai1-system-prompt').value = config.ai1.systemPrompt || '';
@@ -528,11 +528,29 @@
 
                     showNotification('Configuration loaded successfully!', 'success');
                 } else {
-                    showNotification('Using default configuration', 'warning');
+                    // If config structure is invalid, try to reset it
+                    console.warn('Invalid config structure detected, attempting to reset...');
+                    showNotification('Invalid configuration structure detected. Please use Reset Cloud Config button.', 'warning');
+                    
+                    // Auto-reset if structure is completely broken
+                    if (!config || (!config.ai1 && !config.ai2)) {
+                        setTimeout(() => {
+                            if (confirm('Configuration structure is corrupted. Would you like to auto-reset it?')) {
+                                resetCloudConfig();
+                            }
+                        }, 2000);
+                    }
                 }
             } catch (error) {
                 console.error('Error loading configuration:', error);
                 showNotification('Error loading configuration: ' + error.message, 'error');
+                
+                // Try to auto-reset on critical errors
+                setTimeout(() => {
+                    if (confirm('Configuration loading failed. Would you like to reset the cloud configuration?')) {
+                        resetCloudConfig();
+                    }
+                }, 3000);
             }
         }
 
