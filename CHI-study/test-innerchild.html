@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inner Child Test</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 8px; }
+    .error { color: red; }
+    .success { color: green; }
+    .info { color: blue; }
+  </style>
+</head>
+<body>
+  <h1>Inner Child Test Page</h1>
+  
+  <div class="test-section">
+    <h3>Configuration Loading Test</h3>
+    <div id="config-test"></div>
+  </div>
+  
+  <div class="test-section">
+    <h3>Element Loading Test</h3>
+    <div id="element-test"></div>
+  </div>
+  
+  <div class="test-section">
+    <h3>Console Log</h3>
+    <div id="console-log"></div>
+  </div>
+
+  <script>
+    // Test configuration loading
+    function testConfig() {
+      const configTest = document.getElementById('config-test');
+      let html = '';
+      
+      try {
+        // Test INNER_CHILD_CONFIG
+        if (window.INNER_CHILD_CONFIG) {
+          html += '<p class="success">✅ INNER_CHILD_CONFIG loaded</p>';
+          html += '<p class="info">Model: ' + window.INNER_CHILD_CONFIG.model + '</p>';
+        } else {
+          html += '<p class="error">❌ INNER_CHILD_CONFIG not found</p>';
+        }
+        
+        // Test GLOBAL_AI2_CONFIG
+        if (window.GLOBAL_AI2_CONFIG) {
+          html += '<p class="success">✅ GLOBAL_AI2_CONFIG loaded</p>';
+        } else {
+          html += '<p class="error">❌ GLOBAL_AI2_CONFIG not found</p>';
+        }
+        
+        // Test onlineGlobalConfig
+        if (window.onlineGlobalConfig) {
+          html += '<p class="success">✅ onlineGlobalConfig loaded</p>';
+        } else {
+          html += '<p class="error">❌ onlineGlobalConfig not found</p>';
+        }
+        
+      } catch (e) {
+        html += '<p class="error">❌ Error testing config: ' + e.message + '</p>';
+      }
+      
+      configTest.innerHTML = html;
+    }
+    
+    // Test element loading
+    function testElements() {
+      const elementTest = document.getElementById('element-test');
+      let html = '';
+      
+      try {
+        const testElements = [
+          'ic-api-key', 'ic-name', 'ic-file', 'ic-raw-text',
+          'ic-generate-prompt-btn', 'ic-view-prompt-btn',
+          'ic-prompt-preview', 'ic-prompt-text', 'ic-copy-prompt',
+          'ic-start-chat', 'ic-refresh-config', 'ic-chat',
+          'ic-typing', 'ic-input', 'ic-send'
+        ];
+        
+        testElements.forEach(id => {
+          const elem = document.getElementById(id);
+          if (elem) {
+            html += '<p class="success">✅ ' + id + ' found</p>';
+          } else {
+            html += '<p class="error">❌ ' + id + ' not found</p>';
+          }
+        });
+        
+      } catch (e) {
+        html += '<p class="error">❌ Error testing elements: ' + e.message + '</p>';
+      }
+      
+      elementTest.innerHTML = html;
+    }
+    
+    // Capture console logs
+    function captureConsole() {
+      const originalLog = console.log;
+      const originalError = console.error;
+      const originalWarn = console.warn;
+      const consoleLog = document.getElementById('console-log');
+      
+      console.log = function(...args) {
+        originalLog.apply(console, args);
+        consoleLog.innerHTML += '<p class="info">LOG: ' + args.join(' ') + '</p>';
+      };
+      
+      console.error = function(...args) {
+        originalError.apply(console, args);
+        consoleLog.innerHTML += '<p class="error">ERROR: ' + args.join(' ') + '</p>';
+      };
+      
+      console.warn = function(...args) {
+        originalWarn.apply(console, args);
+        consoleLog.innerHTML += '<p class="info">WARN: ' + args.join(' ') + '</p>';
+      };
+    }
+    
+    // Run tests
+    window.addEventListener('load', function() {
+      captureConsole();
+      setTimeout(() => {
+        testConfig();
+        testElements();
+      }, 1000);
+    });
+  </script>
+  
+  <!-- Load the same scripts as innerchild.html -->
+  <script src="../script.js"></script>
+  <script src="../online-global-config.js"></script>
+  <script src="../global-config.js"></script>
+  <script src="innerchild-config.js"></script>
+  <script src="innerchild-chat.js"></script>
+</body>
+</html>

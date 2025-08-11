@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inner Child AI | 童年自我聊天</title>
+  <link rel="stylesheet" href="../styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+  <style>
+    .setup-card {
+      background: rgba(0,0,0,0.25);
+      border: 1px solid rgba(0,212,255,0.25);
+      border-radius: 16px;
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+    }
+    .ai-container { max-width: 980px; margin: 0 auto; padding: 1.5rem; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 920px) { .grid-2 { grid-template-columns: 1fr; } }
+    .form-row { display: grid; gap: .75rem; grid-template-columns: 160px 1fr; align-items: center; }
+    .form-row label { color: var(--text-color); font-weight: 600; }
+    .form-row input[type="text"], .form-row input[type="password"], .form-row textarea, .form-row select {
+      width: 100%; padding: .75rem; border-radius: 8px; border: 1px solid rgba(157,78,221,.3);
+      background: rgba(0,0,0,.35); color: var(--text-color); font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+    .avatar-grid { display: grid; grid-template-columns: repeat(4, minmax(120px,1fr)); gap: .75rem; }
+    @media (max-width: 640px) { .avatar-grid { grid-template-columns: repeat(2, minmax(120px,1fr)); } }
+    .avatar-card { 
+      border: 1px solid rgba(157,78,221,.3); 
+      border-radius: 12px; 
+      overflow: hidden; 
+      background: rgba(0,0,0,.25); 
+      cursor: pointer; 
+      position: relative;
+      transition: all 0.2s ease;
+    }
+    .avatar-card:hover { 
+      border-color: rgba(157,78,221,.6); 
+      background: rgba(0,0,0,.35);
+      transform: translateY(-2px);
+    }
+    .avatar-card img { width: 100%; height: 120px; object-fit: cover; display: block; pointer-events: none; }
+    .avatar-card input { 
+      position: absolute; 
+      top: 0; 
+      left: 0; 
+      width: 100%; 
+      height: 100%; 
+      opacity: 0; 
+      cursor: pointer; 
+      z-index: 2;
+    }
+    .avatar-card .label { 
+      padding: .5rem .75rem; 
+      text-align: center; 
+      font-size: .9rem; 
+      color: var(--text-color); 
+      pointer-events: none;
+    }
+    .avatar-card.selected { 
+      outline: 2px solid var(--secondary-color); 
+      box-shadow: 0 0 18px rgba(157,78,221,.45); 
+    }
+    .btn { padding: .75rem 1.25rem; border-radius: 10px; border: none; color: white; cursor: pointer; font-weight: 600; }
+    .btn-primary { background: var(--gradient-cyber); }
+    .btn-secondary { background: linear-gradient(135deg, #28a745, #20c997); }
+    .btn-ghost { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15); }
+    .hint { font-size: .9rem; color: #a0aec0; }
+    .small { font-size: .85rem; }
+    .chat-container { height: 520px; overflow-y: auto; padding: 1rem; background: rgba(0,0,0,.2); border: 1px solid rgba(0,212,255,.2); border-radius: 15px; margin-bottom: 1rem; }
+    .message { margin-bottom: 1rem; display: flex; gap: .75rem; align-items: flex-start; }
+    .message .bubble { padding: .85rem 1rem; border-radius: 12px; max-width: 80%; }
+    .message.user { flex-direction: row-reverse; }
+    .message.user .bubble { background: linear-gradient(135deg, rgba(157,78,221,.15), rgba(0,212,255,.08)); border-left: 3px solid var(--primary-color); }
+    .message.ai .bubble { background: linear-gradient(135deg, rgba(0,212,255,.15), rgba(157,78,221,.08)); border-left: 3px solid var(--secondary-color); }
+    .message .avatar { width: 40px; height: 40px; border-radius: 50%; overflow: hidden; border: 2px solid rgba(255,255,255,.12); box-shadow: 0 2px 8px rgba(0,0,0,.2); flex-shrink: 0; }
+    .message .avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .typing { display: none; color: var(--secondary-color); padding: .5rem 0; }
+    .inline-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-container">
+      <div class="nav-logo"><a href="../index.html">Ruoyu Wen</a></div>
+      <div class="nav-menu" id="nav-menu">
+        <a href="../index.html" class="nav-link">Home</a>
+        <a href="../about.html" class="nav-link">About</a>
+        <a href="../education.html" class="nav-link">Education</a>
+        <a href="../research.html" class="nav-link">Research</a>
+        <a href="../experience.html" class="nav-link">Experience</a>
+      </div>
+      <div class="nav-toggle" id="nav-toggle"><span class="bar"></span><span class="bar"></span><span class="bar"></span></div>
+    </div>
+  </nav>
+
+  <section class="section-padding">
+    <div class="container">
+      <div class="page-header">
+        <h1 class="page-title">🧒 Inner Child AI ▸ 童年自我</h1>
+        <p class="page-subtitle">上传你的童年故事，生成专属的"小时候的自己"AI，立即开始对话</p>
+      </div>
+
+      <div class="ai-container">
+        <div class="setup-card">
+          <div class="grid-2">
+            <div class="form-row">
+              <label>OpenAI API 密钥</label>
+              <input type="password" id="ic-api-key" placeholder="sk-proj-..." />
+            </div>
+            <div class="form-row">
+              <label>AI 名字</label>
+              <input type="text" id="ic-name" placeholder="例如：小小我、童年小天使" value="童年自我" />
+            </div>
+          </div>
+          <div style="margin-top: .75rem;" class="hint">密钥仅保存在本地浏览器，用于直接调用 OpenAI gpt-4.1。</div>
+        </div>
+
+        <div class="setup-card">
+          <div class="form-row" style="align-items: start;">
+            <label>上传童年文档</label>
+            <div>
+              <input type="file" id="ic-file" accept=".txt,.md,.json" />
+              <div class="hint small" style="margin-top:.35rem;">当前支持 .txt/.md/.json。若为 .pdf/.docx，请先复制文本内容粘贴到下方。</div>
+              <textarea id="ic-raw-text" rows="6" placeholder="可选：如果上传无法解析，请把文本直接粘贴到这里"></textarea>
+              <div class="inline-actions" style="margin-top:.5rem;">
+                <button class="btn btn-secondary" id="ic-generate-prompt-btn"><i class="fas fa-wand-magic-sparkles"></i> 生成性格设定</button>
+                <button class="btn btn-ghost" id="ic-view-prompt-btn"><i class="fas fa-eye"></i> 预览设定</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="setup-card">
+          <div class="form-row" style="align-items: start;">
+            <label>选择头像</label>
+            <div class="avatar-grid" id="ic-avatar-grid">
+              <label class="avatar-card">
+                <input type="radio" name="ic-avatar" value="../images/image1.png" checked />
+                <img src="../images/image1.png" alt="avatar1" />
+                <div class="label">头像 1</div>
+              </label>
+              <label class="avatar-card">
+                <input type="radio" name="ic-avatar" value="../images/image2.png" />
+                <img src="../images/image2.png" alt="avatar2" />
+                <div class="label">头像 2</div>
+              </label>
+              <label class="avatar-card">
+                <input type="radio" name="ic-avatar" value="../images/image3.png" />
+                <img src="../images/image3.png" alt="avatar3" />
+                <div class="label">头像 3</div>
+              </label>
+              <label class="avatar-card">
+                <input type="radio" name="ic-avatar" value="../images/image4.png" />
+                <img src="../images/image4.png" alt="avatar4" />
+                <div class="label">头像 4</div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="setup-card" id="ic-prompt-preview" style="display:none;">
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:.75rem;">
+              <h3 style="color:var(--secondary-color);margin:0;font-size:1.1rem;">🧩 已生成的系统提示词（可用于对话）</h3>
+              <div class="inline-actions">
+                <button class="btn btn-ghost" id="ic-copy-prompt"><i class="fas fa-copy"></i> 复制</button>
+                <button class="btn btn-primary" id="ic-start-chat"><i class="fas fa-comments"></i> 用此设定开始聊天</button>
+              </div>
+            </div>
+            <pre id="ic-prompt-text" style="white-space:pre-wrap;margin-top:.75rem;font-family:'Source Code Pro',monospace;color:#cbd5e1;background:rgba(0,0,0,.3);padding:1rem;border-radius:8px;border:1px solid rgba(157,78,221,.25);"></pre>
+          </div>
+        </div>
+
+        <div class="setup-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;">
+            <h3 style="margin:0;color:var(--primary-color);font-size:1.1rem;">💬 对话</h3>
+            <button class="btn btn-ghost" id="ic-refresh-config" title="从设置刷新配置"><i class="fas fa-sync-alt"></i></button>
+          </div>
+          
+          <!-- 设置指导区域 -->
+          <div id="ic-setup-guide" style="display:block;">
+            <div style="text-align: center; padding: 2rem; color: #a0aec0;">
+              <i class="fas fa-cog" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
+              <h3>请先完成设置</h3>
+              <p>1. 输入 OpenAI API 密钥</p>
+              <p>2. 设置 AI 名字</p>
+              <p>3. 选择头像</p>
+              <p>4. 上传童年文档并生成人设</p>
+              <p>5. 点击"用此设定开始聊天"</p>
+            </div>
+          </div>
+          
+          <!-- 聊天界面（默认隐藏） -->
+          <div id="ic-chat" class="chat-container" style="display:none;"></div>
+          <div class="typing" id="ic-typing" style="display:none;"><i class="fas fa-robot"></i> 正在思考...</div>
+          <div style="display:flex;gap:.5rem;align-items:flex-end;">
+            <textarea id="ic-input" rows="2" placeholder="请先完成设置..." class="chat-input" style="flex:1;display:none;"></textarea>
+            <button class="btn btn-primary" id="ic-send" style="display:none;"><i class="fas fa-paper-plane"></i> 发送</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <p>&copy; 2024 Ruoyu Wen. 游戏研究员 & 设计师 | 人机交互博士 🌸</p>
+        <div class="social-links">
+          <a href="mailto:ruoyu.wen.game@gmail.com" target="_blank" title="邮箱"><i class="fas fa-envelope"></i></a>
+          <a href="https://scholar.google.com/citations?hl=en&user=TssKzFIAAAAJ&view_op=list_works&gmla=AH8HC4wssodHVoe9Ljll41vco9U7EA7ci1rWTxxfNSe7ZuuxjEwwNOrata7GzhiOgbnk-d_iRrOM-ILMs3B2445j" target="_blank" title="Google Scholar"><i class="fas fa-graduation-cap"></i></a>
+          <a href="https://www.linkedin.com/in/ruoyu-wen-53344419a/?locale=en_US" target="_blank" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
+          <a href="https://wrychristian.itch.io/" target="_blank" title="作品集"><i class="fas fa-gamepad"></i></a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../script.js"></script>
+  <script src="../online-global-config.js"></script>
+  <script src="../global-config.js"></script>
+  <script src="innerchild-config.js"></script>
+  <script src="innerchild-chat.js"></script>
+</body>
+</html>
