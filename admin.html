@@ -366,10 +366,13 @@
             // Load from central storage (simulation for now)
             const centralResults = JSON.parse(localStorage.getItem('centralResults') || '[]');
             const localResults = JSON.parse(localStorage.getItem('airesults') || '[]');
-            const cloudResults = JSON.parse(localStorage.getItem('cloudResults') || '[]');
+            const cloudResults = JSON.parse(localStorage.getItem('cloudResults') || '{}');
+            
+            // Extract results from cloud config (cloudResults.results)
+            const cloudResultsArray = cloudResults.results || [];
             
             // Combine all results (cloud data takes priority)
-            const allResults = [...cloudResults, ...centralResults, ...localResults];
+            const allResults = [...cloudResultsArray, ...centralResults, ...localResults];
             
             // Remove duplicates based on ID
             const uniqueResults = allResults.filter((result, index, arr) => 
@@ -399,16 +402,16 @@
                 }
 
                 const data = await response.json();
-                const results = data.record?.results || [];
+                const cloudConfig = data.record || data;
                 
-                // Store in localStorage for local access
-                localStorage.setItem('cloudResults', JSON.stringify(results));
+                // Store the full cloud config in localStorage for local access
+                localStorage.setItem('cloudResults', JSON.stringify(cloudConfig));
                 
-                console.log('☁️ Cloud results loaded:', results.length);
-                return results;
+                console.log('☁️ Cloud config loaded:', cloudConfig);
+                return cloudConfig;
                 
             } catch (error) {
-                console.error('❌ Failed to load cloud results:', error);
+                console.error('❌ Failed to load cloud config:', error);
                 throw error;
             }
         }
@@ -437,46 +440,69 @@
         function displayConfigStatus() {
             const configContainer = document.getElementById('config-status');
             
-            // Check global configurations
-            const globalAI1 = localStorage.getItem('global_ai1_config');
-            const globalAI2 = localStorage.getItem('global_ai2_config');
-            const configChanges = JSON.parse(localStorage.getItem('globalConfigChanges') || '[]');
+            // Get cloud configuration from localStorage
+            const cloudResults = localStorage.getItem('cloudResults');
+            let cloudConfig = null;
+            
+            if (cloudResults) {
+                try {
+                    // The cloudResults contains the full cloud config, not just results
+                    const parsed = JSON.parse(cloudResults);
+                    // Check if this is the full config structure or just results array
+                    if (parsed.ai1 && parsed.ai2) {
+                        cloudConfig = parsed;
+                    }
+                } catch (e) {
+                    console.log('Failed to parse cloud config from localStorage');
+                }
+            }
+            
+            // If no cloud config in localStorage, try to load from cloud
+            if (!cloudConfig) {
+                // Try to load from cloud storage to get current config
+                loadCloudResults().then(() => {
+                    // Reload the display after cloud data is loaded
+                    displayConfigStatus();
+                }).catch(error => {
+                    console.log('Failed to load cloud config for display');
+                });
+            }
             
             let statusHTML = '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">';
             
-            // AI Chat 1 Status
-            if (globalAI1) {
-                const config = JSON.parse(globalAI1);
+            // AI Chat 1 Status (Tom)
+            if (cloudConfig && cloudConfig.ai1) {
+                const config = cloudConfig.ai1;
                 statusHTML += `
                     <div style="background: rgba(40, 167, 69, 0.1); border: 1px solid rgba(40, 167, 69, 0.3); border-radius: 8px; padding: 1rem;">
-                        <h4 style="color: #28a745; margin: 0 0 0.5rem 0;"><i class="fas fa-check-circle"></i> AI Chat 1</h4>
+                        <h4 style="color: #28a745; margin: 0 0 0.5rem 0;"><i class="fas fa-check-circle"></i> Tom AI (AI1)</h4>
                         <p style="margin: 0; font-size: 0.9rem;">Model: ${config.model}</p>
-                        <p style="margin: 0; font-size: 0.8rem; opacity: 0.8;">Updated: ${new Date(config.lastUpdated).toLocaleString()}</p>
+                        <p style="margin: 0; font-size: 0.8rem; opacity: 0.8;">Updated: ${new Date(cloudConfig.lastUpdated).toLocaleString()}</p>
                     </div>
                 `;
             } else {
                 statusHTML += `
                     <div style="background: rgba(108, 117, 125, 0.1); border: 1px solid rgba(108, 117, 125, 0.3); border-radius: 8px; padding: 1rem;">
-                        <h4 style="color: #6c757d; margin: 0 0 0.5rem 0;"><i class="fas fa-cog"></i> AI Chat 1</h4>
+                        <h4 style="color: #6c757d; margin: 0 0 0.5rem 0;"><i class="fas fa-cog"></i> Tom AI (AI1)</h4>
                         <p style="margin: 0; font-size: 0.9rem;">Using default configuration</p>
                     </div>
                 `;
             }
             
-            // AI Chat 2 Status
-            if (globalAI2) {
-                const config = JSON.parse(globalAI2);
+            // AI Chat 2 Status (Lucy)
+            if (cloudConfig && cloudConfig.ai2) {
+                const config = cloudConfig.ai2;
                 statusHTML += `
                     <div style="background: rgba(40, 167, 69, 0.1); border: 1px solid rgba(40, 167, 69, 0.3); border-radius: 8px; padding: 1rem;">
-                        <h4 style="color: #28a745; margin: 0 0 0.5rem 0;"><i class="fas fa-check-circle"></i> AI Chat 2</h4>
+                        <h4 style="color: #28a745; margin: 0 0 0.5rem 0;"><i class="fas fa-check-circle"></i> Lucy AI (AI2)</h4>
                         <p style="margin: 0; font-size: 0.9rem;">Model: ${config.model}</p>
-                        <p style="margin: 0; font-size: 0.8rem; opacity: 0.8;">Updated: ${new Date(config.lastUpdated).toLocaleString()}</p>
+                        <p style="margin: 0; font-size: 0.8rem; opacity: 0.8;">Updated: ${new Date(cloudConfig.lastUpdated).toLocaleString()}</p>
                     </div>
                 `;
             } else {
                 statusHTML += `
                     <div style="background: rgba(108, 117, 125, 0.1); border: 1px solid rgba(108, 117, 125, 0.3); border-radius: 8px; padding: 1rem;">
-                        <h4 style="color: #6c757d; margin: 0 0 0.5rem 0;"><i class="fas fa-cog"></i> AI Chat 2</h4>
+                        <h4 style="color: #6c757d; margin: 0 0 0.5rem 0;"><i class="fas fa-cog"></i> Lucy AI (AI2)</h4>
                         <p style="margin: 0; font-size: 0.9rem;">Using default configuration</p>
                     </div>
                 `;
@@ -484,17 +510,17 @@
             
             statusHTML += '</div>';
             
-            // Show recent changes
-            if (configChanges.length > 0) {
-                const recentChanges = configChanges.slice(-3).reverse();
+            // Show cloud config info
+            if (cloudConfig) {
                 statusHTML += `
                     <div style="margin-top: 1rem; padding: 1rem; background: rgba(0, 0, 0, 0.1); border-radius: 8px;">
-                        <h5 style="margin: 0 0 0.5rem 0; color: var(--text-color);">Recent Configuration Changes:</h5>
-                        ${recentChanges.map(change => `
-                            <div style="font-size: 0.8rem; margin-bottom: 0.25rem; opacity: 0.8;">
-                                ${new Date(change.timestamp).toLocaleString()} - ${change.aiType.toUpperCase()} updated to ${change.config.model}
-                            </div>
-                        `).join('')}
+                        <h5 style="margin: 0 0 0.5rem 0; color: var(--text-color);">Cloud Configuration Status:</h5>
+                        <div style="font-size: 0.8rem; margin-bottom: 0.25rem; opacity: 0.8;">
+                            Version: ${cloudConfig.version || 'N/A'} | Last Updated: ${new Date(cloudConfig.lastUpdated).toLocaleString()}
+                        </div>
+                        <div style="font-size: 0.8rem; margin-bottom: 0.25rem; opacity: 0.8;">
+                            Results Count: ${(cloudConfig.results || []).length}
+                        </div>
                     </div>
                 `;
             }
@@ -570,8 +596,9 @@
         function exportAllData() {
             const centralResults = JSON.parse(localStorage.getItem('centralResults') || '[]');
             const localResults = JSON.parse(localStorage.getItem('airesults') || '[]');
-            const cloudResults = JSON.parse(localStorage.getItem('cloudResults') || '[]');
-            const allResults = [...cloudResults, ...centralResults, ...localResults];
+            const cloudResults = JSON.parse(localStorage.getItem('cloudResults') || '{}');
+            const cloudResultsArray = cloudResults.results || [];
+            const allResults = [...cloudResultsArray, ...centralResults, ...localResults];
             
             const filename = `ai_chat_results_${new Date().toISOString().split('T')[0]}.json`;
             const blob = new Blob([JSON.stringify(allResults, null, 2)], { type: 'application/json' });
@@ -581,8 +608,9 @@
         function exportCSV() {
             const centralResults = JSON.parse(localStorage.getItem('centralResults') || '[]');
             const localResults = JSON.parse(localStorage.getItem('airesults') || '[]');
-            const cloudResults = JSON.parse(localStorage.getItem('cloudResults') || '[]');
-            const allResults = [...cloudResults, ...centralResults, ...localResults];
+            const cloudResults = JSON.parse(localStorage.getItem('cloudResults') || '{}');
+            const cloudResultsArray = cloudResults.results || [];
+            const allResults = [...cloudResultsArray, ...centralResults, ...localResults];
             
             if (allResults.length === 0) {
                 alert('No data to export.');
@@ -626,8 +654,9 @@
         function viewDetails(resultId) {
             const centralResults = JSON.parse(localStorage.getItem('centralResults') || '[]');
             const localResults = JSON.parse(localStorage.getItem('airesults') || '[]');
-            const cloudResults = JSON.parse(localStorage.getItem('cloudResults') || '[]');
-            const allResults = [...cloudResults, ...centralResults, ...localResults];
+            const cloudResults = JSON.parse(localStorage.getItem('cloudResults') || '{}');
+            const cloudResultsArray = cloudResults.results || [];
+            const allResults = [...cloudResultsArray, ...centralResults, ...localResults];
             
             const result = allResults.find(r => r.id === resultId);
             if (result) {
@@ -638,8 +667,9 @@
         function downloadResult(resultId) {
             const centralResults = JSON.parse(localStorage.getItem('centralResults') || '[]');
             const localResults = JSON.parse(localStorage.getItem('airesults') || '[]');
-            const cloudResults = JSON.parse(localStorage.getItem('cloudResults') || '[]');
-            const allResults = [...cloudResults, ...centralResults, ...localResults];
+            const cloudResults = JSON.parse(localStorage.getItem('cloudResults') || '{}');
+            const cloudResultsArray = cloudResults.results || [];
+            const allResults = [...cloudResultsArray, ...centralResults, ...localResults];
             
             const result = allResults.find(r => r.id === resultId);
             if (result) {
