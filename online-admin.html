@@ -347,7 +347,62 @@
                     </div>
                 </div>
 
+                <!-- Global AI Configuration Editor -->
+                <div class="config-editor">
+                    <h3><i class="fas fa-sliders-h"></i> Global AI Configuration Editor</h3>
+                    <div class="editor-grid">
+                        <!-- AI1 (Lucy) -->
+                        <div>
+                            <h4 style="color: var(--secondary-color); margin-bottom: 0.75rem;">AI1 (Lucy)</h4>
+                            <div class="form-group">
+                                <label class="form-label" for="ai1-model">Model</label>
+                                <input id="ai1-model" class="form-input" type="text" placeholder="e.g., gpt-4o" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="ai1-max-tokens">Max Tokens</label>
+                                <input id="ai1-max-tokens" class="form-input" type="number" min="1" placeholder="1500" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="ai1-temperature">Temperature</label>
+                                <input id="ai1-temperature" class="form-input" type="number" step="0.1" min="0" max="2" placeholder="0.7" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="ai1-system-prompt">System Prompt (Lucy)</label>
+                                <textarea id="ai1-system-prompt" class="form-textarea" placeholder="Enter Lucy's system prompt here..."></textarea>
+                            </div>
+                        </div>
 
+                        <!-- AI2 (Tom) -->
+                        <div>
+                            <h4 style="color: #28a745; margin-bottom: 0.75rem;">AI2 (Tom)</h4>
+                            <div class="form-group">
+                                <label class="form-label" for="ai2-model">Model</label>
+                                <input id="ai2-model" class="form-input" type="text" placeholder="e.g., gpt-4.1" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="ai2-max-tokens">Max Tokens</label>
+                                <input id="ai2-max-tokens" class="form-input" type="number" min="1" placeholder="1500" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="ai2-temperature">Temperature</label>
+                                <input id="ai2-temperature" class="form-input" type="number" step="0.1" min="0" max="2" placeholder="0.7" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="ai2-system-prompt">System Prompt (Tom)</label>
+                                <textarea id="ai2-system-prompt" class="form-textarea" placeholder="Enter Tom's system prompt here..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 1rem;">
+                        <button class="save-btn" id="save-btn" onclick="saveConfiguration()">
+                            <i class="fas fa-cloud-upload-alt"></i> Save to Cloud (Apply Globally)
+                        </button>
+                        <button class="refresh-btn" onclick="loadCurrentConfiguration()">
+                            <i class="fas fa-sync-alt"></i> Reload Current Config
+                        </button>
+                    </div>
+                </div>
 
                 <!-- Cloud Results Management -->
                 <div class="config-editor">
