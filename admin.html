@@ -280,7 +280,7 @@
                         <i class="fas fa-download"></i> Export All Data
                     </button>
                     <button class="control-btn danger" onclick="clearAllData()">
-                        <i class="fas fa-trash"></i> Clear All Data
+                        <i class="fas fa-trash"></i> Clear Chat Results Only
                     </button>
                     <button class="control-btn" onclick="loadCloudData()">
                         <i class="fas fa-cloud"></i> Load Cloud Data
@@ -614,12 +614,12 @@
         }
 
         function clearAllData() {
-            if (confirm('Are you sure you want to clear ALL data? This action cannot be undone and will affect all stored results.')) {
+            if (confirm('Are you sure you want to clear all chat results? This will only clear conversation data, not AI configuration settings.')) {
                 localStorage.removeItem('centralResults');
                 localStorage.removeItem('airesults');
                 localStorage.removeItem('cloudResults');
                 loadAdminData();
-                showNotification('All data cleared successfully!', 'warning');
+                showNotification('Chat results cleared successfully!', 'warning');
             }
         }
 
