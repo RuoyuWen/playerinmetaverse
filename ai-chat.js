@@ -626,7 +626,7 @@ class AIChat {
     async saveToCloudStorage(result) {
         try {
             // Use a dedicated JSONBin for storing chat results
-            const RESULTS_ENDPOINT = 'https://api.jsonbin.io/v3/b/6892ab887b4b8670d8ae42e0'; // Results storage bin
+            const RESULTS_ENDPOINT = 'https://api.jsonbin.io/v3/b/6892ab887b4b8670d8ae42df'; // Results storage bin (same as config)
             const API_KEY = '$2a$10$XIZ3tMFNAQ56XbxSVUR2NeboaNtWqUvRveuIUkDQ1ceUUjPgHQzBq'; // Same API key as config
             
             // Get existing results from cloud
