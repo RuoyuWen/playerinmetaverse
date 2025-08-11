@@ -429,10 +429,8 @@ class AIChat {
         this.sendBtn.style.opacity = '0.5';
         this.sendBtn.style.cursor = 'not-allowed';
         
-
-        
-        // Create and show completion button for fail state
-        this.showCompletionButton('fail');
+        // Automatically save the fail result without showing completion button
+        this.saveGameResult('fail');
         
         this.scrollToBottom();
     }
@@ -450,13 +448,18 @@ class AIChat {
         this.sendBtn.innerHTML = '<i class="fas fa-check"></i> Completed';
         this.sendBtn.style.opacity = '0.5';
         
-        // Create and show completion button for success state
+        // Create and show completion button for success state only
         this.showCompletionButton('success');
         
         this.scrollToBottom();
     }
 
     showCompletionButton(gameResult) {
+        // Only show completion button for success states
+        if (gameResult !== 'success') {
+            return;
+        }
+        
         // Remove any existing completion button
         const existingButton = document.getElementById('completion-button');
         if (existingButton) {
@@ -470,9 +473,7 @@ class AIChat {
         completionButton.className = 'submit-btn';
         completionButton.style.margin = '10px auto';
         completionButton.style.display = 'block';
-        completionButton.style.background = gameResult === 'success' 
-            ? 'linear-gradient(135deg, #28a745, #20c997)' 
-            : 'linear-gradient(135deg, #dc3545, #c82333)';
+        completionButton.style.background = 'linear-gradient(135deg, #28a745, #20c997)';
         
         completionButton.onclick = () => {
             this.saveGameResult(gameResult);
