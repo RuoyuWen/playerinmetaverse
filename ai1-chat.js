@@ -510,6 +510,25 @@ class AI1Chat {
 
 
 
+    handleSuccessState() {
+        console.log('🎉 游戏成功 - 触发成功状态');
+        
+        // Display success message
+        this.addMessage('🎉 恭喜！游戏成功完成！', 'assistant');
+        
+        // Disable chat functionality
+        this.chatInput.disabled = true;
+        this.sendBtn.disabled = true;
+        this.chatInput.placeholder = '任务完成 - 聊天已禁用';
+        this.sendBtn.innerHTML = '<i class="fas fa-check"></i> 已完成';
+        this.sendBtn.style.opacity = '0.5';
+        
+        // Automatically save the success result without showing completion button
+        this.saveGameResult('success');
+        
+        this.scrollToBottom();
+    }
+
     handleFailState() {
         console.log('💀 游戏结束 - 触发失败状态');
         
@@ -530,59 +549,11 @@ class AI1Chat {
         this.scrollToBottom();
     }
 
-    handleSuccessState() {
-        console.log('🎉 游戏成功 - 触发成功状态');
-        
-        // Display success message
-        this.addMessage('🎉 恭喜！游戏成功完成！', 'assistant');
-        
-        // Disable chat functionality
-        this.chatInput.disabled = true;
-        this.sendBtn.disabled = true;
-        this.chatInput.placeholder = '任务完成 - 聊天已禁用';
-        this.sendBtn.innerHTML = '<i class="fas fa-check"></i> 已完成';
-        this.sendBtn.style.opacity = '0.5';
-        
-        // Create and show completion button for success state only
-        this.showCompletionButton('success');
-        
-        this.scrollToBottom();
-    }
-
     showCompletionButton(gameResult) {
-        // Only show completion button for success states
-        if (gameResult !== 'success') {
-            return;
-        }
-        
-        // Remove any existing completion button
-        const existingButton = document.getElementById('completion-button');
-        if (existingButton) {
-            existingButton.remove();
-        }
-
-        // Create completion button
-        const completionButton = document.createElement('button');
-        completionButton.id = 'completion-button';
-        completionButton.textContent = '完成';
-        completionButton.className = 'submit-btn';
-        completionButton.style.margin = '10px auto';
-        completionButton.style.display = 'block';
-        completionButton.style.background = 'linear-gradient(135deg, #28a745, #20c997)';
-        
-        completionButton.onclick = () => {
-            this.saveGameResult(gameResult);
-            completionButton.disabled = true;
-            completionButton.textContent = '已完成 ✓';
-            completionButton.style.opacity = '0.5';
-        };
-        
-        // Add button to the chat container
-        const chatContainer = document.getElementById('chat-container');
-        
-        if (chatContainer && chatContainer.parentNode) {
-            chatContainer.parentNode.appendChild(completionButton);
-        }
+        // This function is no longer needed for automatic completion
+        // But keeping it for potential future use
+        console.log('Completion button function called but not needed for automatic completion');
+        return;
     }
 
     saveGameResult(gameResult) {
