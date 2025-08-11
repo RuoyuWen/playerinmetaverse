@@ -48,7 +48,7 @@ JSON格式要求：
 
     // UI text configuration
     ui: {
-        welcomeMessage: "嘿！我是Tom！🚀 我需要你的帮助来做决定。你能协助我吗？(使用中转模型)",
+        welcomeMessage: "嘿！我是Tom！🚀 我需要你的帮助来做决定。你能协助我吗？",
         errorMessage: "抱歉，Tom暂时无法使用。请检查您的API密钥或稍后再试。",
         apiKeyPlaceholder: "sk-... (中转API密钥)",
         sendButtonText: "发送",
