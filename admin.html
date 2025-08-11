@@ -282,6 +282,9 @@
                     <button class="control-btn danger" onclick="clearAllData()">
                         <i class="fas fa-trash"></i> Clear All Data
                     </button>
+                    <button class="control-btn" onclick="loadCloudData()">
+                        <i class="fas fa-cloud"></i> Load Cloud Data
+                    </button>
                 </div>
 
                 <!-- Results Table -->
@@ -352,13 +355,21 @@
     <script src="script.js"></script>
     <script>
         // Load and display admin data
-        function loadAdminData() {
+        async function loadAdminData() {
+            // Try to load from cloud storage first
+            try {
+                await loadCloudResults();
+            } catch (error) {
+                console.log('Cloud data loading failed, falling back to local data');
+            }
+            
             // Load from central storage (simulation for now)
             const centralResults = JSON.parse(localStorage.getItem('centralResults') || '[]');
             const localResults = JSON.parse(localStorage.getItem('airesults') || '[]');
+            const cloudResults = JSON.parse(localStorage.getItem('cloudResults') || '[]');
             
-            // Combine all results (in real implementation, this would come from your backend)
-            const allResults = [...centralResults, ...localResults];
+            // Combine all results (cloud data takes priority)
+            const allResults = [...cloudResults, ...centralResults, ...localResults];
             
             // Remove duplicates based on ID
             const uniqueResults = allResults.filter((result, index, arr) => 
@@ -368,6 +379,58 @@
             updateStatistics(uniqueResults);
             displayResults(uniqueResults);
             displayConfigStatus();
+        }
+
+        // Load results from cloud storage
+        async function loadCloudResults() {
+            try {
+                const RESULTS_ENDPOINT = 'https://api.jsonbin.io/v3/b/6892ab887b4b8670d8ae42df';
+                const API_KEY = '$2a$10$XIZ3tMFNAQ56XbxSVUR2NeboaNtWqUvRveuIUkDQ1ceUUjPgHQzBq';
+                
+                const response = await fetch(`${RESULTS_ENDPOINT}/latest`, {
+                    method: 'GET',
+                    headers: {
+                        'X-Master-Key': API_KEY
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                const results = data.record?.results || [];
+                
+                // Store in localStorage for local access
+                localStorage.setItem('cloudResults', JSON.stringify(results));
+                
+                console.log('☁️ Cloud results loaded:', results.length);
+                return results;
+                
+            } catch (error) {
+                console.error('❌ Failed to load cloud results:', error);
+                throw error;
+            }
+        }
+
+        // Load cloud data manually
+        async function loadCloudData() {
+            const loadBtn = document.querySelector('button[onclick="loadCloudData()"]');
+            const originalText = loadBtn.innerHTML;
+            
+            loadBtn.disabled = true;
+            loadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+            
+            try {
+                await loadCloudResults();
+                loadAdminData();
+                showNotification('Cloud data loaded successfully!', 'success');
+            } catch (error) {
+                showNotification('Failed to load cloud data: ' + error.message, 'error');
+            } finally {
+                loadBtn.disabled = false;
+                loadBtn.innerHTML = originalText;
+            }
         }
 
         // Display global configuration status
@@ -507,7 +570,8 @@
         function exportAllData() {
             const centralResults = JSON.parse(localStorage.getItem('centralResults') || '[]');
             const localResults = JSON.parse(localStorage.getItem('airesults') || '[]');
-            const allResults = [...centralResults, ...localResults];
+            const cloudResults = JSON.parse(localStorage.getItem('cloudResults') || '[]');
+            const allResults = [...cloudResults, ...centralResults, ...localResults];
             
             const filename = `ai_chat_results_${new Date().toISOString().split('T')[0]}.json`;
             const blob = new Blob([JSON.stringify(allResults, null, 2)], { type: 'application/json' });
@@ -517,7 +581,8 @@
         function exportCSV() {
             const centralResults = JSON.parse(localStorage.getItem('centralResults') || '[]');
             const localResults = JSON.parse(localStorage.getItem('airesults') || '[]');
-            const allResults = [...centralResults, ...localResults];
+            const cloudResults = JSON.parse(localStorage.getItem('cloudResults') || '[]');
+            const allResults = [...cloudResults, ...centralResults, ...localResults];
             
             if (allResults.length === 0) {
                 alert('No data to export.');
@@ -552,6 +617,7 @@
             if (confirm('Are you sure you want to clear ALL data? This action cannot be undone and will affect all stored results.')) {
                 localStorage.removeItem('centralResults');
                 localStorage.removeItem('airesults');
+                localStorage.removeItem('cloudResults');
                 loadAdminData();
                 showNotification('All data cleared successfully!', 'warning');
             }
@@ -560,7 +626,8 @@
         function viewDetails(resultId) {
             const centralResults = JSON.parse(localStorage.getItem('centralResults') || '[]');
             const localResults = JSON.parse(localStorage.getItem('airesults') || '[]');
-            const allResults = [...centralResults, ...localResults];
+            const cloudResults = JSON.parse(localStorage.getItem('cloudResults') || '[]');
+            const allResults = [...cloudResults, ...centralResults, ...localResults];
             
             const result = allResults.find(r => r.id === resultId);
             if (result) {
@@ -571,7 +638,8 @@
         function downloadResult(resultId) {
             const centralResults = JSON.parse(localStorage.getItem('centralResults') || '[]');
             const localResults = JSON.parse(localStorage.getItem('airesults') || '[]');
-            const allResults = [...centralResults, ...localResults];
+            const cloudResults = JSON.parse(localStorage.getItem('cloudResults') || '[]');
+            const allResults = [...cloudResults, ...centralResults, ...localResults];
             
             const result = allResults.find(r => r.id === resultId);
             if (result) {
