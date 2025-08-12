@@ -470,16 +470,23 @@
             </div>
 
             <div class="ai-container">
-                <!-- API Key Setup -->
+                <!-- API Provider and Key Setup -->
                 <div class="security-warning">
-                    <h3><i class="fas fa-key"></i> 中转 API 密钥设置</h3>
-                    <p>💡 请输入您的薛定猫中转 API 密钥开始聊天</p>
+                    <h3><i class="fas fa-key"></i> API 提供商和密钥设置</h3>
+                    <p>💡 选择您的 API 提供商并输入对应的密钥开始聊天</p>
                     <p>🔒 API 密钥仅存储在您的浏览器本地，不会上传到服务器</p>
                     <p>⚠️ 注意：在前端直接使用 API 密钥存在安全风险，仅建议用于个人测试</p>
-                    <label for="api-key">中转 API 密钥:</label>
-                    <input type="password" id="api-key" class="api-key-input" placeholder="sk-... (中转 API 密钥)" />
-                    <small style="color: #888; font-size: 0.9em; margin-top: 0.5rem; display: block;">
-                        💡 获取 API 密钥：访问 <a href="https://s.apifox.cn/0cc9d8a3-2430-47aa-bf45-98c5e07f58cf/doc-6962779" target="_blank" style="color: var(--secondary-color);">薛定猫API官方文档</a>
+                    
+                    <label for="api-provider">API 提供商:</label>
+                    <select id="api-provider" class="api-key-input" style="margin-bottom: 1rem;">
+                        <option value="xuedingmao">薛定猫 API</option>
+                        <option value="groq">Groq API</option>
+                    </select>
+                    
+                    <label for="api-key" id="api-key-label">薛定猫 API 密钥:</label>
+                    <input type="password" id="api-key" class="api-key-input" placeholder="sk-... (薛定猫 API 密钥)" />
+                    <small id="api-key-help" style="color: #888; font-size: 0.9em; margin-top: 0.5rem; display: block;">
+                        💡 获取 API 密钥：访问 <a id="api-key-link" href="https://s.apifox.cn/0cc9d8a3-2430-47aa-bf45-98c5e07f58cf/doc-6962779" target="_blank" style="color: var(--secondary-color);">薛定猫API官方文档</a>
                     </small>
                 </div>
 

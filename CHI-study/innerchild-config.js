@@ -4,6 +4,28 @@
  */
 
 const INNER_CHILD_CONFIG = {
+  // API提供商配置
+  apiProviders: {
+    xuedingmao: {
+      name: '薛定猫 API',
+      endpoint: 'https://xuedingmao.online/v1/chat/completions',
+      model: 'gpt-4.1',
+      helpUrl: 'https://s.apifox.cn/0cc9d8a3-2430-47aa-bf45-98c5e07f58cf/doc-6962779',
+      keyPlaceholder: 'sk-... (薛定猫 API 密钥)'
+    },
+    groq: {
+      name: 'Groq API',
+      endpoint: 'https://api.groq.com/openai/v1/chat/completions',
+      model: 'openai/gpt-oss-120b',
+      helpUrl: 'https://console.groq.com/',
+      keyPlaceholder: 'gsk_... (Groq API 密钥)'
+    }
+  },
+  
+  // 默认API提供商
+  defaultProvider: 'xuedingmao',
+  
+  // 兼容性字段（保持向后兼容）
   model: 'gpt-4.1', // 薛定猫API支持的模型名称
   apiEndpoint: 'https://xuedingmao.online/v1/chat/completions', // 薛定猫API端点（有多个备用端点）
   systemPromptTemplate: `你是一位名为「{{name}}」的AI，对话目标是：以用户"童年时期的自己"的视角进行交流。

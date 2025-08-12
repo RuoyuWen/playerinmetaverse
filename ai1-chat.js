@@ -159,7 +159,17 @@ class AI1Chat {
         this.typingIndicator = document.getElementById('typing-indicator');
         this.typingText = document.getElementById('typing-text');
         this.apiKeyInput = document.getElementById('api-key');
+        this.apiProviderSelect = document.getElementById('api-provider');
+        this.apiKeyLabel = document.getElementById('api-key-label');
+        this.apiKeyHelp = document.getElementById('api-key-help');
+        this.apiKeyLink = document.getElementById('api-key-link');
 
+        // 初始化API提供商
+        this.currentProvider = localStorage.getItem('ai1_api_provider') || this.config.defaultProvider || 'xuedingmao';
+        if (this.apiProviderSelect) {
+            this.apiProviderSelect.value = this.currentProvider;
+            this.updateApiProviderUI();
+        }
     }
 
     bindEvents() {
@@ -173,8 +183,18 @@ class AI1Chat {
         
         this.apiKeyInput.addEventListener('input', (e) => {
             this.apiKey = e.target.value;
-            localStorage.setItem('transit_api_key_v2', this.apiKey);
+            this.saveApiKey();
         });
+
+        // API提供商切换
+        if (this.apiProviderSelect) {
+            this.apiProviderSelect.addEventListener('change', (e) => {
+                this.currentProvider = e.target.value;
+                localStorage.setItem('ai1_api_provider', this.currentProvider);
+                this.updateApiProviderUI();
+                this.loadApiKey(); // 重新加载对应的API密钥
+            });
+        }
 
         // Auto-resize textarea
         this.chatInput.addEventListener('input', () => {
@@ -186,10 +206,35 @@ class AI1Chat {
     }
 
     loadApiKey() {
-        const savedKey = localStorage.getItem('transit_api_key_v2');
+        const keyName = `ai1_api_key_${this.currentProvider}`;
+        const savedKey = localStorage.getItem(keyName);
         if (savedKey) {
             this.apiKey = savedKey;
-            this.apiKeyInput.value = savedKey;
+            if (this.apiKeyInput) {
+                this.apiKeyInput.value = savedKey;
+            }
+        } else {
+            this.apiKey = '';
+            if (this.apiKeyInput) {
+                this.apiKeyInput.value = '';
+            }
+        }
+    }
+
+    saveApiKey() {
+        const keyName = `ai1_api_key_${this.currentProvider}`;
+        localStorage.setItem(keyName, this.apiKey);
+    }
+
+    updateApiProviderUI() {
+        const providers = this.config.apiProviders || {};
+        const provider = providers[this.currentProvider];
+        
+        if (provider && this.apiKeyLabel && this.apiKeyInput && this.apiKeyHelp && this.apiKeyLink) {
+            this.apiKeyLabel.textContent = `${provider.name} 密钥:`;
+            this.apiKeyInput.placeholder = provider.keyPlaceholder;
+            this.apiKeyLink.href = provider.helpUrl;
+            this.apiKeyLink.textContent = `${provider.name}官方文档`;
         }
     }
 
@@ -261,60 +306,70 @@ class AI1Chat {
         // Add current message to conversation history
         this.messages.push({ role: 'user', content: userMessage });
 
+        // 获取当前API提供商配置
+        const providers = this.config.apiProviders || {};
+        const provider = providers[this.currentProvider];
+        
+        if (!provider) {
+            throw new Error(`未找到API提供商配置: ${this.currentProvider}`);
+        }
+
         // 从配置文件获取设置
-        const model = this.config.model || 'gpt-4o';
+        const model = provider.model || this.config.model || 'gpt-4o';
         const systemPrompt = this.config.systemPrompt || '你是一个友好的助手。请用中文回答问题，保持礼貌和有帮助的态度。';
         const apiParams = this.config.apiParams || {};
         
-        // 尝试多个API端点 - 根据薛定猫API官方文档
-        const apiEndpoints = [
-            'https://xuedingmao.online/v1/chat/completions',
-            'https://xuedingmao.online/v1',
-            'https://xuedingmao.online',
-            'https://api.xuedingmao.com/v1/chat/completions' // 备用端点
-        ];
+        console.log(`🔗 使用 ${provider.name} API: ${provider.endpoint}`);
         
-        let lastError = null;
-        
-        for (const apiEndpoint of apiEndpoints) {
-            try {
-                console.log(`🔗 尝试 API 端点: ${apiEndpoint}`);
-                
-                const response = await fetch(apiEndpoint, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${this.apiKey}`
+        try {
+            let requestBody = {
+                model: model,
+                messages: [
+                    {
+                        role: 'system',
+                        content: systemPrompt
                     },
-                    body: JSON.stringify({
-                        model: model,
-                        messages: [
-                            {
-                                role: 'system',
-                                content: systemPrompt
-                            },
-                            ...this.messages
-                        ],
-                        max_tokens: apiParams.max_tokens || 1500,
-                        temperature: apiParams.temperature || 0.7,
-                        top_p: apiParams.top_p || 0.9,
-                        frequency_penalty: apiParams.frequency_penalty || 0.0,
-                        presence_penalty: apiParams.presence_penalty || 0.0,
-                        stream: false,
-                        response_format: { type: "json_object" }
-                    })
-                });
+                    ...this.messages
+                ],
+                max_tokens: apiParams.max_tokens || 1500,
+                temperature: apiParams.temperature || 0.7,
+                top_p: apiParams.top_p || 0.9,
+                stream: false
+            };
 
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(`API Error: ${error.error?.message || 'Unknown error'}`);
-                }
+            // 根据不同API提供商调整请求参数
+            if (this.currentProvider === 'xuedingmao') {
+                requestBody.frequency_penalty = apiParams.frequency_penalty || 0.0;
+                requestBody.presence_penalty = apiParams.presence_penalty || 0.0;
+                requestBody.response_format = { type: "json_object" };
+            } else if (this.currentProvider === 'groq') {
+                // Groq的特殊参数
+                requestBody.max_completion_tokens = requestBody.max_tokens;
+                delete requestBody.max_tokens;
+                requestBody.reasoning_effort = "medium";
+                requestBody.stop = null;
+            }
 
-                const data = await response.json();
-                const assistantMessage = data.choices[0].message.content;
-                
-                // Parse JSON response
-                let parsedResponse;
+            const response = await fetch(provider.endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.apiKey}`
+                },
+                body: JSON.stringify(requestBody)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(`API Error: ${errorData.error?.message || response.statusText}`);
+            }
+
+            const data = await response.json();
+            const assistantMessage = data.choices[0].message.content;
+            
+            // Parse JSON response (主要针对薛定猫API)
+            let parsedResponse;
+            if (this.currentProvider === 'xuedingmao') {
                 try {
                     parsedResponse = JSON.parse(assistantMessage);
                 } catch (error) {
@@ -325,41 +380,42 @@ class AI1Chat {
                         class: "none"
                     };
                 }
-                
-                // Add assistant response to conversation history
-                this.messages.push({ role: 'assistant', content: parsedResponse.content || assistantMessage });
-
-                // Keep conversation history reasonable (从配置文件获取历史长度限制)
-                const maxHistory = this.config.maxHistoryLength || 20;
-                if (this.messages.length > maxHistory) {
-                    this.messages = this.messages.slice(-maxHistory);
-                }
-
-                console.log(`✅ 成功使用 API 端点: ${apiEndpoint}`);
-                return parsedResponse;
-                
-            } catch (error) {
-                console.warn(`❌ 无法使用 API 端点 ${apiEndpoint}:`, error.message);
-                lastError = error;
-                continue;
+            } else {
+                // 对于Groq等其他API，直接使用文本响应
+                parsedResponse = {
+                    content: assistantMessage,
+                    class: "none"
+                };
             }
+            
+            // Add assistant response to conversation history
+            this.messages.push({ role: 'assistant', content: parsedResponse.content || assistantMessage });
+
+            // Keep conversation history reasonable (从配置文件获取历史长度限制)
+            const maxHistory = this.config.maxHistoryLength || 20;
+            if (this.messages.length > maxHistory) {
+                this.messages = this.messages.slice(-maxHistory);
+            }
+
+            console.log(`✅ 成功使用 ${provider.name} API`);
+            return parsedResponse;
+            
+        } catch (error) {
+            console.error(`❌ ${provider.name} API 调用失败:`, error.message);
+            
+            // 检查是否是网络连接问题
+            if (error.message.includes('Failed to fetch') || error.message.includes('ERR_NAME_NOT_RESOLVED')) {
+                throw new Error(`网络连接失败：无法连接到${provider.name}服务器。请检查网络连接或稍后重试。\n\n可能的解决方案：\n1. 检查网络连接\n2. 确认API密钥是否正确\n3. 稍后重试`);
+            }
+            
+            // 检查是否是API密钥问题
+            if (error.message.includes('401') || error.message.includes('Unauthorized')) {
+                throw new Error(`API密钥无效：请检查您的${provider.name} API密钥是否正确。`);
+            }
+            
+            // 其他错误
+            throw new Error(`API调用失败：${error.message || '未知错误'}`);
         }
-        
-        // 如果所有端点都失败了
-        console.error('❌ 所有 API 端点都失败了');
-        
-        // 检查是否是网络连接问题
-        if (lastError && (lastError.message.includes('Failed to fetch') || lastError.message.includes('ERR_NAME_NOT_RESOLVED'))) {
-            throw new Error('网络连接失败：无法连接到薛定猫API服务器。请检查网络连接或稍后重试。\n\n可能的解决方案：\n1. 检查网络连接\n2. 确认API密钥是否正确\n3. 稍后重试');
-        }
-        
-        // 检查是否是API密钥问题
-        if (lastError && (lastError.message.includes('401') || lastError.message.includes('Unauthorized'))) {
-            throw new Error('API密钥无效：请检查您的薛定猫API密钥是否正确。');
-        }
-        
-        // 其他错误
-        throw new Error(`API调用失败：${lastError?.message || '未知错误'}`);
     }
 
     addMessage(message, sender) {

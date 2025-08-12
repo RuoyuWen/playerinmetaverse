@@ -103,8 +103,15 @@
         <div class="setup-card">
           <div class="grid-2">
             <div class="form-row">
-              <label>OpenAI API 密钥</label>
-              <input type="password" id="ic-api-key" placeholder="sk-proj-..." />
+              <label>API 提供商</label>
+              <select id="ic-api-provider">
+                <option value="xuedingmao">薛定猫 API</option>
+                <option value="groq">Groq API</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label id="ic-api-key-label">薛定猫 API 密钥</label>
+              <input type="password" id="ic-api-key" placeholder="sk-..." />
             </div>
             <div class="form-row">
               <label>AI 名字</label>
@@ -181,7 +188,7 @@
             <div style="text-align: center; padding: 2rem; color: #a0aec0;">
               <i class="fas fa-cog" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
               <h3>请先完成设置</h3>
-              <p>1. 输入 OpenAI API 密钥</p>
+              <p>1. 选择 API 提供商并输入密钥</p>
               <p>2. 设置 AI 名字</p>
               <p>3. 选择头像</p>
               <p>4. 上传童年文档并生成人设</p>
