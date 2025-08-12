@@ -8,12 +8,20 @@ class OnlineGlobalConfig {
     constructor() {
         this.configEndpoint = 'https://api.jsonbin.io/v3/b/6892ab887b4b8670d8ae42df'; // Your JSONBin ID
         this.apiKey = '$2a$10$XIZ3tMFNAQ56XbxSVUR2NeboaNtWqUvRveuIUkDQ1ceUUjPgHQzBq'; // Your correct JSONBin API key
-        this.fallbackConfig = this.getDefaultConfig();
+        this.fallbackConfig = null; // Will be set after DOM is ready
         this.currentConfig = null;
         this.configVersion = null;
         
-        // Try to load config immediately
-        this.loadConfig();
+        // Wait for DOM to be ready before loading configs
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                this.fallbackConfig = this.getDefaultConfig();
+                this.loadConfig();
+            });
+        } else {
+            this.fallbackConfig = this.getDefaultConfig();
+            this.loadConfig();
+        }
     }
 
     // Default configuration fallback - Now uses local config files
@@ -102,7 +110,7 @@ class OnlineGlobalConfig {
                     this.currentConfig = cloudConfig;
                     this.configVersion = cloudConfig.version;
                     console.log('✅ Online global config loaded:', cloudConfig);
-                    return localConfig;
+                    return cloudConfig;
                 } else {
                     console.warn('⚠️ Cloud config has invalid structure, using fallback');
                 }
@@ -118,6 +126,9 @@ class OnlineGlobalConfig {
             }
             
             // Final fallback to default
+            if (!this.fallbackConfig) {
+                this.fallbackConfig = this.getDefaultConfig();
+            }
             this.currentConfig = this.fallbackConfig;
             this.configVersion = this.fallbackConfig.version;
             console.log('⚙️ Using default global config');
@@ -134,6 +145,9 @@ class OnlineGlobalConfig {
                 return cachedConfig;
             }
             
+            if (!this.fallbackConfig) {
+                this.fallbackConfig = this.getDefaultConfig();
+            }
             this.currentConfig = this.fallbackConfig;
             this.configVersion = this.fallbackConfig.version;
             return this.fallbackConfig;

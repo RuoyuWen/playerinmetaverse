@@ -31,7 +31,7 @@ class AIChat {
         // 等待在线配置加载完成
         const checkOnlineConfig = () => {
             if (window.onlineGlobalConfig && window.onlineGlobalConfig.currentConfig) {
-                const onlineConfig = window.onlineGlobalConfig.getAI1Config();
+                const onlineConfig = window.onlineGlobalConfig.getAI2Config();
                 console.log('🎯 Forcing online config application:', onlineConfig);
                 
                 // 强制应用在线配置
@@ -46,7 +46,7 @@ class AIChat {
                     this.config.apiParams = { ...this.config.apiParams, ...onlineConfig.apiParams };
                 }
                 
-                console.log('🚀 Final AI1 config after force update:', this.config);
+                console.log('🚀 Final AI2 config after force update:', this.config);
             } else {
                 console.log('⏳ Online config not ready, retrying in 1 second...');
                 setTimeout(checkOnlineConfig, 1000);
@@ -72,22 +72,22 @@ class AIChat {
     }
 
     loadConfig() {
-        // Load default config first
+        // Load default config first (which is now AI_CONFIG from local file)
         let config = JSON.parse(JSON.stringify(window.AI_CONFIG || {}));
-        console.log('📋 Default AI1 config loaded:', config);
+        console.log('📋 Default AI2 config loaded:', config);
         
         try {
             // PRIORITY 1: Use LOCAL CONFIG FILES (ai-config.js) - Highest Priority
             if (window.AI_CONFIG) {
-                console.log('📁 Using LOCAL AI1 config from ai-config.js');
+                console.log('📁 Using LOCAL AI2 config from ai-config.js');
                 // Local config is already loaded as default, no need to override
-                console.log('✅ AI1 config using LOCAL FILE settings:', config);
+                console.log('✅ AI2 config using LOCAL FILE settings:', config);
                 console.log('🕐 Source: Local config file (ai-config.js)');
             }
             // PRIORITY 2: Check for ONLINE GLOBAL configuration (if local not available)
             else if (window.onlineGlobalConfig) {
-                const onlineConfig = window.onlineGlobalConfig.getAI1Config();
-                console.log('☁️ Loading ONLINE GLOBAL AI1 config:', onlineConfig);
+                const onlineConfig = window.onlineGlobalConfig.getAI2Config();
+                console.log('☁️ Loading ONLINE GLOBAL AI2 config:', onlineConfig);
                 
                 if (onlineConfig.model) config.model = onlineConfig.model;
                 if (onlineConfig.systemPrompt) config.systemPrompt = onlineConfig.systemPrompt;
@@ -95,7 +95,7 @@ class AIChat {
                     config.apiParams = { ...config.apiParams, ...onlineConfig.apiParams };
                 }
                 
-                console.log('✅ AI1 config updated with ONLINE GLOBAL settings:', config);
+                console.log('✅ AI2 config updated with ONLINE GLOBAL settings:', config);
                 console.log('🕐 Online config version:', window.onlineGlobalConfig.configVersion);
             }
             // PRIORITY 2: Check for FILE-BASED GLOBAL configuration from global-config.js

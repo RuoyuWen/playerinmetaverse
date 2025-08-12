@@ -86,13 +86,13 @@ class AI1Chat {
             }
             // PRIORITY 2: Check for ONLINE GLOBAL configuration (if local not available)
             else if (window.onlineGlobalConfig && window.onlineGlobalConfig.currentConfig) {
-                const onlineConfig = window.onlineGlobalConfig.getAI2Config();
-                console.log('☁️ 加载 ONLINE GLOBAL AI1 配置 (使用 AI2 配置):', onlineConfig);
+                const onlineConfig = window.onlineGlobalConfig.getAI1Config();
+                console.log('☁️ 加载 ONLINE GLOBAL AI1 配置:', onlineConfig);
                 
                 if (onlineConfig.model) config.model = onlineConfig.model;
                 if (onlineConfig.systemPrompt) {
                     config.systemPrompt = onlineConfig.systemPrompt;
-                    console.log('✅ 使用来自在线管理员的 AI2 配置');
+                    console.log('✅ 使用来自在线管理员的 AI1 配置');
                 }
                 if (onlineConfig.apiParams) {
                     config.apiParams = { ...config.apiParams, ...onlineConfig.apiParams };
