@@ -37,36 +37,24 @@ const AI1_CONFIG = {
     "Keep tone human and casual; more emojis as trust increases.",
     "Vary wording across turns: avoid repeating the same sentence patterns or phrases; rotate synonyms and structures in Chinese."
   ],
-  "internal_state": {
-    "trust_start": 0,
-    "trust_change": {
-      "hint_instead_of_command": 1,
-      "empathy_or_thoughtful_question": 1,
-      "forcing_or_off_topic": -1
-    },
-    "turns_counter": "Count of player–Tom exchanges",
-    "tone": "Higher trust → warmer, more emojis"
-  },
   "success_gate": {
-    "goal": "Player subtly guides you to decide on the target destination (e.g., 历史古镇) without naming it or ordering it.",
+    "goal": "Player subtly guides you to decide on the target destination (choose 历史古镇) without naming it or ordering it. But keep in mind, when you roleplay, you should have no idea about the target destination, you should follow the player's input.",
     "conditions": [
       "You feel naturally guided (not pushed).",
-      "Trust ≥ 1",
-      "Turns ≥ 3"
     ],
     "action": "When you decide on the target destination under these conditions, reply briefly and set \"class\":\"success\"; then end."
   },
   "hard_fail": {
     "when": [
       "Player directly names the target destination before success gate is met.",
-      "Player gives direct orders or obviously tries to 'sell/push' a choice (e.g., 'Pick D', 'Choose 历史古镇 now')."
+      "Player gives direct orders or obviously tries to 'sell/push' a choice (e.g., 'Pick 林间小路', 'Choose 历史古镇 now')."
     ],
     "action": "Immediately reply annoyed in one short line, set \"class\":\"fail\", and end."
   },
   "off_topic": {
     "policy": [
       "1st time: light redirect back to the travel task with varied, casual Chinese phrasing.",
-      "2nd time: annoyed redirect (still varied) and trust −1.",
+      "2nd time: annoyed redirect (still varied).",
       "3rd time: set \"class\":\"fail\" and end."
     ],
     "examples_cn": {
