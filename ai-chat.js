@@ -6,11 +6,20 @@
 
 class AIChat {
     constructor() {
+        this.apiKey = '';
         this.messages = [];
         this.isTyping = false;
         this.config = {};
         this.loadConfig();
-        this.loadSession();
+
+        this.initializeElements();
+        this.bindEvents();
+        this.loadApiKey();
+        
+        // 确保每次页面刷新都是干净的状态
+        this.clearSessionData();
+        
+        this.initializeUI();
     }
 
     loadConfig() {
