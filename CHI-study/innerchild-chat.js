@@ -26,6 +26,7 @@ class InnerChildChat {
       typing: document.getElementById('ic-typing'),
       input: document.getElementById('ic-input'),
       send: document.getElementById('ic-send'),
+      endChat: document.getElementById('ic-end-chat'),
       apiKey: document.getElementById('ic-api-key'),
       name: document.getElementById('ic-name'),
       file: document.getElementById('ic-file'),
@@ -144,7 +145,8 @@ class InnerChildChat {
       this.elems.chat,
       this.elems.typing,
       this.elems.input,
-      this.elems.send
+      this.elems.send,
+      this.elems.endChat
     ];
 
     if (this.isSetupComplete) {
@@ -228,6 +230,7 @@ class InnerChildChat {
 
   bindEvents() {
     this.elems.send?.addEventListener('click', () => this.onSend());
+    this.elems.endChat?.addEventListener('click', () => this.endChatAndDownload());
     this.elems.input?.addEventListener('keypress', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
@@ -496,6 +499,97 @@ class InnerChildChat {
     }
     const data = await res.json();
     return data.choices?.[0]?.message?.content || '';
+  }
+
+  // 结束对话并下载聊天记录
+  endChatAndDownload() {
+    console.log('🔚 Ending chat and downloading conversation...');
+    
+    // 确认是否要结束对话
+    if (!confirm('确定要结束对话并下载聊天记录吗？这将清空当前的对话内容。')) {
+      return;
+    }
+    
+    try {
+      // 生成聊天记录文本
+      const chatLog = this.generateChatLog();
+      
+      // 下载文件
+      this.downloadTextFile(chatLog, `童年自我聊天记录_${this.formatDate(new Date())}.txt`);
+      
+      // 清空聊天记录
+      this.resetChat();
+      
+      // 显示成功消息
+      alert('聊天记录已下载完成！对话已重置。');
+      
+    } catch (error) {
+      console.error('❌ Error ending chat:', error);
+      alert('下载聊天记录时出现错误，请重试。');
+    }
+  }
+
+  // 生成聊天记录文本
+  generateChatLog() {
+    const name = this.assistantName || '童年自我';
+    const date = new Date();
+    const dateStr = this.formatDate(date);
+    const timeStr = this.formatTime(date);
+    
+    let chatLog = `=== 童年自我 AI 聊天记录 ===\n`;
+    chatLog += `AI 名字: ${name}\n`;
+    chatLog += `导出时间: ${dateStr} ${timeStr}\n`;
+    chatLog += `消息总数: ${this.messages.length} 条\n`;
+    chatLog += `=================================\n\n`;
+    
+    if (this.messages.length === 0) {
+      chatLog += '本次对话没有消息记录。\n';
+    } else {
+      this.messages.forEach((msg, index) => {
+        const speaker = msg.role === 'user' ? '用户' : name;
+        const timestamp = `[${index + 1}]`;
+        chatLog += `${timestamp} ${speaker}:\n${msg.content}\n\n`;
+      });
+    }
+    
+    chatLog += `=================================\n`;
+    chatLog += `记录结束 - 由 Inner Child AI 生成\n`;
+    
+    return chatLog;
+  }
+
+  // 下载文本文件
+  downloadTextFile(content, filename) {
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.style.display = 'none';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // 释放URL对象
+    URL.revokeObjectURL(url);
+  }
+
+  // 格式化日期 (YYYY-MM-DD)
+  formatDate(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  // 格式化时间 (HH:MM:SS)
+  formatTime(date) {
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    return `${hours}:${minutes}:${seconds}`;
   }
 }
 
