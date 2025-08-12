@@ -461,7 +461,6 @@ class InnerChildChat {
   }
 
   async rawOpenAI(messages, extra = {}) {
-    const endpoint = 'https://api.openai.com/v1/chat/completions';
     const body = {
       model: this.config.model || 'gpt-4.1',
       messages,
@@ -473,21 +472,51 @@ class InnerChildChat {
       stream: false,
       ...extra
     };
-    const res = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.apiKey}`
-      },
-      body: JSON.stringify(body)
-    });
-    if (!res.ok) {
-      let detail = '';
-      try { detail = (await res.json()).error?.message || ''; } catch {}
-      throw new Error(`OpenAI API error: ${res.status} ${detail}`);
+
+    // 尝试多个API端点 - 根据薛定猫API官方文档
+    const apiEndpoints = [
+      'https://xuedingmao.online/v1/chat/completions',
+      'https://xuedingmao.online/v1',
+      'https://xuedingmao.online',
+      'https://api.xuedingmao.com/v1/chat/completions' // 备用端点
+    ];
+    
+    let lastError = null;
+    
+    for (const endpoint of apiEndpoints) {
+      try {
+        console.log(`🔗 Inner Child API 尝试端点: ${endpoint}`);
+        
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.apiKey}`
+          },
+          body: JSON.stringify(body)
+        });
+
+        if (!res.ok) {
+          const error = await res.json();
+          console.warn(`⚠️ API 端点 ${endpoint} 失败:`, error);
+          lastError = new Error(`API Error: ${error.error?.message || 'Unknown error'}`);
+          continue; // 尝试下一个端点
+        }
+
+        const data = await res.json();
+        console.log(`✅ API 端点 ${endpoint} 成功!`);
+        return data.choices?.[0]?.message?.content || '';
+        
+      } catch (error) {
+        console.warn(`⚠️ API 端点 ${endpoint} 连接失败:`, error.message);
+        lastError = error;
+        continue; // 尝试下一个端点
+      }
     }
-    const data = await res.json();
-    return data.choices?.[0]?.message?.content || '';
+    
+    // 如果所有端点都失败了
+    console.error('❌ 所有 API 端点都失败了');
+    throw lastError || new Error('All API endpoints failed');
   }
 
   // 结束对话并下载聊天记录

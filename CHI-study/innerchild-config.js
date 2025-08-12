@@ -1,10 +1,11 @@
 /**
  * Inner Child AI Configuration
- * 可被 online-global-config 或 localStorage 覆盖
+ * 童年自我AI的本地配置文件，使用薛定猫API
  */
 
 const INNER_CHILD_CONFIG = {
-  model: 'gpt-4.1',
+  model: 'gpt-4.1', // 薛定猫API支持的模型名称
+  apiEndpoint: 'https://xuedingmao.online/v1/chat/completions', // 薛定猫API端点（有多个备用端点）
   systemPromptTemplate: `你是一位名为「{{name}}」的AI，对话目标是：以用户"童年时期的自己"的视角进行交流。
 
 根据以下"资料要点"形成你的说话风格、价值观、口头禅、性格特征、记忆片段与情绪触发点。在整个对话中：
