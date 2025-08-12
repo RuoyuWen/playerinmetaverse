@@ -19,7 +19,8 @@ const AI1_CONFIG = {
             endpoint: 'https://api.groq.com/openai/v1/chat/completions',
             model: 'openai/gpt-oss-120b',
             helpUrl: 'https://console.groq.com/',
-            keyPlaceholder: 'gsk_... (Groq API 密钥)'
+            keyPlaceholder: 'gsk_... (Groq API 密钥)',
+            requiresJsonMode: true  // Groq也需要JSON模式来保持Tom游戏功能
         }
     },
     

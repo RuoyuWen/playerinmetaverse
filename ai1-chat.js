@@ -354,6 +354,10 @@ class AI1Chat {
                 delete requestBody.max_tokens;
                 requestBody.reasoning_effort = "medium";
                 requestBody.stop = null;
+                // Groq也支持JSON格式来保持Tom游戏功能
+                if (provider.requiresJsonMode) {
+                    requestBody.response_format = { type: "json_object" };
+                }
             }
 
             const response = await fetch(provider.endpoint, {
@@ -373,33 +377,26 @@ class AI1Chat {
             const data = await response.json();
             const assistantMessage = data.choices[0].message.content;
             
-            // Parse JSON response (主要针对薛定猫API)
+            // Parse JSON response (适用于所有API提供商)
             let parsedResponse;
-            if (this.currentProvider === 'xuedingmao') {
-                try {
-                    parsedResponse = JSON.parse(assistantMessage);
-                    console.log('✅ 成功解析薛定猫API的JSON响应:', parsedResponse);
-                    
-                    // 确保解析后的对象有content字段
-                    if (!parsedResponse.content) {
-                        console.warn('⚠️ JSON响应缺少content字段，使用原始消息');
-                        parsedResponse = {
-                            content: assistantMessage,
-                            class: parsedResponse.class || "none"
-                        };
-                    }
-                } catch (error) {
-                    console.error('❌ 解析JSON响应失败:', error);
-                    console.log('📝 原始响应内容:', assistantMessage);
-                    // Fallback to plain text if JSON parsing fails
+            
+            // 先尝试解析JSON，无论是哪个API提供商
+            try {
+                parsedResponse = JSON.parse(assistantMessage);
+                console.log('✅ 成功解析JSON响应:', parsedResponse);
+                
+                // 确保解析后的对象有content字段
+                if (!parsedResponse.content) {
+                    console.warn('⚠️ JSON响应缺少content字段，使用原始消息');
                     parsedResponse = {
                         content: assistantMessage,
-                        class: "none"
+                        class: parsedResponse.class || "none"
                     };
                 }
-            } else {
-                // 对于Groq等其他API，直接使用文本响应
-                console.log('✅ 使用Groq API文本响应:', assistantMessage);
+            } catch (error) {
+                console.error('❌ 解析JSON响应失败，使用纯文本模式:', error);
+                console.log('📝 原始响应内容:', assistantMessage);
+                // Fallback to plain text if JSON parsing fails
                 parsedResponse = {
                     content: assistantMessage,
                     class: "none"
