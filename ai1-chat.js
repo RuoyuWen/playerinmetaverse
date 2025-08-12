@@ -380,18 +380,34 @@ class AI1Chat {
             // Parse JSON response (适用于所有API提供商)
             let parsedResponse;
             
+            console.log('📥 原始API响应内容:', assistantMessage);
+            
             // 先尝试解析JSON，无论是哪个API提供商
             try {
                 parsedResponse = JSON.parse(assistantMessage);
                 console.log('✅ 成功解析JSON响应:', parsedResponse);
                 
-                // 确保解析后的对象有content字段
+                // 确保解析后的对象有content字段，并且content是字符串而不是对象
                 if (!parsedResponse.content) {
                     console.warn('⚠️ JSON响应缺少content字段，使用原始消息');
                     parsedResponse = {
                         content: assistantMessage,
                         class: parsedResponse.class || "none"
                     };
+                } else {
+                    // 如果content本身又是一个JSON字符串，再次解析
+                    if (typeof parsedResponse.content === 'string' && parsedResponse.content.trim().startsWith('{')) {
+                        try {
+                            const nestedContent = JSON.parse(parsedResponse.content);
+                            console.log('🔄 发现嵌套JSON，再次解析:', nestedContent);
+                            parsedResponse = {
+                                content: nestedContent.content || parsedResponse.content,
+                                class: nestedContent.class || parsedResponse.class || "none"
+                            };
+                        } catch (nestedError) {
+                            console.log('📝 content不是嵌套JSON，保持原样');
+                        }
+                    }
                 }
             } catch (error) {
                 console.error('❌ 解析JSON响应失败，使用纯文本模式:', error);
