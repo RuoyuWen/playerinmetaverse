@@ -279,7 +279,13 @@ class AI1Chat {
             
             // Handle different response classes
             const responseClass = response.class || 'none';
-            const content = response.content || response;
+            const content = response.content || (typeof response === 'string' ? response : JSON.stringify(response));
+            
+            console.log('🎭 显示消息内容:', {
+                content: content,
+                responseClass: responseClass,
+                originalResponse: response
+            });
             
             // Display the content as conversation
             this.addMessage(content, 'assistant');
@@ -372,8 +378,19 @@ class AI1Chat {
             if (this.currentProvider === 'xuedingmao') {
                 try {
                     parsedResponse = JSON.parse(assistantMessage);
+                    console.log('✅ 成功解析薛定猫API的JSON响应:', parsedResponse);
+                    
+                    // 确保解析后的对象有content字段
+                    if (!parsedResponse.content) {
+                        console.warn('⚠️ JSON响应缺少content字段，使用原始消息');
+                        parsedResponse = {
+                            content: assistantMessage,
+                            class: parsedResponse.class || "none"
+                        };
+                    }
                 } catch (error) {
-                    console.error('Failed to parse JSON response:', error);
+                    console.error('❌ 解析JSON响应失败:', error);
+                    console.log('📝 原始响应内容:', assistantMessage);
                     // Fallback to plain text if JSON parsing fails
                     parsedResponse = {
                         content: assistantMessage,
@@ -382,11 +399,18 @@ class AI1Chat {
                 }
             } else {
                 // 对于Groq等其他API，直接使用文本响应
+                console.log('✅ 使用Groq API文本响应:', assistantMessage);
                 parsedResponse = {
                     content: assistantMessage,
                     class: "none"
                 };
             }
+            
+            console.log('🎯 最终解析结果:', {
+                content: parsedResponse.content,
+                class: parsedResponse.class,
+                provider: this.currentProvider
+            });
             
             // Add assistant response to conversation history
             this.messages.push({ role: 'assistant', content: parsedResponse.content || assistantMessage });
