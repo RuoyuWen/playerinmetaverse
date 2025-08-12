@@ -19,57 +19,9 @@ class AI1Chat {
         this.clearSessionData();
         
         this.initializeUI();
-        
-        // 确保在线配置立即生效
-        this.ensureOnlineConfigActive();
     }
 
-    // 确保在线配置激活
-    ensureOnlineConfigActive() {
-        console.log('🔧 确保在线配置激活...');
-        
-        // 等待在线配置加载完成
-        const checkOnlineConfig = () => {
-            if (window.onlineGlobalConfig && window.onlineGlobalConfig.currentConfig) {
-                const onlineConfig = window.onlineGlobalConfig.getAI1Config();
-                console.log('🎯 强制应用在线配置:', onlineConfig);
-                
-                // 强制应用在线配置
-                if (onlineConfig.systemPrompt) {
-                    this.config.systemPrompt = onlineConfig.systemPrompt;
-                    console.log('✅ 系统提示词强制更新为:', this.config.systemPrompt);
-                }
-                if (onlineConfig.model) {
-                    this.config.model = onlineConfig.model;
-                }
-                if (onlineConfig.apiParams) {
-                    this.config.apiParams = { ...this.config.apiParams, ...onlineConfig.apiParams };
-                }
-                
-                console.log('🚀 强制更新后的最终AI1配置:', this.config);
-            } else {
-                console.log('⏳ 在线配置未就绪，1秒后重试...');
-                setTimeout(checkOnlineConfig, 1000);
-            }
-        };
-        
-        // 立即检查，如果不可用则每秒重试
-        checkOnlineConfig();
-        
-        // 同时设置一个更长的超时，确保最终能加载到配置
-        setTimeout(() => {
-            if (!window.onlineGlobalConfig || !window.onlineGlobalConfig.currentConfig) {
-                console.log('⚠️ 超时后在线配置仍未就绪，强制重新加载...');
-                if (window.onlineGlobalConfig) {
-                    window.onlineGlobalConfig.loadConfig().then(() => {
-                        checkOnlineConfig();
-                    }).catch(error => {
-                        console.warn('重新加载在线配置失败:', error);
-                    });
-                }
-            }
-        }, 5000); // 5秒后强制重试
-    }
+
 
     loadConfig() {
         // Load default config first
@@ -84,35 +36,7 @@ class AI1Chat {
                 console.log('✅ AI1 配置使用本地文件设置:', config);
                 console.log('🕐 来源: 本地配置文件 (ai1-config.js)');
             }
-            // PRIORITY 2: Check for ONLINE GLOBAL configuration (if local not available)
-            else if (window.onlineGlobalConfig && window.onlineGlobalConfig.currentConfig) {
-                const onlineConfig = window.onlineGlobalConfig.getAI1Config();
-                console.log('☁️ 加载 ONLINE GLOBAL AI1 配置:', onlineConfig);
-                
-                if (onlineConfig.model) config.model = onlineConfig.model;
-                if (onlineConfig.systemPrompt) {
-                    config.systemPrompt = onlineConfig.systemPrompt;
-                    console.log('✅ 使用来自在线管理员的 AI1 配置');
-                }
-                if (onlineConfig.apiParams) {
-                    config.apiParams = { ...config.apiParams, ...onlineConfig.apiParams };
-                }
-                
-                // 确保ui配置不被覆盖
-                if (!config.ui) {
-                    config.ui = window.AI1_CONFIG?.ui || {};
-                }
-                
-                console.log('✅ AI1 配置已更新 (包含 ONLINE GLOBAL 设置):', config);
-                console.log('🕐 Online config version:', window.onlineGlobalConfig.configVersion);
-            } else if (window.onlineGlobalConfig) {
-                // 如果onlineGlobalConfig存在但没有currentConfig，尝试加载
-                console.log('🔄 Online global config exists but no current config, trying to load...');
-                window.onlineGlobalConfig.loadConfig().then(() => {
-                    // 重新加载配置
-                    this.refreshConfig();
-                });
-            }
+
             // PRIORITY 2: Check for FILE-BASED GLOBAL configuration from global-config.js
             else if (window.GLOBAL_AI1_CONFIG) {
                 const globalConfig = window.GLOBAL_AI1_CONFIG;

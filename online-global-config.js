@@ -26,349 +26,168 @@ class OnlineGlobalConfig {
 
     // Default configuration fallback - Now uses local config files
     getDefaultConfig() {
-        // Check if local config files are available
-        let ai1Config = null;
-        let ai2Config = null;
+        console.log('🔧 Getting default config from local files...');
         
-        try {
-            // Try to get local AI1 config (Tom)
-            if (window.AI1_CONFIG) {
-                ai1Config = {
-                    model: window.AI1_CONFIG.model,
-                    systemPrompt: window.AI1_CONFIG.systemPrompt,
-                    maxTokens: window.AI1_CONFIG.apiParams.max_tokens,
-                    temperature: window.AI1_CONFIG.apiParams.temperature
-                };
-                console.log('📁 Local AI1 config loaded:', ai1Config);
-            }
-            
-            // Try to get local AI2 config (Lucy)
-            if (window.AI_CONFIG) {
-                ai2Config = {
-                    model: window.AI_CONFIG.model,
-                    systemPrompt: window.AI_CONFIG.systemPrompt,
-                    maxTokens: window.AI_CONFIG.apiParams.max_tokens,
-                    temperature: window.AI_CONFIG.apiParams.temperature
-                };
-                console.log('📁 Local AI2 config loaded:', ai2Config);
-            }
-        } catch (error) {
-            console.warn('⚠️ Failed to load local configs:', error);
-        }
-        
-        // Fallback to basic config if local configs are not available
-        if (!ai1Config) {
-            ai1Config = {
-                model: 'gpt-4o',
-                systemPrompt: '你是Tom，一个需要帮助做决定的AI助手。你必须始终返回JSON格式的回答。',
-                maxTokens: 1500,
-                temperature: 0.7
+        // PRIORITY 1: Try to use local config files first
+        if (window.AI1_CONFIG && window.AI_CONFIG) {
+            console.log('✅ Local config files found, using them as default');
+            return {
+                version: Date.now(),
+                lastUpdated: new Date().toISOString(),
+                ai1: {
+                    model: window.AI1_CONFIG.model || 'gpt-4o',
+                    systemPrompt: window.AI1_CONFIG.systemPrompt || 'Default AI1 prompt',
+                    maxTokens: window.AI1_CONFIG.apiParams?.max_tokens || 1500,
+                    temperature: window.AI1_CONFIG.apiParams?.temperature || 0.7
+                },
+                ai2: {
+                    model: window.AI_CONFIG.model || 'gpt-4.1',
+                    systemPrompt: window.AI_CONFIG.systemPrompt || 'Default AI2 prompt',
+                    maxTokens: window.AI_CONFIG.apiParams?.max_tokens || 1500,
+                    temperature: window.AI_CONFIG.apiParams?.temperature || 0.7
+                },
+                results: []
             };
         }
         
-        if (!ai2Config) {
-            ai2Config = {
-                model: 'gpt-4.1',
-                systemPrompt: '你是Lucy，一个需要帮助做决定的AI助手。你必须始终返回JSON格式的回答。',
-                maxTokens: 1500,
-                temperature: 0.7
-            };
-        }
-        
+        // PRIORITY 2: Fallback to hardcoded defaults (only if local files not available)
+        console.log('⚠️ Local config files not available, using hardcoded defaults');
         return {
             version: Date.now(),
             lastUpdated: new Date().toISOString(),
-            ai1: ai1Config,
-            ai2: ai2Config,
-            results: [],
-            source: 'local-config-files' // Indicate this is from local files
+            ai1: {
+                model: 'gpt-4o',
+                systemPrompt: 'Default AI1 prompt',
+                maxTokens: 1500,
+                temperature: 0.7
+            },
+            ai2: {
+                model: 'gpt-4.1',
+                systemPrompt: 'Default AI2 prompt',
+                maxTokens: 1500,
+                temperature: 0.7
+            },
+            results: []
         };
     }
 
-    // Load configuration - Now prioritizes local config files
+    // Load configuration - NOW DISABLED: Always returns local configs
     async loadConfig() {
-        try {
-            console.log('📁 Loading configuration (prioritizing local config files)...');
-            
-            // First priority: Use local config files (ai1-config.js and ai-config.js)
-            if (window.AI1_CONFIG || window.AI_CONFIG) {
-                const localConfig = this.getDefaultConfig();
-                if (this.validateConfigStructure(localConfig)) {
-                    this.currentConfig = localConfig;
-                    this.configVersion = localConfig.version;
-                    console.log('✅ Local config files loaded and used:', localConfig);
-                    return localConfig;
-                }
-            }
-            
-            // Second priority: Try to load from cloud storage
-            console.log('🌐 Local configs not available, trying cloud storage...');
-            const cloudConfig = await this.fetchFromCloud();
-            if (cloudConfig) {
-                // Validate cloud config structure
-                if (this.validateConfigStructure(cloudConfig)) {
-                    this.currentConfig = cloudConfig;
-                    this.configVersion = cloudConfig.version;
-                    console.log('✅ Online global config loaded:', cloudConfig);
-                    return cloudConfig;
-                } else {
-                    console.warn('⚠️ Cloud config has invalid structure, using fallback');
-                }
-            }
-            
-            // Third priority: Try to load from cache
-            const cachedConfig = this.loadFromCache();
-            if (cachedConfig && this.validateConfigStructure(cachedConfig)) {
-                this.currentConfig = cachedConfig;
-                this.configVersion = cachedConfig.version;
-                console.log('📦 Using cached global config:', cachedConfig);
-                return cachedConfig;
-            }
-            
-            // Final fallback to default
-            if (!this.fallbackConfig) {
-                this.fallbackConfig = this.getDefaultConfig();
-            }
-            this.currentConfig = this.fallbackConfig;
-            this.configVersion = this.fallbackConfig.version;
-            console.log('⚙️ Using default global config');
-            return this.fallbackConfig;
-            
-        } catch (error) {
-            console.error('❌ Error loading global config:', error);
-            
-            // Use cached or default config
-            const cachedConfig = this.loadFromCache();
-            if (cachedConfig && this.validateConfigStructure(cachedConfig)) {
-                this.currentConfig = cachedConfig;
-                this.configVersion = cachedConfig.version;
-                return cachedConfig;
-            }
-            
-            if (!this.fallbackConfig) {
-                this.fallbackConfig = this.getDefaultConfig();
-            }
-            this.currentConfig = this.fallbackConfig;
-            this.configVersion = this.fallbackConfig.version;
-            return this.fallbackConfig;
+        console.log('🚫 Online configuration loading DISABLED - using local configs only');
+        
+        // Always use local config files, never fetch from cloud
+        if (window.AI1_CONFIG && window.AI_CONFIG) {
+            console.log('✅ Using local config files directly');
+            this.currentConfig = {
+                version: Date.now(),
+                lastUpdated: new Date().toISOString(),
+                ai1: {
+                    model: window.AI1_CONFIG.model || 'gpt-4o',
+                    systemPrompt: window.AI1_CONFIG.systemPrompt || 'Default AI1 prompt',
+                    maxTokens: window.AI1_CONFIG.apiParams?.max_tokens || 1500,
+                    temperature: window.AI1_CONFIG.apiParams?.temperature || 0.7
+                },
+                ai2: {
+                    model: window.AI_CONFIG.model || 'gpt-4.1',
+                    systemPrompt: window.AI_CONFIG.systemPrompt || 'Default AI2 prompt',
+                    maxTokens: window.AI_CONFIG.apiParams?.max_tokens || 1500,
+                    temperature: window.AI_CONFIG.apiParams?.temperature || 0.7
+                },
+                results: []
+            };
+            this.configVersion = this.currentConfig.version;
+            return this.currentConfig;
         }
+        
+        // Fallback to default if local files not available
+        if (!this.fallbackConfig) {
+            this.fallbackConfig = this.getDefaultConfig();
+        }
+        this.currentConfig = this.fallbackConfig;
+        this.configVersion = this.fallbackConfig.version;
+        console.log('⚙️ Using fallback default config');
+        return this.currentConfig;
     }
 
-    // Validate configuration structure
+    // Validate config structure
     validateConfigStructure(config) {
         return config && 
+               typeof config === 'object' && 
                config.ai1 && 
                config.ai2 && 
-               typeof config.ai1.model === 'string' &&
-               typeof config.ai2.model === 'string';
+               Array.isArray(config.results);
     }
 
-    // Fetch configuration from cloud storage
-    async fetchFromCloud() {
-        try {
-            // Using JSONBin.io as example (free service for JSON storage)
-            const response = await fetch(`${this.configEndpoint}/latest`, {
-                method: 'GET',
-                headers: {
-                    'X-Master-Key': this.apiKey
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-
-            const responseData = await response.json();
-            
-            // JSONBin returns data in a "record" wrapper for private bins
-            const config = responseData.record || responseData;
-            
-            // Cache the config locally for offline use
-            this.saveToCache(config);
-            
-            return config;
-        } catch (error) {
-            console.warn('🔄 Cloud config fetch failed:', error.message);
-            return null;
-        }
-    }
-
-    // Save configuration to cloud storage
-    async saveToCloud(config) {
-        try {
-            console.log('💾 Saving global config to cloud...');
-            console.log('🔗 Endpoint:', this.configEndpoint);
-            console.log('🔑 API Key (first 10 chars):', this.apiKey ? this.apiKey.substring(0, 10) + '...' : 'NOT SET');
-            
-            const response = await fetch(this.configEndpoint, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Master-Key': this.apiKey
-                },
-                body: JSON.stringify(config)
-            });
-
-            console.log('📊 Response status:', response.status);
-            console.log('📊 Response headers:', Object.fromEntries(response.headers.entries()));
-
-            if (!response.ok) {
-                // Try to get more error details
-                let errorDetails = 'Unknown error';
-                try {
-                    const errorResponse = await response.text();
-                    console.log('❌ Error response body:', errorResponse);
-                    errorDetails = errorResponse;
-                } catch (e) {
-                    console.log('❌ Could not parse error response');
-                }
-                throw new Error(`HTTP ${response.status}: ${response.statusText}. Details: ${errorDetails}`);
-            }
-
-            const result = await response.json();
-            
-            // Update local cache
-            this.saveToCache(config);
-            this.currentConfig = config;
-            this.configVersion = config.version;
-            
-            console.log('✅ Global config saved to cloud successfully');
-            return result;
-            
-        } catch (error) {
-            console.error('❌ Failed to save config to cloud:', error);
-            throw error;
-        }
-    }
-
-    // Cache configuration locally
-    saveToCache(config) {
-        try {
-            localStorage.setItem('online_global_config_cache', JSON.stringify(config));
-            localStorage.setItem('online_global_config_timestamp', Date.now().toString());
-        } catch (error) {
-            console.warn('⚠️ Failed to cache config locally:', error);
-        }
-    }
-
-    // Load configuration from local cache
-    loadFromCache() {
-        try {
-            const cached = localStorage.getItem('online_global_config_cache');
-            const timestamp = localStorage.getItem('online_global_config_timestamp');
-            
-            if (cached && timestamp) {
-                const cacheAge = Date.now() - parseInt(timestamp);
-                // Use cache if less than 1 hour old
-                if (cacheAge < 3600000) {
-                    return JSON.parse(cached);
-                }
-            }
-            return null;
-        } catch (error) {
-            console.warn('⚠️ Failed to load cached config:', error);
-            return null;
-        }
-    }
-
-    // Get current configuration
-    getConfig() {
-        return this.currentConfig || this.fallbackConfig;
-    }
-
-    // Get AI1 configuration
+    // Get AI1 configuration - NOW DISABLED: Always returns local AI1 config
     getAI1Config() {
-        const config = this.getConfig();
-        return {
-            model: config.ai1.model,
-            systemPrompt: config.ai1.systemPrompt,
-            apiParams: {
-                max_tokens: config.ai1.maxTokens,
-                temperature: config.ai1.temperature
-            }
-        };
-    }
-
-    // Get AI2 configuration
-    getAI2Config() {
-        const config = this.getConfig();
-        return {
-            model: config.ai2.model,
-            systemPrompt: config.ai2.systemPrompt,
-            apiParams: {
-                max_tokens: config.ai2.maxTokens,
-                temperature: config.ai2.temperature
-            }
-        };
-    }
-
-    // Update configuration (admin function)
-    async updateConfig(newConfig) {
-        try {
-            const updatedConfig = {
-                ...newConfig,
-                version: Date.now(),
-                lastUpdated: new Date().toISOString()
+        console.log('🚫 Online AI1 config disabled - using local config');
+        if (window.AI1_CONFIG) {
+            return {
+                model: window.AI1_CONFIG.model,
+                systemPrompt: window.AI1_CONFIG.systemPrompt,
+                apiParams: window.AI1_CONFIG.apiParams
             };
-
-            await this.saveToCloud(updatedConfig);
-            
-            // Notify all listeners about config change
-            this.notifyConfigChange(updatedConfig);
-            
-            return updatedConfig;
-        } catch (error) {
-            console.error('❌ Failed to update global config:', error);
-            throw error;
         }
+        return this.fallbackConfig?.ai1 || {};
     }
 
-    // Notify about configuration changes
-    notifyConfigChange(newConfig) {
-        // Dispatch custom event for other parts of the application
-        const event = new CustomEvent('globalConfigChanged', {
-            detail: { config: newConfig, version: newConfig.version }
-        });
-        window.dispatchEvent(event);
-        
-        console.log('📢 Global config change notification sent');
-    }
-
-    // Check for configuration updates
-    async checkForUpdates() {
-        try {
-            const cloudConfig = await this.fetchFromCloud();
-            if (cloudConfig && cloudConfig.version > this.configVersion) {
-                console.log('🔄 New global config version available');
-                this.currentConfig = cloudConfig;
-                this.configVersion = cloudConfig.version;
-                this.notifyConfigChange(cloudConfig);
-                return true;
-            }
-            return false;
-        } catch (error) {
-            console.warn('⚠️ Failed to check for config updates:', error);
-            return false;
+    // Get AI2 configuration - NOW DISABLED: Always returns local AI2 config
+    getAI2Config() {
+        console.log('🚫 Online AI2 config disabled - using local config');
+        if (window.AI_CONFIG) {
+            return {
+                model: window.AI_CONFIG.model,
+                systemPrompt: window.AI_CONFIG.systemPrompt,
+                apiParams: window.AI_CONFIG.apiParams
+            };
         }
+        return this.fallbackConfig?.ai2 || {};
     }
 
-    // Start automatic update checking
-    startAutoUpdate(intervalMinutes = 5) {
-        setInterval(() => {
-            this.checkForUpdates();
-        }, intervalMinutes * 60 * 1000);
+    // Save configuration - NOW DISABLED: Does nothing
+    async saveConfig(config) {
+        console.log('🚫 Online config saving DISABLED - config not saved to cloud');
+        return false;
+    }
+
+    // Get cached config - NOW DISABLED: Always returns local configs
+    getCachedConfig() {
+        console.log('🚫 Online config cache disabled - using local configs');
+        if (window.AI1_CONFIG && window.AI_CONFIG) {
+            return {
+                version: Date.now(),
+                lastUpdated: new Date().toISOString(),
+                ai1: {
+                    model: window.AI1_CONFIG.model || 'gpt-4o',
+                    systemPrompt: window.AI1_CONFIG.systemPrompt || 'Default AI1 prompt',
+                    maxTokens: window.AI1_CONFIG.apiParams?.max_tokens || 1500,
+                    temperature: window.AI1_CONFIG.apiParams?.temperature || 0.7
+                },
+                ai2: {
+                    model: window.AI_CONFIG.model || 'gpt-4.1',
+                    systemPrompt: window.AI_CONFIG.systemPrompt || 'Default AI2 prompt',
+                    maxTokens: window.AI_CONFIG.apiParams?.max_tokens || 1500,
+                    temperature: window.AI_CONFIG.apiParams?.temperature || 0.7
+                },
+                results: []
+            };
+        }
         
-        console.log(`🔄 Auto-update started (every ${intervalMinutes} minutes)`);
+        if (!this.fallbackConfig) {
+            this.fallbackConfig = this.getDefaultConfig();
+        }
+        return this.fallbackConfig;
+    }
+
+    // Auto-update - NOW DISABLED: Does nothing
+    startAutoUpdate() {
+        console.log('🚫 Auto-update DISABLED - no online config updates');
+    }
+
+    stopAutoUpdate() {
+        console.log('🚫 Auto-update already disabled');
     }
 }
 
-// Global instance
+// Initialize the disabled online global config
 window.onlineGlobalConfig = new OnlineGlobalConfig();
-
-// Auto-start update checking
-window.onlineGlobalConfig.startAutoUpdate(5);
-
-// Export for module use
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = OnlineGlobalConfig;
-}

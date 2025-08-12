@@ -6,69 +6,11 @@
 
 class AIChat {
     constructor() {
-        this.apiKey = '';
         this.messages = [];
         this.isTyping = false;
-        this.config = this.loadConfig();
-
-        this.initializeElements();
-        this.bindEvents();
-        this.loadApiKey();
-        
-        // 确保每次页面刷新都是干净的状态
-        this.clearSessionData();
-        
-        this.initializeUI();
-        
-        // 确保在线配置立即生效
-        this.ensureOnlineConfigActive();
-    }
-
-    // 确保在线配置激活
-    ensureOnlineConfigActive() {
-        console.log('🔧 Ensuring online config is active...');
-        
-        // 等待在线配置加载完成
-        const checkOnlineConfig = () => {
-            if (window.onlineGlobalConfig && window.onlineGlobalConfig.currentConfig) {
-                const onlineConfig = window.onlineGlobalConfig.getAI2Config();
-                console.log('🎯 Forcing online config application:', onlineConfig);
-                
-                // 强制应用在线配置
-                if (onlineConfig.systemPrompt) {
-                    this.config.systemPrompt = onlineConfig.systemPrompt;
-                    console.log('✅ System prompt forcefully updated to:', this.config.systemPrompt);
-                }
-                if (onlineConfig.model) {
-                    this.config.model = onlineConfig.model;
-                }
-                if (onlineConfig.apiParams) {
-                    this.config.apiParams = { ...this.config.apiParams, ...onlineConfig.apiParams };
-                }
-                
-                console.log('🚀 Final AI2 config after force update:', this.config);
-            } else {
-                console.log('⏳ Online config not ready, retrying in 1 second...');
-                setTimeout(checkOnlineConfig, 1000);
-            }
-        };
-        
-        // 立即检查，如果不可用则每秒重试
-        checkOnlineConfig();
-        
-        // 同时设置一个更长的超时，确保最终能加载到配置
-        setTimeout(() => {
-            if (!window.onlineGlobalConfig || !window.onlineGlobalConfig.currentConfig) {
-                console.log('⚠️ Online config still not ready after timeout, forcing reload...');
-                if (window.onlineGlobalConfig) {
-                    window.onlineGlobalConfig.loadConfig().then(() => {
-                        checkOnlineConfig();
-                    }).catch(error => {
-                        console.warn('Failed to reload online config:', error);
-                    });
-                }
-            }
-        }, 5000); // 5秒后强制重试
+        this.config = {};
+        this.loadConfig();
+        this.loadSession();
     }
 
     loadConfig() {
@@ -84,92 +26,67 @@ class AIChat {
                 console.log('✅ AI2 config using LOCAL FILE settings:', config);
                 console.log('🕐 Source: Local config file (ai-config.js)');
             }
-            // PRIORITY 2: Check for ONLINE GLOBAL configuration (if local not available)
-            else if (window.onlineGlobalConfig) {
-                const onlineConfig = window.onlineGlobalConfig.getAI2Config();
-                console.log('☁️ Loading ONLINE GLOBAL AI2 config:', onlineConfig);
-                
-                if (onlineConfig.model) config.model = onlineConfig.model;
-                if (onlineConfig.systemPrompt) config.systemPrompt = onlineConfig.systemPrompt;
-                if (onlineConfig.apiParams) {
-                    config.apiParams = { ...config.apiParams, ...onlineConfig.apiParams };
-                }
-                
-                console.log('✅ AI2 config updated with ONLINE GLOBAL settings:', config);
-                console.log('🕐 Online config version:', window.onlineGlobalConfig.configVersion);
-            }
             // PRIORITY 2: Check for FILE-BASED GLOBAL configuration from global-config.js
-            else if (window.GLOBAL_AI1_CONFIG) {
-                const globalConfig = window.GLOBAL_AI1_CONFIG;
-                console.log('🌍 Loading FILE-BASED GLOBAL AI1 config:', globalConfig);
+            else if (window.globalConfig) {
+                console.log('📁 Loading FILE-BASED GLOBAL AI2 config');
+                const globalConfig = window.globalConfig.getAI2Config();
                 
                 if (globalConfig.model) config.model = globalConfig.model;
                 if (globalConfig.systemPrompt) config.systemPrompt = globalConfig.systemPrompt;
-                if (globalConfig.maxTokens) {
-                    config.apiParams = config.apiParams || {};
-                    config.apiParams.max_tokens = globalConfig.maxTokens;
-                }
-                if (globalConfig.temperature !== undefined) {
-                    config.apiParams = config.apiParams || {};
-                    config.apiParams.temperature = globalConfig.temperature;
+                if (globalConfig.apiParams) {
+                    config.apiParams = { ...config.apiParams, ...globalConfig.apiParams };
                 }
                 
-                console.log('✅ AI1 config updated with FILE-BASED GLOBAL settings:', config);
-                console.log('🕐 Global config version:', window.GLOBAL_CONFIG_VERSION);
-            } else {
-                // PRIORITY 3: Fallback to localStorage global config
-                const globalConfigStr = localStorage.getItem('global_ai1_config');
-                console.log('🌐 Checking for localStorage global_ai1_config:', globalConfigStr);
-                
-                if (globalConfigStr) {
-                    const parsed = JSON.parse(globalConfigStr);
-                    console.log('🔧 Loading localStorage GLOBAL AI config:', parsed);
-                
-                // Override specific settings
-                if (parsed.model) config.model = parsed.model;
-                if (parsed.systemPrompt) config.systemPrompt = parsed.systemPrompt;
-                if (parsed.maxTokens) {
-                    config.apiParams = config.apiParams || {};
-                    config.apiParams.max_tokens = parsed.maxTokens;
-                }
-                if (parsed.temperature !== undefined) {
-                    config.apiParams = config.apiParams || {};
-                    config.apiParams.temperature = parsed.temperature;
-                }
-                
-                    console.log('✅ AI1 config updated with localStorage GLOBAL settings:', config);
-                } else {
-                    // PRIORITY 4: Fallback to legacy user-specific config
-                    const customConfigStr = localStorage.getItem('ai1_custom_config');
-                    console.log('🔍 Checking localStorage for ai1_custom_config (legacy):', customConfigStr);
+                console.log('✅ AI2 config updated with FILE-BASED GLOBAL settings:', config);
+                console.log('🕐 Source: global-config.js');
+            }
+            // PRIORITY 3: Check for LOCALSTORAGE GLOBAL configuration
+            else if (localStorage.getItem('globalConfig')) {
+                try {
+                    const storedConfig = JSON.parse(localStorage.getItem('globalConfig'));
+                    const ai2Config = storedConfig.ai2 || storedConfig;
+                    console.log('💾 Loading LOCALSTORAGE GLOBAL AI2 config:', ai2Config);
                     
-                    if (customConfigStr) {
-                        const parsed = JSON.parse(customConfigStr);
-                        console.log('🔧 Loading legacy custom AI1 config:', parsed);
-                        
-                        // Override specific settings
-                        if (parsed.model) config.model = parsed.model;
-                        if (parsed.systemPrompt) config.systemPrompt = parsed.systemPrompt;
-                        if (parsed.maxTokens) {
-                            config.apiParams = config.apiParams || {};
-                            config.apiParams.max_tokens = parsed.maxTokens;
-                        }
-                        if (parsed.temperature !== undefined) {
-                            config.apiParams = config.apiParams || {};
-                            config.apiParams.temperature = parsed.temperature;
-                        }
-                        
-                        console.log('✅ AI1 config updated with legacy custom settings:', config);
-                    } else {
-                        console.log('ℹ️ No custom AI1 config found, using defaults');
+                    if (ai2Config.model) config.model = ai2Config.model;
+                    if (ai2Config.systemPrompt) config.systemPrompt = ai2Config.systemPrompt;
+                    if (ai2Config.apiParams) {
+                        config.apiParams = { ...config.apiParams, ...ai2Config.apiParams };
                     }
+                    
+                    console.log('✅ AI2 config updated with LOCALSTORAGE GLOBAL settings:', config);
+                    console.log('🕐 Source: localStorage');
+                } catch (error) {
+                    console.warn('⚠️ Failed to parse localStorage global config:', error);
                 }
             }
+            // PRIORITY 4: Check for LEGACY USER-SPECIFIC configuration
+            else if (localStorage.getItem('ai2Config')) {
+                try {
+                    const storedConfig = JSON.parse(localStorage.getItem('ai2Config'));
+                    console.log('💾 Loading LEGACY USER-SPECIFIC AI2 config:', storedConfig);
+                    
+                    if (storedConfig.model) config.model = storedConfig.model;
+                    if (storedConfig.systemPrompt) config.systemPrompt = storedConfig.systemPrompt;
+                    if (storedConfig.apiParams) {
+                        config.apiParams = { ...config.apiParams, ...storedConfig.apiParams };
+                    }
+                    
+                    console.log('✅ AI2 config updated with LEGACY USER-SPECIFIC settings:', config);
+                    console.log('🕐 Source: localStorage (legacy)');
+                } catch (error) {
+                    console.warn('⚠️ Failed to parse legacy user-specific config:', error);
+                }
+            }
+            
+            // Apply the final configuration
+            this.config = config;
+            console.log('🎯 Final AI2 configuration applied:', this.config);
+            
         } catch (error) {
-            console.error('❌ Error loading custom AI1 config:', error);
+            console.error('❌ Error loading AI2 configuration:', error);
+            // Use the default config that was loaded at the beginning
+            this.config = config;
         }
-        
-        return config;
     }
 
     // Add method to refresh config
