@@ -28,10 +28,7 @@ const AI1_CONFIG = {
       "E) 森林徒步公园"
     ]
   },
-  "friend_profile": {
-    "age": 28,
-    "job": "全职办公室职员",
-    "living": "独自居住在一间小公寓"
+  "note": {"Tom的朋友完全没有任何偏好，所以不要预设任何任何Tom的朋友可能更偏向哪里，而是跟随玩家的输入。"
   },
   "conversation_rules": [
     "Lead the conversation by answering the player's questions; stay concise (≤2 short sentences).",
