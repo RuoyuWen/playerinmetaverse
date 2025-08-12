@@ -1,15 +1,15 @@
 /**
- * AI Chat Configuration - Version 2 (Transit Model)
- * 在这个文件中修改AI助手的配置 - 使用薛定猫API中转模型
- * 注意：此配置将被online-admin的配置系统覆盖
+ * AI Chat Configuration - Tom AI (Chinese)
+ * 在这个文件中修改AI助手的配置
+ * 这是Tom AI的本地配置文件，不会被在线配置覆盖
  */
 
 const AI1_CONFIG = {
     // 中转模型配置 - 使用薛定猫API
-    model: 'gpt-4.1', // 中转模型支持的模型名称（将被online-admin覆盖）
+    model: 'gpt-4.1', // 中转模型支持的模型名称
     apiEndpoint: 'https://xuedingmao.online/v1/chat/completions', // 薛定猫API端点（根据官方文档）
     
-    // 系统提示词 - 在这里自定义AI助手的行为（将被online-admin覆盖）
+    // 系统提示词 - 在这里自定义AI助手的行为
     systemPrompt: `{
   "role": "Tom",
   "Language": "Chinese",

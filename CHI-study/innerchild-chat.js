@@ -82,19 +82,8 @@ class InnerChildChat {
     console.log('✅ Base config loaded:', base.model);
     
     try {
-      // 尝试加载在线配置
-      if (window.onlineGlobalConfig && window.onlineGlobalConfig.currentConfig) {
-        console.log('✅ Loading online config...');
-        const online = window.onlineGlobalConfig.getAI2Config();
-        if (online && online.model) {
-          base.model = online.model;
-          console.log('✅ Online model applied:', base.model);
-        }
-        if (online && online.apiParams) {
-          base.apiParams = { ...base.apiParams, ...online.apiParams };
-          console.log('✅ Online API params applied');
-        }
-      } else if (window.GLOBAL_AI2_CONFIG) {
+      // 尝试加载全局配置
+      if (window.GLOBAL_AI2_CONFIG) {
         console.log('✅ Loading global config...');
         const g = window.GLOBAL_AI2_CONFIG;
         if (g.model) base.model = g.model;

@@ -100,8 +100,8 @@ class AIChat {
 
     // Add method to refresh config
     refreshConfig() {
-        console.log('🔄 Refreshing AI1 configuration...');
-        this.config = this.loadConfig();
+        console.log('🔄 Refreshing AI2 configuration...');
+        this.loadConfig();
     }
 
     initializeElements() {
