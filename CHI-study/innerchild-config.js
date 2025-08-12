@@ -30,7 +30,7 @@ const INNER_CHILD_CONFIG = {
     presence_penalty: 0.0
   },
   ui: {
-    welcomeMessage: '嗨，我是你的小时候～可以和我聊聊天吗？',
+    welcomeMessage: '嗨，我是15岁的你～可以和我聊聊天吗？',
     typingText: '我在思考…',
     userLabel: '玩家',
     assistantLabelDefault: ''
