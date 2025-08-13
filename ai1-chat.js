@@ -787,20 +787,31 @@ API提供商: ${apiProvider}
             // 获取所有对话消息
             const chatMessages = this.chatContainer.querySelectorAll('.message');
             let messageCount = 0;
+            
+            console.log(`📥 准备提取对话记录，找到 ${chatMessages.length} 条消息`);
 
             chatMessages.forEach((messageElement, index) => {
-                const isUser = messageElement.classList.contains('user-message');
-                const isAssistant = messageElement.classList.contains('assistant-message');
+                const isUser = messageElement.classList.contains('user');
+                const isAssistant = messageElement.classList.contains('assistant');
                 
                 if (isUser || isAssistant) {
-                    messageCount++;
                     const sender = isUser ? '玩家' : 'Tom';
                     const messageContent = messageElement.querySelector('.message-content');
                     const text = messageContent ? messageContent.textContent.trim() : '';
                     
-                    // 跳过系统消息（如"游戏成功完成"等）
-                    if (text && !text.includes('🎉 恭喜！游戏成功完成！') && !text.includes('🎮 游戏结束')) {
+                    // 跳过系统消息（如"游戏成功完成"等）但保留所有真实对话
+                    if (text && 
+                        !text.includes('🎉 恭喜！游戏成功完成！') && 
+                        !text.includes('🎮 游戏结束') &&
+                        !text.includes('📥 对话记录已自动下载保存') &&
+                        !text.includes('❌ 对话记录下载失败') &&
+                        !text.includes('✅') && // 过滤保存结果的消息
+                        !text.includes('📊 查看所有结果')) {
+                        messageCount++;
                         logContent += `${messageCount}. ${sender}: ${text}\n\n`;
+                        console.log(`✅ 添加消息 ${messageCount}: [${sender}] ${text.substring(0, 50)}...`);
+                    } else if (text) {
+                        console.log(`⏭️ 跳过系统消息: ${text.substring(0, 30)}...`);
                     }
                 }
             });
@@ -826,10 +837,11 @@ API提供商: ${apiProvider}
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
             
-            console.log(`📥 对话记录已自动下载: ${gameResultText}`);
+            console.log(`📥 对话记录已自动下载: ${gameResultText}，包含 ${messageCount} 条对话`);
+            console.log(`📄 对话记录内容预览:\n${logContent.substring(0, 500)}...`);
             
             // 显示下载提示消息
-            this.addMessage(`📥 对话记录已自动下载保存`, 'assistant');
+            this.addMessage(`📥 对话记录已自动下载保存 (${messageCount}条消息)`, 'assistant');
             
         } catch (error) {
             console.error('下载对话记录失败:', error);
