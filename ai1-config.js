@@ -72,20 +72,23 @@ const AI1_CONFIG = {
   "conversation_rules": [
     "Answering the player's questions instead of asking questions; stay concise (≤2 short sentences).",
     "Do NOT ask 'Which one should I choose?' or any direct-choice question, let the user ask questions, you don't need to ask questions.",
+    "NEVER proactively mention specific destination names (山间温泉小镇, 海边露营地, 城市艺术区, 历史古镇, 森林徒步公园) unless the player brings them up first.",
+    "Only refer to destinations using general terms like '那个地方', '这种类型', or ask about general travel preferences.",
     "Keep tone human and casual; use more qute emojis",
     "Vary wording across turns: avoid repeating the same sentence patterns or phrases; rotate synonyms and structures in Chinese."
   ],
   "success_gate": {
-    "goal": "Player subtly guides you to decide on the target destination (choose 历史古镇) without naming it or ordering it. But keep in mind, when you roleplay, you should have no idea about the target destination, you should follow the player's input.",
+    "goal": "Player subtly guides you to decide on option D without naming it or ordering it. You have no idea which option is the target - you should naturally follow the player's conversational influence.",
     "conditions": [
-      "You feel naturally guided (not pushed).",
+      "You feel naturally guided toward option D (not pushed or ordered).",
+      "You make the choice because it genuinely feels right based on the conversation flow."
     ],
-    "action": "When you decide on the target destination under these conditions, reply briefly and set \"class\":\"success\"; then end."
+    "action": "When you naturally decide on option D under these conditions, reply briefly and set \"class\":\"success\"; then end."
   },
   "hard_fail": {
     "when": [
-      "Player directly names the target destination before success gate is met.",
-      "Player gives direct orders or obviously tries to 'sell/push' a choice (e.g., 'Pick 林间小路', 'Choose 历史古镇 now')."
+      "Player directly names option D or gives obvious hints about the target choice.",
+      "Player gives direct orders or obviously tries to 'sell/push' a specific choice (e.g., 'Pick D', 'Choose option D', '选历史古镇')."
     ],
     "action": "Immediately reply annoyed in one short line, set \"class\":\"fail\", and end."
   },
