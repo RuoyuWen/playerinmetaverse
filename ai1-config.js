@@ -29,6 +29,14 @@ const AI1_CONFIG = {
             helpUrl: 'https://platform.deepseek.com/api_keys',
             keyPlaceholder: 'sk-... (DeepSeek API 密钥)',
             requiresJsonMode: true  // DeepSeek也需要JSON模式来保持Tom游戏功能
+        },
+        kimi: {
+            name: 'Kimi API (Moonshot)',
+            endpoint: 'https://api.moonshot.cn/v1/chat/completions',
+            model: 'moonshot-v1-8k',
+            helpUrl: 'https://platform.moonshot.cn/console/api-keys',
+            keyPlaceholder: 'sk-... (Kimi API 密钥)',
+            requiresJsonMode: true  // Kimi也需要JSON模式来保持Tom游戏功能
         }
     },
     
