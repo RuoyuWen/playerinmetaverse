@@ -526,6 +526,11 @@ class InnerChildChat {
       body.max_completion_tokens = this.config.apiParams?.max_tokens ?? 1200;
       body.reasoning_effort = "medium";
       body.stop = null;
+    } else if (this.currentProvider === 'deepseek') {
+      // DeepSeek API使用与OpenAI兼容的格式
+      body.max_tokens = this.config.apiParams?.max_tokens ?? 1200;
+      body.frequency_penalty = this.config.apiParams?.frequency_penalty ?? 0.0;
+      body.presence_penalty = this.config.apiParams?.presence_penalty ?? 0.0;
     }
 
     console.log(`🔗 使用 ${provider.name} API: ${provider.endpoint}`);

@@ -19,6 +19,13 @@ const INNER_CHILD_CONFIG = {
       model: 'openai/gpt-oss-120b',
       helpUrl: 'https://console.groq.com/',
       keyPlaceholder: 'gsk_... (Groq API 密钥)'
+    },
+    deepseek: {
+      name: 'DeepSeek API',
+      endpoint: 'https://api.deepseek.com/chat/completions',
+      model: 'deepseek-chat',
+      helpUrl: 'https://platform.deepseek.com/api_keys',
+      keyPlaceholder: 'sk-... (DeepSeek API 密钥)'
     }
   },
   
