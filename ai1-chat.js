@@ -358,6 +358,14 @@ class AI1Chat {
                 if (provider.requiresJsonMode) {
                     requestBody.response_format = { type: "json_object" };
                 }
+            } else if (this.currentProvider === 'deepseek') {
+                // DeepSeek API使用与OpenAI兼容的格式
+                requestBody.frequency_penalty = apiParams.frequency_penalty || 0.0;
+                requestBody.presence_penalty = apiParams.presence_penalty || 0.0;
+                // DeepSeek支持JSON格式来保持Tom游戏功能
+                if (provider.requiresJsonMode) {
+                    requestBody.response_format = { type: "json_object" };
+                }
             }
 
             const response = await fetch(provider.endpoint, {

@@ -21,6 +21,14 @@ const AI1_CONFIG = {
             helpUrl: 'https://console.groq.com/',
             keyPlaceholder: 'gsk_... (Groq API 密钥)',
             requiresJsonMode: true  // Groq也需要JSON模式来保持Tom游戏功能
+        },
+        deepseek: {
+            name: 'DeepSeek API',
+            endpoint: 'https://api.deepseek.com/chat/completions',
+            model: 'deepseek-chat',
+            helpUrl: 'https://platform.deepseek.com/api_keys',
+            keyPlaceholder: 'sk-... (DeepSeek API 密钥)',
+            requiresJsonMode: true  // DeepSeek也需要JSON模式来保持Tom游戏功能
         }
     },
     
