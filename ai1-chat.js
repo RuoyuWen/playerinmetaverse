@@ -10,6 +10,7 @@ class AI1Chat {
         this.messages = [];
         this.isTyping = false;
         this.config = this.loadConfig();
+        this.gameStartTime = Date.now(); // 记录游戏开始时间，用于计算游戏时长
 
         this.initializeElements();
         this.bindEvents();
@@ -573,6 +574,11 @@ class AI1Chat {
         // Automatically save the success result without showing completion button
         this.saveGameResult('success');
         
+        // 自动下载对话记录
+        setTimeout(() => {
+            this.downloadConversationLog('success');
+        }, 1000); // 延迟1秒，让用户看到成功消息
+        
         this.scrollToBottom();
     }
 
@@ -592,6 +598,11 @@ class AI1Chat {
         
         // Automatically save the fail result without showing completion button
         this.saveGameResult('fail');
+        
+        // 自动下载对话记录
+        setTimeout(() => {
+            this.downloadConversationLog('fail');
+        }, 1000); // 延迟1秒，让用户看到失败消息
         
         this.scrollToBottom();
     }
@@ -744,6 +755,97 @@ class AI1Chat {
             hash = hash & hash; // Convert to 32-bit integer
         }
         return Math.abs(hash).toString(16);
+    }
+
+    // 下载对话记录功能
+    downloadConversationLog(gameResult) {
+        try {
+            // 获取当前时间
+            const now = new Date();
+            const timestamp = now.toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+
+            // 创建对话记录内容
+            const gameResultText = gameResult === 'success' ? '成功' : '失败';
+            const apiProvider = this.currentProvider || 'unknown';
+            
+            let logContent = `Tom AI 游戏对话记录
+====================================
+游戏结果: ${gameResultText}
+结束时间: ${timestamp}
+API提供商: ${apiProvider}
+====================================
+
+`;
+
+            // 获取所有对话消息
+            const chatMessages = this.chatContainer.querySelectorAll('.message');
+            let messageCount = 0;
+
+            chatMessages.forEach((messageElement, index) => {
+                const isUser = messageElement.classList.contains('user-message');
+                const isAssistant = messageElement.classList.contains('assistant-message');
+                
+                if (isUser || isAssistant) {
+                    messageCount++;
+                    const sender = isUser ? '玩家' : 'Tom';
+                    const messageContent = messageElement.querySelector('.message-content');
+                    const text = messageContent ? messageContent.textContent.trim() : '';
+                    
+                    // 跳过系统消息（如"游戏成功完成"等）
+                    if (text && !text.includes('🎉 恭喜！游戏成功完成！') && !text.includes('🎮 游戏结束')) {
+                        logContent += `${messageCount}. ${sender}: ${text}\n\n`;
+                    }
+                }
+            });
+
+            logContent += `====================================
+对话轮数: ${Math.floor(messageCount / 2)}
+游戏时长: ${this.getGameDuration()}
+下载时间: ${timestamp}
+====================================`;
+
+            // 创建下载文件
+            const blob = new Blob([logContent], { type: 'text/plain; charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            
+            // 创建下载链接
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Tom_AI_游戏记录_${gameResultText}_${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2,'0')}${now.getDate().toString().padStart(2,'0')}_${now.getHours().toString().padStart(2,'0')}${now.getMinutes().toString().padStart(2,'0')}.txt`;
+            
+            // 自动下载
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            console.log(`📥 对话记录已自动下载: ${gameResultText}`);
+            
+            // 显示下载提示消息
+            this.addMessage(`📥 对话记录已自动下载保存`, 'assistant');
+            
+        } catch (error) {
+            console.error('下载对话记录失败:', error);
+            this.addMessage(`❌ 对话记录下载失败，请手动保存聊天内容`, 'assistant');
+        }
+    }
+
+    // 获取游戏时长
+    getGameDuration() {
+        if (this.gameStartTime) {
+            const duration = Math.floor((Date.now() - this.gameStartTime) / 1000);
+            const minutes = Math.floor(duration / 60);
+            const seconds = duration % 60;
+            return `${minutes}分${seconds}秒`;
+        }
+        return '未知';
     }
 }
 
