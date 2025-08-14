@@ -66,7 +66,7 @@ const INNER_CHILD_CONFIG = {
     presence_penalty: 0.0
   },
   ui: {
-    welcomeMessage: '嗨，我是15岁的你～可以和我聊聊天吗？',
+    welcomeMessage: '嗨～你看到我写给你的信了吗？有什么想对小时候的自己说的吗？',
     typingText: '我在思考…',
     userLabel: '玩家',
     assistantLabelDefault: ''

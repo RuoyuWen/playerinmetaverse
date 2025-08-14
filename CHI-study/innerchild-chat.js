@@ -39,7 +39,12 @@ class InnerChildChat {
       promptText: document.getElementById('ic-prompt-text'),
       copyPrompt: document.getElementById('ic-copy-prompt'),
       startChat: document.getElementById('ic-start-chat'),
-      refreshConfig: document.getElementById('ic-refresh-config')
+      refreshConfig: document.getElementById('ic-refresh-config'),
+      // 新增信件相关元素
+      letterDisplay: document.getElementById('ic-letter-display'),
+      letterContent: document.getElementById('ic-letter-content'),
+      letterTyping: document.getElementById('ic-letter-typing'),
+      copyLetter: document.getElementById('ic-copy-letter')
     };
 
     // 初始化API提供商
@@ -129,8 +134,9 @@ class InnerChildChat {
     const hasName = this.elems.name?.value?.trim() !== '';
     const hasAvatar = this.avatarUrl && this.avatarUrl !== '';
     const hasPrompt = sessionStorage.getItem('ic_system_prompt') && sessionStorage.getItem('ic_system_prompt').trim() !== '';
+    const hasLetter = sessionStorage.getItem('ic_letter_content') && sessionStorage.getItem('ic_letter_content').trim() !== '';
 
-    this.isSetupComplete = hasApiKey && hasName && hasAvatar && hasPrompt;
+    this.isSetupComplete = hasApiKey && hasName && hasAvatar && hasPrompt && hasLetter;
     
     // 更新UI状态
     this.updateUIState();
@@ -198,6 +204,12 @@ class InnerChildChat {
       } else {
         status.push('❌ 人设生成');
       }
+      
+      if (sessionStorage.getItem('ic_letter_content') && sessionStorage.getItem('ic_letter_content').trim() !== '') {
+        status.push('✅ 信件生成');
+      } else {
+        status.push('❌ 信件生成');
+      }
 
       setupGuide.innerHTML = `
         <div style="text-align: center; padding: 2rem; color: #a0aec0;">
@@ -207,7 +219,7 @@ class InnerChildChat {
             ${status.join('<br>')}
           </div>
           <p style="margin-top: 1rem; font-size: 0.85rem; color: #718096;">
-            完成所有设置后，点击"用此设定开始聊天"即可开始对话
+            完成所有设置后，点击"开始对话"即可开始聊天
           </p>
         </div>
       `;
@@ -257,6 +269,7 @@ class InnerChildChat {
     this.elems.genPrompt?.addEventListener('click', () => this.generatePrompt());
     this.elems.viewPrompt?.addEventListener('click', () => this.togglePromptPreview(true));
     this.elems.copyPrompt?.addEventListener('click', () => this.copyPrompt());
+    this.elems.copyLetter?.addEventListener('click', () => this.copyLetter());
     this.elems.startChat?.addEventListener('click', () => this.usePromptAndFocus());
     this.elems.refreshConfig?.addEventListener('click', () => this.refreshConfig());
     document.getElementById('ic-avatar-grid')?.addEventListener('change', () => {
@@ -436,7 +449,13 @@ class InnerChildChat {
         .replaceAll('{{profile}}', profile || profileNote);
 
       this.elems.promptText.textContent = prompt;
-      this.togglePromptPreview(true);
+      
+      // 存储系统提示词
+      sessionStorage.setItem('ic_system_prompt', prompt);
+      
+      // 生成信件
+      await this.generateLetter(profile || profileNote);
+      
     } catch (e) {
       alert('生成失败，请稍后重试');
     } finally {
@@ -452,6 +471,84 @@ class InnerChildChat {
     const txt = this.elems.promptText?.textContent || '';
     if (!txt) return;
     navigator.clipboard.writeText(txt);
+  }
+
+  // 生成童年自我给用户的信件
+  async generateLetter(profile) {
+    const name = (this.elems.name?.value || '').trim() || '童年自我';
+    
+    // 专门用于生成信件的系统提示词
+    const letterSystemPrompt = `你是用户童年时期的自己，现在要给长大后的自己（用户）写一封信。
+
+基于以下童年资料，以第一人称的童年视角写一封温暖、真诚的信：
+${profile}
+
+信件要求：
+- 以童年的口吻和视角，充满天真和好奇
+- 表达对未来的憧憬和梦想
+- 询问现在的自己过得好不好，梦想实现了吗
+- 分享一些童年的美好回忆或想法
+- 语气温暖、充满爱意，但保持童年的纯真
+- 字数控制在200-400字之间
+- 不要使用过于成熟的词汇或概念
+
+请直接输出信件内容，不要添加格式标记或说明。`;
+
+    const letterInstruction = `请以童年自我的身份，给现在的自己写一封信。`;
+
+    try {
+      this.showLetterTyping(true);
+      const letterContent = await this.rawOpenAI([
+        { role: 'system', content: letterSystemPrompt },
+        { role: 'user', content: letterInstruction }
+      ]);
+      
+      // 存储信件内容
+      sessionStorage.setItem('ic_letter_content', letterContent);
+      
+      // 显示信件
+      this.showLetter(letterContent);
+      
+    } catch (e) {
+      console.error('生成信件失败:', e);
+      alert('生成信件失败，请稍后重试');
+    } finally {
+      this.showLetterTyping(false);
+    }
+  }
+
+  // 显示信件内容
+  showLetter(content) {
+    if (this.elems.letterContent) {
+      this.elems.letterContent.textContent = content;
+    }
+    if (this.elems.letterDisplay) {
+      this.elems.letterDisplay.style.display = 'block';
+    }
+    this.updateSetupStatus();
+  }
+
+  // 显示/隐藏信件生成中的提示
+  showLetterTyping(show) {
+    if (this.elems.letterTyping) {
+      this.elems.letterTyping.style.display = show ? 'block' : 'none';
+    }
+  }
+
+  // 复制信件内容
+  copyLetter() {
+    const txt = this.elems.letterContent?.textContent || '';
+    if (!txt) return;
+    navigator.clipboard.writeText(txt);
+    // 可以添加复制成功的提示
+    const btn = this.elems.copyLetter;
+    if (btn) {
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '<i class="fas fa-check"></i> 已复制';
+      setTimeout(() => {
+        btn.innerHTML = originalText;
+      }, 2000);
+    }
   }
 
   usePromptAndFocus() {
@@ -476,11 +573,24 @@ class InnerChildChat {
   buildSystemPrompt() {
     const name = (this.elems.name?.value || '').trim() || '童年自我';
     const stored = sessionStorage.getItem('ic_system_prompt');
-    if (stored && stored.trim()) return stored;
-    const fallbackProfile = '（用户未提供详细资料，仅以温柔、天真、好奇的童年口吻对话）';
-    return (this.config.systemPromptTemplate || '')
-      .replaceAll('{{name}}', name)
-      .replaceAll('{{profile}}', fallbackProfile);
+    const letterContent = sessionStorage.getItem('ic_letter_content');
+    
+    let systemPrompt = '';
+    if (stored && stored.trim()) {
+      systemPrompt = stored;
+    } else {
+      const fallbackProfile = '（用户未提供详细资料，仅以温柔、天真、好奇的童年口吻对话）';
+      systemPrompt = (this.config.systemPromptTemplate || '')
+        .replaceAll('{{name}}', name)
+        .replaceAll('{{profile}}', fallbackProfile);
+    }
+    
+    // 如果有信件内容，添加到系统提示词中
+    if (letterContent && letterContent.trim()) {
+      systemPrompt += `\n\n重要提醒：你已经给用户写了一封信，信的内容是：\n"${letterContent}"\n\n在对话中，你应该记住这封信的内容，因为你们的聊天可能会围绕这封信展开。用户可能会回应信中的内容，或询问相关问题。`;
+    }
+    
+    return systemPrompt;
   }
 
   async callOpenAI(systemPrompt, userText) {

@@ -166,17 +166,24 @@
           </div>
         </div>
 
-        <div class="setup-card" id="ic-prompt-preview" style="display:none;">
+        <!-- 童年自我的信件显示区域 -->
+        <div class="setup-card" id="ic-letter-display" style="display:none;">
           <div>
             <div style="display:flex;justify-content:space-between;align-items:center;gap:.75rem;">
-              <h3 style="color:var(--secondary-color);margin:0;font-size:1.1rem;">🧩 已生成的系统提示词（可用于对话）</h3>
+              <h3 style="color:var(--secondary-color);margin:0;font-size:1.1rem;">💌 来自小时候的你的一封信</h3>
               <div class="inline-actions">
-                <button class="btn btn-ghost" id="ic-copy-prompt"><i class="fas fa-copy"></i> 复制</button>
-                <button class="btn btn-primary" id="ic-start-chat"><i class="fas fa-comments"></i> 用此设定开始聊天</button>
+                <button class="btn btn-ghost" id="ic-copy-letter"><i class="fas fa-copy"></i> 复制信件</button>
+                <button class="btn btn-primary" id="ic-start-chat"><i class="fas fa-comments"></i> 开始对话</button>
               </div>
             </div>
-            <pre id="ic-prompt-text" style="white-space:pre-wrap;margin-top:.75rem;font-family:'Source Code Pro',monospace;color:#cbd5e1;background:rgba(0,0,0,.3);padding:1rem;border-radius:8px;border:1px solid rgba(157,78,221,.25);"></pre>
+            <div id="ic-letter-content" style="margin-top:.75rem;padding:1.5rem;background:rgba(255,255,255,.05);border-radius:12px;border:1px solid rgba(157,78,221,.25);line-height:1.6;color:#e2e8f0;font-size:1rem;white-space:pre-wrap;font-family:'Inter',sans-serif;"></div>
+            <div class="typing" id="ic-letter-typing" style="display:none;margin-top:1rem;"><i class="fas fa-magic"></i> 小时候的你正在写信...</div>
           </div>
+        </div>
+
+        <!-- 隐藏的系统提示词预览（用于内部处理） -->
+        <div class="setup-card" id="ic-prompt-preview" style="display:none;">
+          <pre id="ic-prompt-text" style="display:none;"></pre>
         </div>
 
         <div class="setup-card">
@@ -231,3 +238,4 @@
   <script src="innerchild-chat.js"></script>
 </body>
 </html>
+
