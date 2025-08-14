@@ -44,7 +44,12 @@ class InnerChildChat {
       letterDisplay: document.getElementById('ic-letter-display'),
       letterContent: document.getElementById('ic-letter-content'),
       letterTyping: document.getElementById('ic-letter-typing'),
-      copyLetter: document.getElementById('ic-copy-letter')
+      copyLetter: document.getElementById('ic-copy-letter'),
+      // 自定义头像相关元素
+      customAvatarFile: document.getElementById('ic-custom-avatar-file'),
+      customAvatarCard: document.getElementById('ic-custom-avatar-card'),
+      customAvatarPreview: document.getElementById('ic-custom-avatar-preview'),
+      uploadAvatarBtn: document.getElementById('ic-upload-avatar-btn')
     };
 
     // 初始化API提供商
@@ -67,6 +72,7 @@ class InnerChildChat {
 
     this.avatarUrl = this.getSelectedAvatar();
     this.assistantName = this.elems.name?.value?.trim() || this.config.ui?.assistantLabelDefault || '童年自我';
+    this.customAvatarDataUrl = localStorage.getItem('ic_custom_avatar') || '';
 
     try {
       this.bindEvents();
@@ -74,6 +80,7 @@ class InnerChildChat {
       this.resetChat();
       this.updateSetupStatus();
       this.updateAvatarSelection();
+      this.loadCustomAvatar();
       console.log('✅ InnerChildChat initialized successfully');
     } catch (e) {
       console.error('❌ Error during initialization:', e);
@@ -226,17 +233,7 @@ class InnerChildChat {
     }
   }
 
-  // 更新头像选择的高亮效果
-  updateAvatarSelection() {
-    const avatarCards = document.querySelectorAll('.avatar-card');
-    avatarCards.forEach(card => {
-      card.classList.remove('selected');
-      const input = card.querySelector('input[type="radio"]');
-      if (input && input.checked) {
-        card.classList.add('selected');
-      }
-    });
-  }
+
 
   bindEvents() {
     this.elems.send?.addEventListener('click', () => this.onSend());
@@ -272,10 +269,21 @@ class InnerChildChat {
     this.elems.copyLetter?.addEventListener('click', () => this.copyLetter());
     this.elems.startChat?.addEventListener('click', () => this.usePromptAndFocus());
     this.elems.refreshConfig?.addEventListener('click', () => this.refreshConfig());
+    
+    // 头像相关事件
     document.getElementById('ic-avatar-grid')?.addEventListener('change', () => {
       this.avatarUrl = this.getSelectedAvatar();
       this.updateSetupStatus();
       this.updateAvatarSelection();
+    });
+    
+    // 自定义头像上传事件
+    this.elems.uploadAvatarBtn?.addEventListener('click', () => {
+      this.elems.customAvatarFile?.click();
+    });
+    
+    this.elems.customAvatarFile?.addEventListener('change', (e) => {
+      this.handleCustomAvatarUpload(e);
     });
   }
 
@@ -308,6 +316,9 @@ class InnerChildChat {
 
   getSelectedAvatar() {
     const sel = document.querySelector('input[name="ic-avatar"]:checked');
+    if (sel && sel.value === 'custom') {
+      return this.customAvatarDataUrl || '../images/image1.png';
+    }
     return sel ? sel.value : '../images/image1.png';
   }
 
@@ -775,6 +786,91 @@ ${profile}
     const minutes = String(date.getMinutes()).padStart(2, '0');
     const seconds = String(date.getSeconds()).padStart(2, '0');
     return `${hours}:${minutes}:${seconds}`;
+  }
+
+  // 处理自定义头像上传
+  handleCustomAvatarUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // 验证文件类型
+    if (!file.type.startsWith('image/')) {
+      alert('请选择有效的图片文件（JPG、PNG、GIF 等）');
+      return;
+    }
+
+    // 验证文件大小（限制为 5MB）
+    if (file.size > 5 * 1024 * 1024) {
+      alert('图片文件过大，请选择小于 5MB 的图片');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target.result;
+      
+      // 保存到本地存储
+      this.customAvatarDataUrl = dataUrl;
+      localStorage.setItem('ic_custom_avatar', dataUrl);
+      
+      // 显示自定义头像选项
+      this.showCustomAvatar(dataUrl);
+      
+      // 自动选择自定义头像
+      this.selectCustomAvatar();
+    };
+    
+    reader.onerror = () => {
+      alert('读取图片文件失败，请重试');
+    };
+    
+    reader.readAsDataURL(file);
+  }
+
+  // 显示自定义头像
+  showCustomAvatar(dataUrl) {
+    if (this.elems.customAvatarPreview && this.elems.customAvatarCard) {
+      this.elems.customAvatarPreview.src = dataUrl;
+      this.elems.customAvatarCard.style.display = 'block';
+    }
+  }
+
+  // 选择自定义头像
+  selectCustomAvatar() {
+    const customRadio = document.querySelector('input[name="ic-avatar"][value="custom"]');
+    if (customRadio) {
+      customRadio.checked = true;
+      this.avatarUrl = this.getSelectedAvatar();
+      this.updateSetupStatus();
+      this.updateAvatarSelection();
+    }
+  }
+
+  // 加载已保存的自定义头像
+  loadCustomAvatar() {
+    if (this.customAvatarDataUrl) {
+      this.showCustomAvatar(this.customAvatarDataUrl);
+      
+      // 检查是否之前选择的是自定义头像
+      const selectedAvatar = localStorage.getItem('ic_selected_avatar');
+      if (selectedAvatar === 'custom') {
+        this.selectCustomAvatar();
+      }
+    }
+  }
+
+  // 更新头像选择的高亮效果（重写以支持自定义头像）
+  updateAvatarSelection() {
+    const avatarCards = document.querySelectorAll('.avatar-card');
+    avatarCards.forEach(card => {
+      card.classList.remove('selected');
+      const input = card.querySelector('input[type="radio"]');
+      if (input && input.checked) {
+        card.classList.add('selected');
+        // 保存选择的头像类型
+        localStorage.setItem('ic_selected_avatar', input.value);
+      }
+    });
   }
 }
 

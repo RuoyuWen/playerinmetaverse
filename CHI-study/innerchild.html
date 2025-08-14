@@ -141,27 +141,41 @@
         <div class="setup-card">
           <div class="form-row" style="align-items: start;">
             <label>选择头像</label>
-            <div class="avatar-grid" id="ic-avatar-grid">
-              <label class="avatar-card">
-                <input type="radio" name="ic-avatar" value="../images/image1.png" checked />
-                <img src="../images/image1.png" alt="avatar1" />
-                <div class="label">头像 1</div>
-              </label>
-              <label class="avatar-card">
-                <input type="radio" name="ic-avatar" value="../images/image2.png" />
-                <img src="../images/image2.png" alt="avatar2" />
-                <div class="label">头像 2</div>
-              </label>
-              <label class="avatar-card">
-                <input type="radio" name="ic-avatar" value="../images/image3.png" />
-                <img src="../images/image3.png" alt="avatar3" />
-                <div class="label">头像 3</div>
-              </label>
-              <label class="avatar-card">
-                <input type="radio" name="ic-avatar" value="../images/image4.png" />
-                <img src="../images/image4.png" alt="avatar4" />
-                <div class="label">头像 4</div>
-              </label>
+            <div>
+              <div class="avatar-grid" id="ic-avatar-grid">
+                <label class="avatar-card">
+                  <input type="radio" name="ic-avatar" value="../images/image1.png" checked />
+                  <img src="../images/image1.png" alt="avatar1" />
+                  <div class="label">头像 1</div>
+                </label>
+                <label class="avatar-card">
+                  <input type="radio" name="ic-avatar" value="../images/image2.png" />
+                  <img src="../images/image2.png" alt="avatar2" />
+                  <div class="label">头像 2</div>
+                </label>
+                <label class="avatar-card">
+                  <input type="radio" name="ic-avatar" value="../images/image3.png" />
+                  <img src="../images/image3.png" alt="avatar3" />
+                  <div class="label">头像 3</div>
+                </label>
+                <label class="avatar-card">
+                  <input type="radio" name="ic-avatar" value="../images/image4.png" />
+                  <img src="../images/image4.png" alt="avatar4" />
+                  <div class="label">头像 4</div>
+                </label>
+                <label class="avatar-card" id="ic-custom-avatar-card" style="display:none;">
+                  <input type="radio" name="ic-avatar" value="custom" />
+                  <img id="ic-custom-avatar-preview" src="" alt="custom avatar" />
+                  <div class="label">自定义</div>
+                </label>
+              </div>
+              <div style="margin-top: 1rem;">
+                <input type="file" id="ic-custom-avatar-file" accept="image/*" style="display:none;" />
+                <button type="button" class="btn btn-ghost" id="ic-upload-avatar-btn">
+                  <i class="fas fa-upload"></i> 上传自定义头像
+                </button>
+                <div class="hint small" style="margin-top:.35rem;">支持 JPG、PNG、GIF 格式，建议尺寸 200x200 像素</div>
+              </div>
             </div>
           </div>
         </div>
