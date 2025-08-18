@@ -446,26 +446,54 @@ class InnerChildChat {
     const raw = await this.getUploadText();
     const profileNote = raw ? raw.slice(0, 8000) : '（用户未提供详细资料，仅以温柔、天真、好奇的童年口吻对话）';
 
-    const instruction = `从以下"童年资料文本"中提炼一个不超过300字的"资料要点"，
+    // 第一步：提取基础资料要点
+    const profileInstruction = `从以下"童年资料文本"中提炼一个不超过300字的"资料要点"，
 并仅用JSON返回：{"profile":"..."}。资料文本：\n\n${profileNote}`;
+
+    // 第二步：专门提取说话风格和语气特征
+    const styleInstruction = `请仔细分析以下文本中"过去的自己会对现在的自己说什么"这类内容，提取说话风格特征：
+
+分析要点：
+1. 用词习惯（喜欢用什么词汇、口头禅）
+2. 句式特点（短句/长句、问句/感叹句的使用）
+3. 情感表达方式（如何表达关心、鼓励、担心）
+4. 语气特色（活泼/温柔/直接/含蓄等）
+5. 表达习惯（是否用表情符号、重复某些词汇等）
+
+请用JSON格式返回：{"speaking_style":"详细的说话风格描述，包含具体的用词、句式、语气特征"}
+
+资料文本：\n\n${profileNote}`;
 
     try {
       this.showTyping(true);
-      const jsonStr = await this.rawOpenAI([{ role: 'user', content: instruction }], { response_format: { type: 'json_object' } });
+      
+      // 并行提取资料要点和说话风格
+      const [profileJsonStr, styleJsonStr] = await Promise.all([
+        this.rawOpenAI([{ role: 'user', content: profileInstruction }], { response_format: { type: 'json_object' } }),
+        this.rawOpenAI([{ role: 'user', content: styleInstruction }], { response_format: { type: 'json_object' } })
+      ]);
+
       let profile = '';
-      try { profile = JSON.parse(jsonStr).profile || ''; } catch { profile = ''; }
+      let speakingStyle = '';
+      
+      try { profile = JSON.parse(profileJsonStr).profile || ''; } catch { profile = ''; }
+      try { speakingStyle = JSON.parse(styleJsonStr).speaking_style || ''; } catch { speakingStyle = ''; }
+
+      // 将说话风格信息整合到资料中
+      const enhancedProfile = profile + (speakingStyle ? `\n\n【说话风格特征】：${speakingStyle}` : '');
 
       const prompt = baseTemplate
         .replaceAll('{{name}}', name)
-        .replaceAll('{{profile}}', profile || profileNote);
+        .replaceAll('{{profile}}', enhancedProfile || profileNote);
 
       this.elems.promptText.textContent = prompt;
       
-      // 存储系统提示词
+      // 存储系统提示词和说话风格
       sessionStorage.setItem('ic_system_prompt', prompt);
+      sessionStorage.setItem('ic_speaking_style', speakingStyle);
       
-      // 生成信件
-      await this.generateLetter(profile || profileNote);
+      // 生成信件时传递说话风格信息
+      await this.generateLetter(enhancedProfile || profileNote, speakingStyle);
       
     } catch (e) {
       alert('生成失败，请稍后重试');
@@ -485,14 +513,27 @@ class InnerChildChat {
   }
 
   // 生成童年自我给用户的信件
-  async generateLetter(profile) {
+  async generateLetter(profile, speakingStyle = '') {
     const name = (this.elems.name?.value || '').trim() || '童年自我';
+    
+    // 构建包含说话风格的系统提示词
+    let styleGuidance = '';
+    if (speakingStyle) {
+      styleGuidance = `\n\n【重要】请严格按照以下说话风格特征来写信：
+${speakingStyle}
+
+请在信件中体现这些特征：
+- 使用相同的用词习惯和口头禅
+- 保持相同的句式特点和语气
+- 采用相同的情感表达方式
+- 如果原文有特殊的表达习惯（如表情符号、重复词汇），请在信件中体现`;
+    }
     
     // 专门用于生成信件的系统提示词
     const letterSystemPrompt = `你是用户童年时期的自己，现在要给长大后的自己（用户）写一封信。
 
 基于以下童年资料，以第一人称的童年视角写一封温暖、真诚的信：
-${profile}
+${profile}${styleGuidance}
 
 信件要求：
 - 以童年的口吻和视角，充满天真和好奇
@@ -502,10 +543,13 @@ ${profile}
 - 语气温暖、充满爱意，但保持童年的纯真
 - 字数控制在200-400字之间
 - 不要使用过于成熟的词汇或概念
+- 如果有提供说话风格特征，请严格按照这些特征来写信
 
 请直接输出信件内容，不要添加格式标记或说明。`;
 
-    const letterInstruction = `请以童年自我的身份，给现在的自己写一封信。`;
+    const letterInstruction = speakingStyle ? 
+      `请以童年自我的身份，严格按照提供的说话风格特征，给现在的自己写一封信。记住要模仿我在资料中"过去的自己会说什么"的语气和表达方式。` :
+      `请以童年自我的身份，给现在的自己写一封信。`;
 
     try {
       this.showLetterTyping(true);
@@ -585,6 +629,7 @@ ${profile}
     const name = (this.elems.name?.value || '').trim() || '童年自我';
     const stored = sessionStorage.getItem('ic_system_prompt');
     const letterContent = sessionStorage.getItem('ic_letter_content');
+    const speakingStyle = sessionStorage.getItem('ic_speaking_style');
     
     let systemPrompt = '';
     if (stored && stored.trim()) {
@@ -596,9 +641,29 @@ ${profile}
         .replaceAll('{{profile}}', fallbackProfile);
     }
     
+    // 如果有说话风格信息，强化风格指导
+    if (speakingStyle && speakingStyle.trim()) {
+      systemPrompt += `\n\n【说话风格要求】：在整个对话中，你必须严格按照以下说话风格特征来回应：
+${speakingStyle}
+
+重要提醒：
+- 每一条回复都要体现这些说话风格特征
+- 使用相同的用词习惯、句式和语气
+- 保持一致的情感表达方式
+- 模仿用户在资料中"过去的自己会说什么"的具体表达方式
+- 这是你作为用户童年自我的核心特征，不可改变`;
+    }
+    
     // 如果有信件内容，添加到系统提示词中
     if (letterContent && letterContent.trim()) {
-      systemPrompt += `\n\n重要提醒：你作为用户的小时候已经给用户（长大后的你）写了一封信，信的内容是：\n"${letterContent}"\n\n在对话中，你应该记住这封信的内容，因为你们的聊天会围绕这封信展开。用户可能会回应信中的内容，或询问相关问题。`;
+      systemPrompt += `\n\n【信件回忆】：你作为用户的小时候已经给用户（长大后的你）写了一封信，信的内容是：
+"${letterContent}"
+
+在对话中：
+- 你应该记住这封信的内容和写信时的心情
+- 你们的聊天可能会围绕这封信展开
+- 用户可能会回应信中的内容，或询问相关问题
+- 保持与信件中相同的说话风格和情感表达`;
     }
     
     return systemPrompt;
