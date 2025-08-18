@@ -598,7 +598,7 @@ ${profile}
     
     // 如果有信件内容，添加到系统提示词中
     if (letterContent && letterContent.trim()) {
-      systemPrompt += `\n\n重要提醒：你已经给用户写了一封信，信的内容是：\n"${letterContent}"\n\n在对话中，你应该记住这封信的内容，因为你们的聊天可能会围绕这封信展开。用户可能会回应信中的内容，或询问相关问题。`;
+      systemPrompt += `\n\n重要提醒：你作为用户的小时候已经给用户（长大后的你）写了一封信，信的内容是：\n"${letterContent}"\n\n在对话中，你应该记住这封信的内容，因为你们的聊天会围绕这封信展开。用户可能会回应信中的内容，或询问相关问题。`;
     }
     
     return systemPrompt;
