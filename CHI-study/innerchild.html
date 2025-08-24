@@ -9,11 +9,12 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
   <style>
     .setup-card {
-      background: rgba(0,0,0,0.25);
-      border: 1px solid rgba(0,212,255,0.25);
-      border-radius: 16px;
-      padding: 1.25rem;
+      background: linear-gradient(135deg, rgba(255,228,225,0.08), rgba(255,192,203,0.06));
+      border: 1px solid rgba(255,182,193,0.35);
+      border-radius: 20px;
+      padding: 1.5rem;
       margin-bottom: 1rem;
+      box-shadow: 0 4px 20px rgba(255,182,193,0.1);
     }
     .ai-container { max-width: 980px; margin: 0 auto; padding: 1.5rem; }
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
@@ -21,24 +22,31 @@
     .form-row { display: grid; gap: .75rem; grid-template-columns: 160px 1fr; align-items: center; }
     .form-row label { color: var(--text-color); font-weight: 600; }
     .form-row input[type="text"], .form-row input[type="password"], .form-row textarea, .form-row select {
-      width: 100%; padding: .75rem; border-radius: 8px; border: 1px solid rgba(157,78,221,.3);
-      background: rgba(0,0,0,.35); color: var(--text-color); font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      width: 100%; padding: .75rem; border-radius: 12px; border: 1px solid rgba(255,182,193,.4);
+      background: rgba(255,255,255,.08); color: var(--text-color); font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      transition: all 0.3s ease;
+    }
+    .form-row input[type="text"]:focus, .form-row input[type="password"]:focus, .form-row textarea:focus, .form-row select:focus {
+      border-color: rgba(255,182,193,.8);
+      box-shadow: 0 0 15px rgba(255,182,193,.3);
+      outline: none;
     }
     .avatar-grid { display: grid; grid-template-columns: repeat(4, minmax(120px,1fr)); gap: .75rem; }
     @media (max-width: 640px) { .avatar-grid { grid-template-columns: repeat(2, minmax(120px,1fr)); } }
     .avatar-card { 
-      border: 1px solid rgba(157,78,221,.3); 
-      border-radius: 12px; 
+      border: 1px solid rgba(255,182,193,.4); 
+      border-radius: 16px; 
       overflow: hidden; 
-      background: rgba(0,0,0,.25); 
+      background: linear-gradient(135deg, rgba(255,228,225,0.1), rgba(255,192,203,0.08)); 
       cursor: pointer; 
       position: relative;
-      transition: all 0.2s ease;
+      transition: all 0.3s ease;
     }
     .avatar-card:hover { 
-      border-color: rgba(157,78,221,.6); 
-      background: rgba(0,0,0,.35);
-      transform: translateY(-2px);
+      border-color: rgba(255,182,193,.8); 
+      background: linear-gradient(135deg, rgba(255,228,225,0.15), rgba(255,192,203,0.12));
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 8px 25px rgba(255,182,193,.2);
     }
     .avatar-card img { width: 100%; height: 120px; object-fit: cover; display: block; pointer-events: none; }
     .avatar-card input { 
@@ -59,21 +67,22 @@
       pointer-events: none;
     }
     .avatar-card.selected { 
-      outline: 2px solid var(--secondary-color); 
-      box-shadow: 0 0 18px rgba(157,78,221,.45); 
+      outline: 2px solid rgba(255,182,193,.9); 
+      box-shadow: 0 0 20px rgba(255,182,193,.6), 0 0 40px rgba(255,182,193,.3); 
+      background: linear-gradient(135deg, rgba(255,228,225,0.2), rgba(255,192,203,0.15));
     }
     .btn { padding: .75rem 1.25rem; border-radius: 10px; border: none; color: white; cursor: pointer; font-weight: 600; }
-    .btn-primary { background: var(--gradient-cyber); }
-    .btn-secondary { background: linear-gradient(135deg, #28a745, #20c997); }
+    .btn-primary { background: linear-gradient(135deg, #ff9a9e, #fecfef, #fecfef); }\n    .btn-primary:hover { background: linear-gradient(135deg, #ff8a95, #fedce8, #fedce8); transform: translateY(-1px); }
+    .btn-secondary { background: linear-gradient(135deg, #ffb6c1, #ffc0cb, #ffb3ba); }\n    .btn-secondary:hover { background: linear-gradient(135deg, #ff9faa, #ffadb8, #ff9fa9); transform: translateY(-1px); }
     .btn-ghost { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15); }
     .hint { font-size: .9rem; color: #a0aec0; }
     .small { font-size: .85rem; }
-    .chat-container { height: 520px; overflow-y: auto; padding: 1rem; background: rgba(0,0,0,.2); border: 1px solid rgba(0,212,255,.2); border-radius: 15px; margin-bottom: 1rem; }
+    .chat-container { height: 520px; overflow-y: auto; padding: 1rem; background: linear-gradient(135deg, rgba(255,228,225,0.05), rgba(255,255,255,0.03)); border: 1px solid rgba(255,182,193,.25); border-radius: 20px; margin-bottom: 1rem; }
     .message { margin-bottom: 1rem; display: flex; gap: .75rem; align-items: flex-start; }
     .message .bubble { padding: .85rem 1rem; border-radius: 12px; max-width: 80%; }
     .message.user { flex-direction: row-reverse; }
-    .message.user .bubble { background: linear-gradient(135deg, rgba(157,78,221,.15), rgba(0,212,255,.08)); border-left: 3px solid var(--primary-color); }
-    .message.ai .bubble { background: linear-gradient(135deg, rgba(0,212,255,.15), rgba(157,78,221,.08)); border-left: 3px solid var(--secondary-color); }
+    .message.user .bubble { background: linear-gradient(135deg, rgba(255,182,193,.15), rgba(255,228,225,.12)); border-left: 3px solid rgba(255,182,193,.8); }
+    .message.ai .bubble { background: linear-gradient(135deg, rgba(255,228,225,.18), rgba(255,192,203,.12)); border-left: 3px solid rgba(255,182,193,.9); }
     .message .avatar { width: 40px; height: 40px; border-radius: 50%; overflow: hidden; border: 2px solid rgba(255,255,255,.12); box-shadow: 0 2px 8px rgba(0,0,0,.2); flex-shrink: 0; }
     .message .avatar img { width: 100%; height: 100%; object-fit: cover; }
     .typing { display: none; color: var(--secondary-color); padding: .5rem 0; }
@@ -95,8 +104,8 @@
   <section class="section-padding">
     <div class="container">
       <div class="page-header">
-        <h1 class="page-title">🧒 Inner Child AI ▸ 童年自我</h1>
-        <p class="page-subtitle">上传你的童年故事，生成专属的"小时候的自己"，立即开始对话</p>
+        <h1 class="page-title">🌸 Inner Child AI ▸ 童年自我 🌸</h1>
+        <p class="page-subtitle">✨ 上传你的童年故事，唤醒内心深处的小小自己，开启一段温暖的心灵对话 ✨</p>
       </div>
 
       <div class="ai-container">
@@ -116,8 +125,8 @@
               <input type="password" id="ic-api-key" placeholder="sk-..." />
             </div>
             <div class="form-row">
-              <label>AI 名字</label>
-              <input type="text" id="ic-name" placeholder="例如：小小我、童年小天使" value="童年自我" />
+              <label>请为15年前的你取一个名字</label>
+              <input type="text" id="ic-name" placeholder="例如：小小我、童年小天使、小糖豆" value="童年自我" />
             </div>
           </div>
           <div style="margin-top: .75rem;" class="hint">密钥仅保存在本地浏览器，用于直接调用 OpenAI gpt-4.1。</div>
@@ -184,14 +193,14 @@
         <div class="setup-card" id="ic-letter-display" style="display:none;">
           <div>
             <div style="display:flex;justify-content:space-between;align-items:center;gap:.75rem;">
-              <h3 style="color:var(--secondary-color);margin:0;font-size:1.1rem;">💌 来自小时候的你的一封信</h3>
+              <h3 style="color:rgba(255,182,193,.9);margin:0;font-size:1.1rem;">💌 来自小时候的你的一封信 🌈</h3>
               <div class="inline-actions">
                 <button class="btn btn-ghost" id="ic-copy-letter"><i class="fas fa-copy"></i> 复制信件</button>
                 <button class="btn btn-primary" id="ic-start-chat"><i class="fas fa-comments"></i> 开始对话</button>
               </div>
             </div>
-            <div id="ic-letter-content" style="margin-top:.75rem;padding:1.5rem;background:rgba(255,255,255,.05);border-radius:12px;border:1px solid rgba(157,78,221,.25);line-height:1.6;color:#e2e8f0;font-size:1rem;white-space:pre-wrap;font-family:'Inter',sans-serif;"></div>
-            <div class="typing" id="ic-letter-typing" style="display:none;margin-top:1rem;"><i class="fas fa-magic"></i> 小时候的你正在写信...</div>
+            <div id="ic-letter-content" style="margin-top:.75rem;padding:1.5rem;background:linear-gradient(135deg, rgba(255,228,225,0.12), rgba(255,192,203,0.08));border-radius:16px;border:1px solid rgba(255,182,193,.4);line-height:1.7;color:#f7fafc;font-size:1rem;white-space:pre-wrap;font-family:'Inter',sans-serif;box-shadow: 0 4px 15px rgba(255,182,193,.1);"></div>
+            <div class="typing" id="ic-letter-typing" style="display:none;margin-top:1rem;color:rgba(255,182,193,.8);"><i class="fas fa-magic"></i> ✨ 小时候的你正在用心写信... 🌟</div>
           </div>
         </div>
 
@@ -202,26 +211,26 @@
 
         <div class="setup-card">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;">
-            <h3 style="margin:0;color:var(--primary-color);font-size:1.1rem;">💬 对话</h3>
+            <h3 style="margin:0;color:rgba(255,182,193,.9);font-size:1.1rem;">💬 和小时候的自己聊天 🎈</h3>
             <button class="btn btn-ghost" id="ic-refresh-config" title="从设置刷新配置"><i class="fas fa-sync-alt"></i></button>
           </div>
           
           <!-- 设置指导区域 -->
           <div id="ic-setup-guide" style="display:block;">
-            <div style="text-align: center; padding: 2rem; color: #a0aec0;">
-              <i class="fas fa-cog" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
-              <h3>请先完成设置</h3>
-              <p>1. 选择 API 提供商并输入密钥</p>
-              <p>2. 设置 AI 名字</p>
-              <p>3. 选择头像</p>
-              <p>4. 上传童年文档并生成人设</p>
-              <p>5. 点击"用此设定开始聊天"</p>
+            <div style="text-align: center; padding: 2rem; color: rgba(255,182,193,.7);">
+              <i class="fas fa-heart" style="font-size: 3rem; margin-bottom: 1rem; display: block; color: rgba(255,182,193,.8);"></i>
+              <h3 style="color: rgba(255,182,193,.9);">🌟 让我们一起唤醒童年自我吧 🌟</h3>
+              <p>🔑 1. 选择 API 提供商并输入密钥</p>
+              <p>🏷️ 2. 为15年前的你取一个可爱的名字</p>
+              <p>🖼️ 3. 选择一个代表童年的头像</p>
+              <p>📖 4. 上传童年故事并生成人设</p>
+              <p>💝 5. 点击"开始对话"和小时候的自己聊天</p>
             </div>
           </div>
           
           <!-- 聊天界面（默认隐藏） -->
           <div id="ic-chat" class="chat-container" style="display:none;"></div>
-          <div class="typing" id="ic-typing" style="display:none;"><i class="fas fa-robot"></i> 正在思考...</div>
+          <div class="typing" id="ic-typing" style="display:none;color:rgba(255,182,193,.8);"><i class="fas fa-heart"></i> 小时候的我正在想该说什么... 💭</div>
           <div style="display:flex;gap:.5rem;align-items:flex-end;">
             <textarea id="ic-input" rows="2" placeholder="请先完成设置..." class="chat-input" style="flex:1;display:none;"></textarea>
             <button class="btn btn-primary" id="ic-send" style="display:none;"><i class="fas fa-paper-plane"></i> 发送</button>
