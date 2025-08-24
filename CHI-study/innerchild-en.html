@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inner Child AI | Childhood Self Chat</title>
+  <link rel="stylesheet" href="../styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+  <style>
+    /* Override dark theme with bright playful style */
+    body {
+      background: linear-gradient(135deg, #fef7ed 0%, #fffbeb 50%, #f0fdf4 100%) !important;
+      min-height: 100vh;
+      position: relative;
+    }
+    /* Override page header dark background */
+    .page-header {
+      background: none !important;
+      background-color: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      padding: 2rem 0 !important;
+    }
+    .page-title {
+      background: none !important;
+      background-color: transparent !important;
+    }
+    .page-subtitle {
+      background: none !important;
+      background-color: transparent !important;
+    }
+    /* Override any possible dark container backgrounds */
+    .container {
+      background: none !important;
+      background-color: transparent !important;
+    }
+    .section-padding {
+      background: none !important;
+      background-color: transparent !important;
+    }
+    /* Ensure no dark borders or shadows */
+    .page-header::before,
+    .page-header::after,
+    .page-title::before,
+    .page-title::after {
+      display: none !important;
+    }
+    /* Add playful decorative elements */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+              background-image: 
+        radial-gradient(circle at 20% 80%, rgba(251,146,60,0.06) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(34,197,94,0.04) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(252,211,77,0.05) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: -1;
+    }
+    .setup-card {
+      background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(254,252,232,0.95));
+      border: 2px solid rgba(251,146,60,0.25);
+      border-radius: 24px;
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 8px 32px rgba(251,146,60,0.1), 0 4px 16px rgba(34,197,94,0.05);
+      backdrop-filter: blur(10px);
+    }
+    .ai-container { max-width: 980px; margin: 0 auto; padding: 1.5rem; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 920px) { .grid-2 { grid-template-columns: 1fr; } }
+    .form-row { display: grid; gap: .75rem; grid-template-columns: 160px 1fr; align-items: center; }
+    .form-row label { color: #ea580c; font-weight: 600; font-size: 0.95rem; }
+    .form-row input[type="text"], .form-row input[type="password"], .form-row textarea, .form-row select {
+      width: 100%; padding: .9rem; border-radius: 16px; border: 2px solid rgba(251,146,60,.4);
+      background: rgba(255,255,255,0.8); color: #78716c; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(251,146,60,.12);
+    }
+    .form-row input[type="text"]:focus, .form-row input[type="password"]:focus, .form-row textarea:focus, .form-row select:focus {
+      border-color: #ea580c;
+      box-shadow: 0 0 20px rgba(234,88,12,.3), 0 4px 12px rgba(251,146,60,.15);
+      outline: none;
+      background: rgba(255,255,255,0.95);
+    }
+    .avatar-grid { display: grid; grid-template-columns: repeat(4, minmax(120px,1fr)); gap: .75rem; }
+    @media (max-width: 640px) { .avatar-grid { grid-template-columns: repeat(2, minmax(120px,1fr)); } }
+    .avatar-card { 
+      border: 2px solid rgba(251,146,60,.3); 
+      border-radius: 20px; 
+      overflow: hidden; 
+      background: linear-gradient(135deg, rgba(255,255,255,0.8), rgba(254,252,232,0.9)); 
+      cursor: pointer; 
+      position: relative;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 16px rgba(251,146,60,.12);
+    }
+    .avatar-card:hover { 
+      border-color: #ea580c; 
+      background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(254,252,232,1));
+      transform: translateY(-5px) scale(1.05);
+      box-shadow: 0 12px 30px rgba(234,88,12,.2), 0 6px 20px rgba(251,146,60,.12);
+    }
+    .avatar-card img { width: 100%; height: 120px; object-fit: cover; display: block; pointer-events: none; }
+    .avatar-card input { 
+      position: absolute; 
+      top: 0; 
+      left: 0; 
+      width: 100%; 
+      height: 100%; 
+      opacity: 0; 
+      cursor: pointer; 
+      z-index: 2;
+    }
+    .avatar-card .label { 
+      padding: .5rem .75rem; 
+      text-align: center; 
+      font-size: .9rem; 
+      color: var(--text-color); 
+      pointer-events: none;
+    }
+    .avatar-card.selected { 
+      outline: 3px solid #ea580c; 
+      box-shadow: 0 0 25px rgba(234,88,12,.4), 0 0 50px rgba(251,146,60,.2), 0 8px 25px rgba(34,197,94,.1); 
+      background: linear-gradient(135deg, rgba(254,243,199,1), rgba(240,253,244,0.8));
+      transform: scale(1.08);
+    }
+    .btn { padding: .75rem 1.25rem; border-radius: 10px; border: none; color: white; cursor: pointer; font-weight: 600; }
+    .btn-primary { background: linear-gradient(135deg, #ea580c, #fb923c, #fed7aa); border: none; border-radius: 16px; color: white; font-weight: 600; box-shadow: 0 4px 12px rgba(234,88,12,.25); }
+    .btn-primary:hover { background: linear-gradient(135deg, #dc2626, #ea580c, #fb923c); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(234,88,12,.35); }
+    .btn-secondary { background: linear-gradient(135deg, #22c55e, #4ade80, #86efac); border: none; border-radius: 16px; color: white; font-weight: 600; box-shadow: 0 4px 12px rgba(34,197,94,.25); }
+    .btn-secondary:hover { background: linear-gradient(135deg, #16a34a, #22c55e, #4ade80); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(34,197,94,.35); }
+    .btn-ghost { background: rgba(255,255,255,.7); border: 2px solid rgba(251,146,60,.3); border-radius: 16px; color: #ea580c; font-weight: 600; box-shadow: 0 2px 8px rgba(251,146,60,.1); }
+    .btn-ghost:hover { background: rgba(255,255,255,.9); border-color: #ea580c; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(234,88,12,.2); }
+    .hint { font-size: .9rem; color: #92400e; background: rgba(254,252,232,0.8); padding: 0.5rem 0.8rem; border-radius: 12px; border-left: 3px solid rgba(251,146,60,.4); }
+    .small { font-size: .85rem; }
+    .chat-container { height: 520px; overflow-y: auto; padding: 1.5rem; background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(254,252,232,0.95)); border: 2px solid rgba(251,146,60,.25); border-radius: 24px; margin-bottom: 1rem; box-shadow: inset 0 2px 8px rgba(251,146,60,.08); }
+    .message { margin-bottom: 1rem; display: flex; gap: .75rem; align-items: flex-start; }
+    .message .bubble { padding: .85rem 1rem; border-radius: 12px; max-width: 80%; }
+    .message.user { flex-direction: row-reverse; }
+    .message.user .bubble { background: linear-gradient(135deg, rgba(254,243,199,0.9), rgba(240,253,244,0.7)); border-left: 4px solid #ea580c; color: #78716c; box-shadow: 0 2px 8px rgba(234,88,12,.12); }
+    .message.ai .bubble { background: linear-gradient(135deg, rgba(254,252,232,0.95), rgba(254,243,199,0.8)); border-left: 4px solid #22c55e; color: #78716c; box-shadow: 0 2px 8px rgba(34,197,94,.12); }
+    .message .avatar { width: 40px; height: 40px; border-radius: 50%; overflow: hidden; border: 2px solid rgba(255,255,255,.12); box-shadow: 0 2px 8px rgba(0,0,0,.2); flex-shrink: 0; }
+    .message .avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .typing { display: none; color: var(--secondary-color); padding: .5rem 0; }
+    .inline-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+  <nav class="navbar" style="background: rgba(255,255,255,0.95) !important; backdrop-filter: blur(10px); border-bottom: 1px solid rgba(251,146,60,0.2);">
+    <div class="nav-container">
+      <div class="nav-logo"><a href="#" style="color: #ea580c !important;">Inner Child AI</a></div>
+      <div class="nav-menu" id="nav-menu">
+        <a href="../index.html" class="nav-link" style="color: #ea580c !important;">Home</a>
+        <!-- Other navigation links hidden, only Inner Child function preserved -->
+      </div>
+      <div class="nav-toggle" id="nav-toggle"><span class="bar"></span><span class="bar"></span><span class="bar"></span></div>
+    </div>
+  </nav>
+
+  <section class="section-padding">
+    <div class="container">
+      <div class="page-header">
+        <h1 class="page-title" style="color: #ea580c; text-shadow: 0 2px 8px rgba(234,88,12,0.2);">🌿 Inner Child AI ▸ Childhood Self 🌿</h1>
+        <p class="page-subtitle" style="color: #a16207; font-size: 1.1rem;">✨ Upload your childhood stories, awaken your inner little self, and start a warm conversation with your soul ✨</p>
+      </div>
+
+      <div class="ai-container">
+        <div class="setup-card">
+          <div class="grid-2">
+            <div class="form-row">
+              <label>API Provider</label>
+              <select id="ic-api-provider">
+                <option value="xuedingmao">XueDingMao API</option>
+                <option value="groq">Groq API</option>
+                <option value="deepseek">DeepSeek API</option>
+                <option value="kimi">Kimi API (Moonshot)</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label id="ic-api-key-label">XueDingMao API Key</label>
+              <input type="password" id="ic-api-key" placeholder="sk-..." />
+            </div>
+            <div class="form-row">
+              <label>Give your 15-year-younger self a name</label>
+              <input type="text" id="ic-name" placeholder="e.g. Little Me, Childhood Angel, Sweet Bean" value="Inner Child" />
+            </div>
+          </div>
+          <div style="margin-top: .75rem;" class="hint">🌿 API key is only stored locally in your browser for direct OpenAI gpt-4.1 calls.</div>
+        </div>
+
+        <div class="setup-card">
+          <div class="form-row" style="align-items: start;">
+            <label>Upload Childhood Document</label>
+            <div>
+              <input type="file" id="ic-file" accept=".txt,.md,.json" />
+              <div class="hint small" style="margin-top:.35rem;">Currently supports .txt/.md/.json. For .pdf/.docx, please copy the text content and paste it below.</div>
+              <textarea id="ic-raw-text" rows="6" placeholder="Optional: If upload fails to parse, paste your text directly here"></textarea>
+              <div class="inline-actions" style="margin-top:.5rem;">
+                <button class="btn btn-secondary" id="ic-generate-prompt-btn"><i class="fas fa-wand-magic-sparkles"></i> Generate Personality</button>
+                <button class="btn btn-ghost" id="ic-view-prompt-btn"><i class="fas fa-eye"></i> Preview Setting</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="setup-card">
+          <div class="form-row" style="align-items: start;">
+            <label>Choose Avatar</label>
+            <div>
+              <div class="avatar-grid" id="ic-avatar-grid">
+                <label class="avatar-card">
+                  <input type="radio" name="ic-avatar" value="../images/image1.png" checked />
+                  <img src="../images/image1.png" alt="avatar1" />
+                  <div class="label">Avatar 1</div>
+                </label>
+                <label class="avatar-card">
+                  <input type="radio" name="ic-avatar" value="../images/image2.png" />
+                  <img src="../images/image2.png" alt="avatar2" />
+                  <div class="label">Avatar 2</div>
+                </label>
+                <label class="avatar-card">
+                  <input type="radio" name="ic-avatar" value="../images/image3.png" />
+                  <img src="../images/image3.png" alt="avatar3" />
+                  <div class="label">Avatar 3</div>
+                </label>
+                <label class="avatar-card">
+                  <input type="radio" name="ic-avatar" value="../images/image4.png" />
+                  <img src="../images/image4.png" alt="avatar4" />
+                  <div class="label">Avatar 4</div>
+                </label>
+                <label class="avatar-card" id="ic-custom-avatar-card" style="display:none;">
+                  <input type="radio" name="ic-avatar" value="custom" />
+                  <img id="ic-custom-avatar-preview" src="" alt="custom avatar" />
+                  <div class="label">Custom</div>
+                </label>
+              </div>
+              <div style="margin-top: 1rem;">
+                <input type="file" id="ic-custom-avatar-file" accept="image/*" style="display:none;" />
+                <button type="button" class="btn btn-ghost" id="ic-upload-avatar-btn">
+                  <i class="fas fa-upload"></i> Upload Custom Avatar
+                </button>
+                <div class="hint small" style="margin-top:.35rem;">Supports JPG, PNG, GIF formats, recommended size 200x200 pixels</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Letter display area from inner child -->
+        <div class="setup-card" id="ic-letter-display" style="display:none;">
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:.75rem;">
+              <h3 style="color:#ea580c;margin:0;font-size:1.2rem;font-weight:700;">💌 A Letter from Your Younger Self 🌿</h3>
+              <div class="inline-actions">
+                <button class="btn btn-ghost" id="ic-copy-letter"><i class="fas fa-copy"></i> Copy Letter</button>
+                <button class="btn btn-primary" id="ic-start-chat"><i class="fas fa-comments"></i> Start Chat</button>
+              </div>
+            </div>
+            <div id="ic-letter-content" style="margin-top:.75rem;padding:1.5rem;background:linear-gradient(135deg, rgba(255,255,255,0.9), rgba(254,252,232,0.95));border-radius:20px;border:2px solid rgba(251,146,60,.25);line-height:1.8;color:#78716c;font-size:1rem;white-space:pre-wrap;font-family:'Inter',sans-serif;box-shadow: 0 6px 20px rgba(251,146,60,.1);"></div>
+            <div class="typing" id="ic-letter-typing" style="display:none;margin-top:1rem;color:#92400e;font-weight:500;"><i class="fas fa-magic" style="color:#ea580c;"></i> ✨ Your younger self is writing a heartfelt letter... 🌿</div>
+          </div>
+        </div>
+
+        <!-- Hidden system prompt preview (for internal processing) -->
+        <div class="setup-card" id="ic-prompt-preview" style="display:none;">
+          <pre id="ic-prompt-text" style="display:none;"></pre>
+        </div>
+
+        <div class="setup-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;">
+            <h3 style="margin:0;color:#ea580c;font-size:1.2rem;font-weight:700;">💬 Chat with Your Younger Self 🌿</h3>
+            <button class="btn btn-ghost" id="ic-refresh-config" title="Refresh configuration from settings"><i class="fas fa-sync-alt"></i></button>
+          </div>
+          
+          <!-- Setup guide area -->
+          <div id="ic-setup-guide" style="display:block;">
+            <div style="text-align: center; padding: 2.5rem; background: linear-gradient(135deg, rgba(255,255,255,0.8), rgba(254,252,232,0.9)); border-radius: 20px; border: 2px dashed rgba(251,146,60,.3); margin: 1rem 0;">
+              <i class="fas fa-seedling" style="font-size: 3.5rem; margin-bottom: 1.5rem; display: block; color: #22c55e; text-shadow: 0 2px 4px rgba(34,197,94,0.25);"></i>
+              <h3 style="color: #ea580c; font-size: 1.4rem; margin-bottom: 1.5rem; font-weight: 700;">🌿 Let's Awaken Your Inner Child Together 🌿</h3>
+              <div style="text-align: left; max-width: 400px; margin: 0 auto; color: #92400e;">
+                <p style="margin: 0.8rem 0; padding: 0.5rem 1rem; background: rgba(254,243,199,0.8); border-radius: 12px; border-left: 4px solid #ea580c;">🔑 1. Choose API provider and enter your key</p>
+                <p style="margin: 0.8rem 0; padding: 0.5rem 1rem; background: rgba(254,243,199,0.8); border-radius: 12px; border-left: 4px solid #ea580c;">🏷️ 2. Give your 15-year-younger self a cute name</p>
+                <p style="margin: 0.8rem 0; padding: 0.5rem 1rem; background: rgba(254,243,199,0.8); border-radius: 12px; border-left: 4px solid #ea580c;">🖼️ 3. Choose an avatar representing your childhood</p>
+                <p style="margin: 0.8rem 0; padding: 0.5rem 1rem; background: rgba(254,243,199,0.8); border-radius: 12px; border-left: 4px solid #ea580c;">📖 4. Upload childhood stories and generate personality</p>
+                <p style="margin: 0.8rem 0; padding: 0.5rem 1rem; background: rgba(254,243,199,0.8); border-radius: 12px; border-left: 4px solid #ea580c;">💝 5. Click "Start Chat" to talk with your younger self</p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Chat interface (hidden by default) -->
+          <div id="ic-chat" class="chat-container" style="display:none;"></div>
+          <div class="typing" id="ic-typing" style="display:none;color:#92400e;font-weight:500;"><i class="fas fa-seedling" style="color:#22c55e;"></i> Your younger self is thinking about what to say... 🌿</div>
+          <div style="display:flex;gap:.5rem;align-items:flex-end;">
+            <textarea id="ic-input" rows="2" placeholder="Please complete setup first..." class="chat-input" style="flex:1;display:none;border-radius:16px;border:2px solid rgba(251,146,60,.3);background:rgba(255,255,255,0.9);color:#78716c;padding:1rem;"></textarea>
+            <button class="btn btn-primary" id="ic-send" style="display:none;"><i class="fas fa-paper-plane"></i> Send</button>
+            <button class="btn btn-secondary" id="ic-end-chat" style="display:none;" title="End conversation and download chat log"><i class="fas fa-download"></i> End Chat</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <p style="color:#92400e;">&copy; 2024 Inner Child AI. Childhood Self AI Chat System 🌿</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../script.js"></script>
+  <script src="../global-config.js"></script>
+  <script src="innerchild-config-en.js"></script>
+  <script src="innerchild-chat-en.js"></script>
+</body>
+</html>
