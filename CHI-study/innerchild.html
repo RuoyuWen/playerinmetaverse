@@ -14,6 +14,38 @@
       min-height: 100vh;
       position: relative;
     }
+    /* 覆盖页面标题区域的深色背景 */
+    .page-header {
+      background: none !important;
+      background-color: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      padding: 2rem 0 !important;
+    }
+    .page-title {
+      background: none !important;
+      background-color: transparent !important;
+    }
+    .page-subtitle {
+      background: none !important;
+      background-color: transparent !important;
+    }
+    /* 覆盖任何可能的深色容器背景 */
+    .container {
+      background: none !important;
+      background-color: transparent !important;
+    }
+    .section-padding {
+      background: none !important;
+      background-color: transparent !important;
+    }
+    /* 确保没有深色边框或阴影 */
+    .page-header::before,
+    .page-header::after,
+    .page-title::before,
+    .page-title::after {
+      display: none !important;
+    }
     /* 添加童趣装饰元素 */
     body::before {
       content: '';
