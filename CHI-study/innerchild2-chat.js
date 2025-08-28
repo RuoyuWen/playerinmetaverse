@@ -39,13 +39,16 @@ class InnerChild2Chat {
     };
 
     this.assistantName = this.elems.name?.value?.trim() || this.config.ui?.assistantLabelDefault || '童年自我';
-    this.avatarUrl = '../images/image1.png';
+    this.customAvatarDataUrl = localStorage.getItem('ic_custom_avatar') || '';
+    this.avatarUrl = this.getSelectedAvatar();
 
     this.bindEvents();
     this.restoreApiKey();
     this.initProvider();
     this.resetChat();
     this.updateSetupStatus();
+    this.updateAvatarSelection();
+    this.loadCustomAvatar();
   }
 
   initProvider() {
@@ -75,6 +78,23 @@ class InnerChild2Chat {
     this.elems.viewPrompt?.addEventListener('click', () => this.togglePromptPreview(true));
     this.elems.startChat?.addEventListener('click', () => this.usePromptAndFocus());
     this.elems.copyLetter?.addEventListener('click', () => this.copyLetter());
+
+    // 头像选择
+    document.getElementById('ic-avatar-grid')?.addEventListener('change', () => {
+      this.avatarUrl = this.getSelectedAvatar();
+      this.updateSetupStatus();
+      this.updateAvatarSelection();
+    });
+
+    // 自定义头像上传
+    this.elems.uploadAvatarBtn = document.getElementById('ic-upload-avatar-btn');
+    this.elems.customAvatarFile = document.getElementById('ic-custom-avatar-file');
+    this.elems.customAvatarCard = document.getElementById('ic-custom-avatar-card');
+    this.elems.customAvatarPreview = document.getElementById('ic-custom-avatar-preview');
+    this.elems.uploadAvatarBtn?.addEventListener('click', () => {
+      this.elems.customAvatarFile?.click();
+    });
+    this.elems.customAvatarFile?.addEventListener('change', (e) => this.handleCustomAvatarUpload(e));
   }
 
   updateApiProviderUI() {
@@ -123,6 +143,14 @@ class InnerChild2Chat {
 
   togglePromptPreview(show) {
     if (this.elems.previewCard) this.elems.previewCard.style.display = show ? 'block' : 'none';
+  }
+
+  getSelectedAvatar() {
+    const sel = document.querySelector('input[name="ic-avatar"]:checked');
+    if (sel && sel.value === 'custom') {
+      return this.customAvatarDataUrl || '../images/image1.png';
+    }
+    return sel ? sel.value : '../images/image1.png';
   }
 
   async generateGeneralPrompt() {
@@ -178,6 +206,63 @@ class InnerChild2Chat {
     if (!txt) return; navigator.clipboard.writeText(txt);
   }
 
+  // 自定义头像上传
+  handleCustomAvatarUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { alert('请选择有效的图片文件'); return; }
+    if (file.size > 5 * 1024 * 1024) { alert('图片过大，请选择小于 5MB 的图片'); return; }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target.result;
+      this.customAvatarDataUrl = dataUrl;
+      localStorage.setItem('ic_custom_avatar', dataUrl);
+      this.showCustomAvatar(dataUrl);
+      this.selectCustomAvatar();
+    };
+    reader.onerror = () => alert('读取图片失败');
+    reader.readAsDataURL(file);
+  }
+
+  showCustomAvatar(dataUrl) {
+    if (this.elems.customAvatarPreview && this.elems.customAvatarCard) {
+      this.elems.customAvatarPreview.src = dataUrl;
+      this.elems.customAvatarCard.style.display = 'block';
+    }
+  }
+
+  selectCustomAvatar() {
+    const customRadio = document.querySelector('input[name="ic-avatar"][value="custom"]');
+    if (customRadio) {
+      customRadio.checked = true;
+      this.avatarUrl = this.getSelectedAvatar();
+      this.updateSetupStatus();
+      this.updateAvatarSelection();
+    }
+  }
+
+  loadCustomAvatar() {
+    if (this.customAvatarDataUrl) {
+      this.showCustomAvatar(this.customAvatarDataUrl);
+      const selected = localStorage.getItem('ic_selected_avatar');
+      if (selected === 'custom') {
+        this.selectCustomAvatar();
+      }
+    }
+  }
+
+  updateAvatarSelection() {
+    const cards = document.querySelectorAll('.avatar-card');
+    cards.forEach(card => {
+      card.classList.remove('selected');
+      const input = card.querySelector('input[type="radio"]');
+      if (input && input.checked) {
+        card.classList.add('selected');
+        localStorage.setItem('ic_selected_avatar', input.value);
+      }
+    });
+  }
+
   usePromptAndFocus() {
     // 使用 ic2 的存储键
     sessionStorage.setItem('ic2_system_prompt', this.elems.promptText?.textContent || '');
@@ -198,7 +283,9 @@ class InnerChild2Chat {
     const row = document.createElement('div');
     row.className = `message ${who === 'user' ? 'user' : 'ai'}`;
     const avatar = document.createElement('div'); avatar.className = 'avatar';
-    const img = document.createElement('img'); img.src = who === 'user' ? '../images/default_user_avatar.png' : this.avatarUrl; img.alt = who; avatar.appendChild(img);
+    const img = document.createElement('img');
+    img.src = who === 'user' ? '../images/default_user_avatar.png' : this.avatarUrl;
+    img.alt = who; avatar.appendChild(img);
     const bubble = document.createElement('div'); bubble.className = 'bubble';
     const label = who === 'user' ? (this.config.ui?.userLabel || '玩家') : (this.assistantName || '童年自我');
     bubble.innerHTML = `<strong>${this.escape(label)}:</strong> ${this.format(text)}`;
