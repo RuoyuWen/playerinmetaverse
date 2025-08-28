@@ -102,8 +102,8 @@ class InnerChild2Chat {
     const hasApiKey = this.apiKey && this.apiKey.trim() !== '';
     const hasName = this.elems.name?.value?.trim() !== '';
     const hasPrompt = sessionStorage.getItem('ic2_system_prompt') && sessionStorage.getItem('ic2_system_prompt').trim() !== '';
-    const hasLetter = sessionStorage.getItem('ic2_letter_content') && sessionStorage.getItem('ic2_letter_content').trim() !== '';
-    const ready = hasApiKey && hasName && hasPrompt && hasLetter;
+    // 放宽条件：不强制要求信件已生成即可进入聊天
+    const ready = hasApiKey && hasName && hasPrompt;
 
     const chatElems = [this.elems.chat, this.elems.typing, this.elems.input, this.elems.send, this.elems.endChat];
     chatElems.forEach(el => { if (el) el.style.display = ready ? 'block' : 'none'; });
@@ -185,6 +185,11 @@ class InnerChild2Chat {
       this.resetChat();
       this.addMessage(this.config.ui.welcomeMessage, 'ai');
     }
+    // 若尚未生成信件，则后台生成（不阻塞对话）
+    const hasLetter = sessionStorage.getItem('ic2_letter_content') && sessionStorage.getItem('ic2_letter_content').trim() !== '';
+    if (!hasLetter) {
+      this.generateGeneralLetter().catch(() => {});
+    }
     this.updateSetupStatus();
     this.elems.input?.focus();
   }
@@ -217,7 +222,8 @@ class InnerChild2Chat {
   }
 
   isReady(){
-    return Boolean(this.apiKey && (sessionStorage.getItem('ic2_system_prompt') || '').trim() && (sessionStorage.getItem('ic2_letter_content') || '').trim() && (this.elems.name?.value || '').trim());
+    // 只要求密钥+名字+通用人设
+    return Boolean(this.apiKey && (sessionStorage.getItem('ic2_system_prompt') || '').trim() && (this.elems.name?.value || '').trim());
   }
 
   showTyping(show){ if (this.elems.typing) this.elems.typing.style.display = show ? 'block' : 'none'; }
