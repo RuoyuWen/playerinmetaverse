@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Inner Child AI 控制组 | 童年自我聊天（General）</title>
+  <title>Inner Child AI | 童年自我聊天</title>
   <link rel="stylesheet" href="../styles.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
@@ -80,8 +80,8 @@
   <section class="section-padding">
     <div class="container">
       <div class="page-header">
-        <h1 class="page-title" style="color: #ea580c; text-shadow: 0 2px 8px rgba(234,88,12,0.2);">🌿 Inner Child AI 控制组 ▸ 童年自我（General） 🌿</h1>
-        <p class="page-subtitle" style="color: #a16207; font-size: 1.1rem;">✨ 上传文件不会被用于分析；我们将扮演一个更通用的“过去的自己”，并生成一封温暖的信 ✨</p>
+        <h1 class="page-title" style="color: #ea580c; text-shadow: 0 2px 8px rgba(234,88,12,0.2);">🌿 Inner Child AI ▸ 童年自我 🌿</h1>
+        <p class="page-subtitle" style="color: #a16207; font-size: 1.1rem;">✨ 上传你的童年故事，唤醒内心深处的小小自己，开启一段温暖的心灵对话 ✨</p>
       </div>
 
       <div class="ai-container">
@@ -105,18 +105,18 @@
               <input type="text" id="ic-name" placeholder="例如：小伙伴、小时候的我、小太阳" value="童年自我" />
             </div>
           </div>
-          <div style="margin-top: .75rem;" class="hint">🌿 控制组：上传文档不会用于分析，我们将使用通用的人设与您对话。</div>
+          <div style="margin-top: .75rem;" class="hint">🌿 密钥仅保存在本地浏览器，用于直接调用 OpenAI gpt-4.1。</div>
         </div>
 
         <div class="setup-card">
           <div class="form-row" style="align-items: start;">
-            <label>上传文件（可选）</label>
+            <label>上传童年文档</label>
             <div>
               <input type="file" id="ic-file" accept=".txt,.md,.json" />
-              <div class="hint small" style="margin-top:.35rem;">支持 .txt/.md/.json。文件不会被用于分析，仅为控制组流程保持一致。</div>
-              <textarea id="ic-raw-text" rows="6" placeholder="可选：此处内容不会被用于分析，仅用于保持流程一致"></textarea>
+              <div class="hint small" style="margin-top:.35rem;">当前支持 .txt/.md/.json。若为 .pdf/.docx，请先复制文本内容粘贴到下方。</div>
+              <textarea id="ic-raw-text" rows="6" placeholder="可选：如果上传无法解析，请把文本直接粘贴到这里"></textarea>
               <div class="inline-actions" style="margin-top:.5rem;">
-                <button class="btn btn-secondary" id="ic-generate-prompt-btn"><i class="fas fa-wand-magic-sparkles"></i> 生成通用人设</button>
+                <button class="btn btn-secondary" id="ic-generate-prompt-btn"><i class="fas fa-wand-magic-sparkles"></i> 生成性格设定</button>
                 <button class="btn btn-ghost" id="ic-view-prompt-btn"><i class="fas fa-eye"></i> 预览设定</button>
               </div>
             </div>
@@ -165,18 +165,18 @@
           </div>
         </div>
 
-        <!-- 通用信件显示区域 -->
+        <!-- 童年自我的信件显示区域 -->
         <div class="setup-card" id="ic-letter-display" style="display:none;">
           <div>
             <div style="display:flex;justify-content:space-between;align-items:center;gap:.75rem;">
-              <h3 style="color:#ea580c;margin:0;font-size:1.2rem;font-weight:700;">💌 一封来自“过去的你”的通用信 🌿</h3>
+              <h3 style="color:#ea580c;margin:0;font-size:1.2rem;font-weight:700;">💌 来自小时候的你的一封信 🌿</h3>
               <div class="inline-actions">
                 <button class="btn btn-ghost" id="ic-copy-letter"><i class="fas fa-copy"></i> 复制信件</button>
                 <button class="btn btn-primary" id="ic-start-chat"><i class="fas fa-comments"></i> 开始对话</button>
               </div>
             </div>
             <div id="ic-letter-content" style="margin-top:.75rem;padding:1.5rem;background:linear-gradient(135deg, rgba(255,255,255,0.9), rgba(254,252,232,0.95));border-radius:20px;border:2px solid rgba(251,146,60,.25);line-height:1.8;color:#78716c;font-size:1rem;white-space:pre-wrap;font-family:'Inter',sans-serif;box-shadow: 0 6px 20px rgba(251,146,60,.1);"></div>
-            <div class="typing" id="ic-letter-typing" style="display:none;margin-top:1rem;color:#92400e;font-weight:500;"><i class="fas fa-magic" style="color:#ea580c;"></i> ✨ 正在生成一封温暖通用的信... 🌿</div>
+            <div class="typing" id="ic-letter-typing" style="display:none;margin-top:1rem;color:#92400e;font-weight:500;"><i class="fas fa-magic" style="color:#ea580c;"></i> ✨ 小时候的你正在用心写信... 🌿</div>
           </div>
         </div>
 
@@ -193,12 +193,12 @@
           <div id="ic-setup-guide" style="display:block;">
             <div style="text-align: center; padding: 2.5rem; background: linear-gradient(135deg, rgba(255,255,255,0.8), rgba(254,252,232,0.9)); border-radius: 20px; border: 2px dashed rgba(251,146,60,.3); margin: 1rem 0;">
               <i class="fas fa-seedling" style="font-size: 3.5rem; margin-bottom: 1.5rem; display: block; color: #22c55e; text-shadow: 0 2px 4px rgba(34,197,94,0.25);"></i>
-              <h3 style="color: #ea580c; font-size: 1.4rem; margin-bottom: 1.5rem; font-weight: 700;">🌿 控制组：请先完成设置</h3>
+              <h3 style="color: #ea580c; font-size: 1.4rem; margin-bottom: 1.5rem; font-weight: 700;">🌿 让我们一起唤醒童年自我吧 🌿</h3>
               <div style="text-align: left; max-width: 400px; margin: 0 auto; color: #92400e;">
                 <p style="margin: 0.8rem 0; padding: 0.5rem 1rem; background: rgba(254,243,199,0.8); border-radius: 12px; border-left: 4px solid #ea580c;">🔑 1. 选择 API 提供商并输入密钥</p>
                 <p style="margin: 0.8rem 0; padding: 0.5rem 1rem; background: rgba(254,243,199,0.8); border-radius: 12px; border-left: 4px solid #ea580c;">🏷️ 2. 为15年前的你取一个名字</p>
                 <p style="margin: 0.8rem 0; padding: 0.5rem 1rem; background: rgba(254,243,199,0.8); border-radius: 12px; border-left: 4px solid #ea580c;">🖼️ 3. 选择一个代表童年的头像</p>
-                <p style="margin: 0.8rem 0; padding: 0.5rem 1rem; background: rgba(254,243,199,0.8); border-radius: 12px; border-left: 4px solid #ea580c;">💌 4. 点击“生成通用人设”并生成信件</p>
+                <p style="margin: 0.8rem 0; padding: 0.5rem 1rem; background: rgba(254,243,199,0.8); border-radius: 12px; border-left: 4px solid #ea580c;">📖 4. 上传童年故事并生成人设</p>
               </div>
             </div>
           </div>
