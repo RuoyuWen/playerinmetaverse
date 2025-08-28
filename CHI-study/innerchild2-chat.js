@@ -260,6 +260,38 @@ class InnerChild2Chat {
     return text;
   }
 
+  // 低层封装：直接以给定的 messages 调用模型，支持可选 extra 覆盖参数
+  async rawOpenAI(messages, extra = {}) {
+    const providers = this.config.apiProviders || {};
+    const provider = providers[this.currentProvider] || { name: '薛定猫 API', endpoint: this.config.apiEndpoint, model: this.config.model };
+    const body = {
+      model: provider.model || this.config.model || 'gpt-4.1',
+      messages,
+      temperature: this.config.apiParams?.temperature ?? 0.8,
+      top_p: this.config.apiParams?.top_p ?? 0.9,
+      max_tokens: this.config.apiParams?.max_tokens ?? 1200,
+      stream: false,
+      ...extra
+    };
+
+    const res = await fetch(provider.endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${this.apiKey}`
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || res.statusText);
+    }
+
+    const data = await res.json();
+    return data.choices?.[0]?.message?.content || '';
+  }
+
   ensureApiKey(){ if (!this.apiKey) { alert('请先输入 API 密钥'); return false; } return true; }
 
   endChatAndDownload(){
