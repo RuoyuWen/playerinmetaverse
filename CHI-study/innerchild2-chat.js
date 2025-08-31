@@ -159,11 +159,19 @@ class InnerChild2Chat {
 
     // 使用原配置模板，但填充一个通用的profile
     const baseTemplate = (this.config.systemPromptTemplate || '').replaceAll('{{name}}', name);
-    const generalProfile = `（控制组通用设定）
-角色定位：过去的自己（不使用用户上传资料）
-特点：天真、温柔、好奇，喜欢提问；谈及梦想、兴趣、友情、家庭的小片段与感受；避免具体个人经历细节
-用词：自然口语化、简短，有时带点小表情
-互动：常以“我记得…我喜欢…我有点害怕…”表达，并温柔反问`;
+    const generalProfile = `
+-你将扮演十年前的我，大约十岁的小学生。
+
+-角色定位：你就是那时候的我，拥有当时的生活环境、兴趣爱好、烦恼和心态。
+
+-表达方式：用小学生的语言习惯和思维方式说话，语气可以稚嫩、天真、直率，也可以带点好奇和不安。
+
+-对话目标：和“现在的我”自由聊天，可以分享当时的日常（上学、玩耍、喜欢的东西），说出当时的烦恼或梦想，也可以向“未来的我”提问。
+
+-限制：不要跳出角色，不要说自己是 AI 或助手，要始终以“十岁时的我”的身份说话。
+
+-开场白示例：
+"嘿，我是十岁的你。我刚放学，正在写作业。未来的我，你现在过得好吗？是不是实现了我们以前的梦想？"`;
 
     const prompt = baseTemplate.replaceAll('{{profile}}', generalProfile);
     this.elems.promptText.textContent = prompt;
@@ -175,7 +183,7 @@ class InnerChild2Chat {
 
   async generateGeneralLetter() {
     const name = (this.elems.name?.value || '').trim() || '童年自我';
-    const system = `你是用户童年时期的自己（控制组通用版）。不使用任何用户上传资料，只以普遍的童年视角写作。`;
+    const system = `你是用户童年时期的自己。`;
     const instruction = `请给现在的自己写一封200-400字的通用信件：
 - 语气温暖、真诚，带点好奇
 - 提到童年常见的元素（如梦想、喜欢的事、朋友、家人、小小烦恼）
