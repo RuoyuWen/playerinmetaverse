@@ -6,7 +6,7 @@
     <title>Ruoyu Wen | Game Researcher & PhD Student</title>
     <meta name="description" content="PhD student in Human Computer Interaction at University of Canterbury, specializing in game design and player psychology research">
     <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
@@ -31,61 +31,202 @@
         </div>
     </nav>
 
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="hero-container">
-            <div class="hero-content">
-                <h1 class="hero-title">
-                    Hello, I'm <span class="highlight">Ruoyu Wen</span>! 👋
-                </h1>
-                <p class="hero-subtitle">
-                    <span class="text-xl">PhD student</span> passionate about <span class="text-highlight">Game Design</span> & <span class="text-accent">Human Computer Interaction</span> ✨ 
-                    Exploring the magical world of <span class="text-special">player psychology</span> and <span class="text-highlight">immersive experiences</span>! 🎮💫
+    <!-- Full Screen Landing Page -->
+    <section class="landing-page">
+        <div class="landing-container">
+            <div class="landing-content">
+                <div class="researcher-badge">
+                    <i class="fas fa-graduation-cap"></i>
+                </div>
+                <h1 class="landing-title">Ruoyu Wen</h1>
+                <p class="landing-subtitle">
+                    Building expressive, approachable, and<br>
+                    controllable tools for HCI-supported game research
                 </p>
-                <div class="hero-buttons">
-                    <a href="research.html" class="btn btn-primary">
+                <div class="landing-actions">
+                    <button class="explore-btn" onclick="scrollToContent()">
+                        <span>Explore the World</span>
                         <i class="fas fa-rocket"></i>
-                        Explore My Research
-                    </a>
-                    <a href="about.html" class="btn btn-secondary">
-                        <i class="fas fa-star"></i>
-                        Get to Know Me
-                    </a>
+                    </button>
+                    <button class="portfolio-btn" onclick="window.open('research.html', '_blank')">
+                        Find a harbor →
+                    </button>
                 </div>
             </div>
-            <div class="hero-image">
-                <div class="profile-photo">
-                    <img src="images/profile.jpg" alt="Ruoyu Wen" class="profile-img">
+            <div class="landing-visual">
+                <div class="code-universe">
+                    <!-- Horizontal flowing code streams -->
+                    <div class="code-layer layer-1">
+                        <div class="code-line">console.log('exploring the universe...') █ function discover() { █ let research = new Study(); █ if (curiosity > 0) { █ return innovation; █ } █ AI.learn(experience) █</div>
+                        <div class="code-line">game.design() █ HCI.research() █ player.motivate() █ const dream = await explore(); █ while (learning) { █ knowledge++; █ ARG.create(story) █</div>
+                        <div class="code-line">psychology.analyze() █ for (let i = 0; i < infinity; i++) { █ universe.expand(); █ } █ class Researcher { █ constructor() { █ this.passion = true; █</div>
+                    </div>
+                    
+                    <div class="code-layer layer-2">
+                        <div class="code-line">import { wonder } from 'curiosity'; █ const magic = new Discovery(); █ if (imagination.active) { █ breakthrough.achieve(); █ } █ async function innovate() { █</div>
+                        <div class="code-line">return await future.build(); █ } █ let creativity = Math.random() * 100; █ while (exploring) { █ boundaries.push(); █ limits.break(); █ dreams.realize(); █</div>
+                        <div class="code-line">} █ const journey = new Adventure(); █ journey.start('unknown'); █ setInterval(() => { █ wisdom.grow(); █ }, 1000); █ export default Excellence; █</div>
+                    </div>
+                    
+                    <div class="code-layer layer-3">
+                        <div class="code-line">// The universe is made of code █ function createMiracle() { █ return hope * effort; █ } █ let inspiration = true; █ while (inspiration) { █</div>
+                        <div class="code-line">ideas.generate(); █ prototypes.build(); █ theories.test(); █ } █ class Universe { █ static expand() { █ possibilities *= 2; █ } █ } █</div>
+                        <div class="code-line">const researcher = { █ name: 'Ruoyu', █ mission: 'explore', █ tools: ['AI', 'Games', 'HCI'], █ goal: 'understand_humans' █ }; █</div>
+                    </div>
+                    
+                    <div class="code-layer layer-4">
+                        <div class="code-line">try { █ world.change(); █ } catch (challenge) { █ solution.find(challenge); █ } █ finally { █ progress.continue(); █ } █</div>
+                        <div class="code-line">const matrix = new Reality(); █ matrix.bend(rules); █ if (impossible.exists()) { █ possible.create(); █ } █ let future = await Promise.all([dreams]); █</div>
+                        <div class="code-line">function transcend() { █ return beyond.imagination; █ } █ while (true) { █ universe.code.execute(); █ reality.update(); █ consciousness.expand(); █ } █</div>
+                    </div>
+                </div>
+                <div class="rocket-container">
+                    <div class="rocket">
+                        🚀
+                        <div class="rocket-trail"></div>
+                    </div>
+                </div>
+                <div class="stars">
+                    <div class="star star-1">✦</div>
+                    <div class="star star-2">✧</div>
+                    <div class="star star-3">⋆</div>
+                    <div class="star star-4">✦</div>
+                    <div class="star star-5">✧</div>
+                    <div class="star star-6">⋆</div>
+                    <div class="star star-7">✦</div>
+                    <div class="star star-8">✧</div>
+                </div>
+            </div>
+        </div>
+        <div class="scroll-indicator">
+            <div class="scroll-arrow">
+                <i class="fas fa-chevron-down"></i>
+            </div>
+        </div>
+    </section>
+
+    <!-- Research Highlights -->
+    <section class="research-highlights">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Research Focus</h2>
+                <p class="section-subtitle">Investigating the intersection of technology, psychology, and interactive design</p>
+            </div>
+            <div class="research-areas">
+                <div class="research-area">
+                    <div class="area-icon">
+                        <i class="fas fa-gamepad"></i>
+                    </div>
+                    <h3>Alternate Reality Games</h3>
+                    <p>Exploring player motivation and engagement patterns in immersive ARG experiences using Self-Determination Theory.</p>
+                </div>
+                <div class="research-area">
+                    <div class="area-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h3>Player Psychology</h3>
+                    <p>Understanding how cultural contexts and individual differences shape player behavior and game preferences.</p>
+                </div>
+                <div class="research-area">
+                    <div class="area-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <h3>AI & Design Tools</h3>
+                    <p>Developing generative AI applications for character design and creative prototyping in game development.</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Navigation Cards -->
-    <section class="about">
+    <!-- Recent Publications -->
+    <section class="recent-publications">
         <div class="container">
-            <h2 class="section-title">Discover My Journey ▸</h2>
-            <div class="nav-cards">
-                <a href="about.html" class="nav-card">
-                    <i class="fas fa-user-astronaut"></i>
-                    <h3>About Me</h3>
-                    <p>Meet the person behind the research! My story, passions, and what drives me in the world of game design ◆</p>
-                </a>
-                <a href="education.html" class="nav-card">
-                    <i class="fas fa-graduation-cap"></i>
-                    <h3>Education</h3>
-                    <p>Academic adventures across 3 countries! From China to Sweden to New Zealand ◇</p>
-                </a>
-                <a href="research.html" class="nav-card">
-                    <i class="fas fa-atom"></i>
-                    <h3>Research</h3>
-                    <p>Dive into my research on ARGs, AI, and player psychology! Where science meets creativity ⬢</p>
-                </a>
-                <a href="experience.html" class="nav-card">
-                    <i class="fas fa-rocket"></i>
-                    <h3>Experience</h3>
-                    <p>Professional journey through gaming, research, and innovation! From intern to PhD researcher ▸</p>
-                </a>
+            <div class="section-header">
+                <h2 class="section-title">Recent Publications</h2>
+                <a href="research.html" class="view-all-link">View All Publications <i class="fas fa-arrow-right"></i></a>
+            </div>
+            <div class="publications-grid">
+                <article class="publication-card">
+                    <div class="publication-meta">
+                        <span class="publication-year">2024</span>
+                        <span class="publication-venue">DiGRA</span>
+                    </div>
+                    <h3 class="publication-title">
+                        <a href="https://dl.digra.org/index.php/dl/article/view/2228" target="_blank">
+                            Motivational Landscapes of ARG Players: A Self-Determination Theory Perspective
+                        </a>
+                    </h3>
+                    <p class="publication-abstract">
+                        This paper explores the motivational patterns of Alternate Reality Game players through the lens of Self-Determination Theory.
+                    </p>
+                    <div class="publication-tags">
+                        <span class="tag">ARG</span>
+                        <span class="tag">Player Motivation</span>
+                        <span class="tag">Self-Determination Theory</span>
+                    </div>
+                </article>
+                
+                <article class="publication-card">
+                    <div class="publication-meta">
+                        <span class="publication-year">2024</span>
+                        <span class="publication-venue">CHI</span>
+                    </div>
+                    <h3 class="publication-title">
+                        <a href="https://dl.acm.org/doi/10.1145/3677102" target="_blank">
+                            Sketchar: Supporting Character Design Using Generative AI
+                        </a>
+                    </h3>
+                    <p class="publication-abstract">
+                        An innovative tool that leverages generative AI to support character design and illustration prototyping.
+                    </p>
+                    <div class="publication-tags">
+                        <span class="tag">Generative AI</span>
+                        <span class="tag">Character Design</span>
+                        <span class="tag">Creative Tools</span>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <!-- Academic Journey -->
+    <section class="academic-journey">
+        <div class="container">
+            <div class="journey-content">
+                <div class="journey-text">
+                    <h2 class="section-title">Academic Journey</h2>
+                    <p class="journey-description">
+                        My interdisciplinary path spans three countries and multiple domains, from communication studies in China to game design in Sweden, and now pursuing HCI research in New Zealand.
+                    </p>
+                    <div class="journey-highlights">
+                        <div class="highlight-item">
+                            <strong>PhD in HCI</strong>
+                            <span>University of Canterbury, New Zealand</span>
+                        </div>
+                        <div class="highlight-item">
+                            <strong>MA in Game Design</strong>
+                            <span>Uppsala University, Sweden</span>
+                        </div>
+                        <div class="highlight-item">
+                            <strong>BA in Communication</strong>
+                            <span>Huazhong University, China</span>
+                        </div>
+                    </div>
+                    <a href="education.html" class="btn btn-outline">View Full Journey</a>
+                </div>
+                <div class="journey-visual">
+                    <div class="world-map">
+                        <div class="connection-line"></div>
+                        <div class="data-point china">🇨🇳</div>
+                        <div class="data-point sweden">🇸🇪</div>
+                        <div class="data-point newzealand">🇳🇿</div>
+                        <div class="floating-elements">
+                            <div class="element-1">💻</div>
+                            <div class="element-2">🎮</div>
+                            <div class="element-3">🧠</div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </section>

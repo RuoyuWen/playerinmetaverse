@@ -35,12 +35,23 @@ navLinks.forEach(link => {
 // Navbar effect on scroll
 window.addEventListener('scroll', () => {
     const navbar = document.querySelector('.navbar');
-    if (window.scrollY > 50) {
-        navbar.style.background = 'rgba(10, 10, 10, 0.98)';
-        navbar.style.boxShadow = '0 0 30px rgba(0, 255, 255, 0.3)';
+    const landingPage = document.querySelector('.landing-page');
+    
+    if (landingPage) {
+        // On landing page - change navbar when scrolling past landing
+        const landingHeight = landingPage.offsetHeight;
+        if (window.scrollY > landingHeight - 100) {
+            navbar.classList.add('scrolled');
+        } else {
+            navbar.classList.remove('scrolled');
+        }
     } else {
-        navbar.style.background = 'rgba(10, 10, 10, 0.95)';
-        navbar.style.boxShadow = 'none';
+        // On other pages - standard scroll effect
+        if (window.scrollY > 50) {
+            navbar.classList.add('scrolled');
+        } else {
+            navbar.classList.remove('scrolled');
+        }
     }
 });
 
@@ -232,13 +243,45 @@ document.querySelectorAll('.skill-card, .project-card').forEach(card => {
     });
 });
 
+// Smooth scroll to content function
+function scrollToContent() {
+    const firstSection = document.querySelector('.research-highlights');
+    if (firstSection) {
+        firstSection.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+        });
+    }
+}
+
+// Modern intersection observer for animations
+const observeElements = () => {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('fade-in-up');
+                observer.unobserve(entry.target);
+            }
+        });
+    }, {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    });
+
+    // Observe elements for animation
+    document.querySelectorAll('.research-area, .publication-card, .focus-area, .stat-item').forEach(el => {
+        observer.observe(el);
+    });
+};
+
 // Page load initialization
 document.addEventListener('DOMContentLoaded', function() {
-    // Removed page load animation - content shows immediately
+    // Initialize animations
+    observeElements();
     
-    // Set active link based on current section
-    const currentSection = window.location.hash.slice(1) || 'home';
-    const activeLink = document.querySelector(`a[href="#${currentSection}"]`);
+    // Set active link based on current page
+    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+    const activeLink = document.querySelector(`a[href="${currentPage}"]`);
     if (activeLink) {
         activeLink.classList.add('active');
     }
