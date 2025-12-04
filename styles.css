@@ -605,13 +605,14 @@ p {
 .code-line {
     position: absolute;
     font-family: 'Courier New', 'Monaco', monospace;
-    font-size: 0.7rem;
+    font-size: 1rem;
     color: #4a90e2;
     white-space: nowrap;
-    opacity: 0.6;
-    text-shadow: 0 0 10px rgba(74, 144, 226, 0.5);
+    opacity: 0.7;
+    text-shadow: 0 0 15px rgba(74, 144, 226, 0.6);
     animation: universeFlow 25s linear infinite;
-    width: 200%;
+    width: 250%;
+    font-weight: 500;
 }
 
 /* Layer 1 - Fast flowing */
@@ -636,11 +637,27 @@ p {
 }
 
 .layer-1 .code-line:nth-child(3) {
-    top: 70%;
+    top: 50%;
     animation-duration: 24s;
     animation-delay: 6s;
     opacity: 0.6;
     color: #2c5aa0;
+}
+
+.layer-1 .code-line:nth-child(4) {
+    top: 70%;
+    animation-duration: 26s;
+    animation-delay: 9s;
+    opacity: 0.7;
+    color: #7bb3f0;
+}
+
+.layer-1 .code-line:nth-child(5) {
+    top: 85%;
+    animation-duration: 23s;
+    animation-delay: 12s;
+    opacity: 0.6;
+    color: #4a90e2;
 }
 
 /* Layer 2 - Medium speed */
@@ -665,11 +682,27 @@ p {
 }
 
 .layer-2 .code-line:nth-child(3) {
-    top: 80%;
+    top: 60%;
     animation-duration: 28s;
     animation-delay: 12s;
     opacity: 0.4;
     color: #3b82f6;
+}
+
+.layer-2 .code-line:nth-child(4) {
+    top: 75%;
+    animation-duration: 31s;
+    animation-delay: 15s;
+    opacity: 0.5;
+    color: #60a5fa;
+}
+
+.layer-2 .code-line:nth-child(5) {
+    top: 90%;
+    animation-duration: 29s;
+    animation-delay: 18s;
+    opacity: 0.4;
+    color: #93c5fd;
 }
 
 /* Layer 3 - Slow flowing */
@@ -760,26 +793,30 @@ p {
 }
 
 .rocket {
-    font-size: 3rem;
     position: relative;
     animation: rocketFloat 4s ease-in-out infinite;
     filter: drop-shadow(0 0 20px rgba(74, 144, 226, 0.8));
-    text-shadow: 0 0 30px rgba(255, 255, 255, 0.5);
+}
+
+.rocket svg {
+    width: 90px;
+    height: 120px;
 }
 
 .rocket-trail {
     position: absolute;
-    bottom: -10px;
+    bottom: -20px;
     left: 50%;
     transform: translateX(-50%);
-    width: 3px;
-    height: 30px;
+    width: 12px;
+    height: 40px;
     background: linear-gradient(to bottom, 
-        rgba(255, 165, 0, 0.8) 0%,
-        rgba(255, 69, 0, 0.6) 50%,
+        rgba(255, 165, 0, 0.9) 0%,
+        rgba(255, 69, 0, 0.7) 40%,
+        rgba(255, 0, 0, 0.5) 70%,
         transparent 100%);
     border-radius: 50%;
-    animation: trailFlicker 0.5s ease-in-out infinite alternate;
+    animation: trailFlicker 0.4s ease-in-out infinite alternate;
 }
 
 @keyframes rocketFloat {
@@ -1974,10 +2011,21 @@ section {
     position: relative;
 }
 
-.nav-toggle::before {
-    content: '🍔';
-    font-size: 1.5rem;
-    animation: var(--cyber-pulse);
+.nav-toggle {
+    display: none;
+    flex-direction: column;
+    cursor: pointer;
+    gap: 4px;
+    padding: 8px;
+}
+
+.nav-toggle span {
+    width: 25px;
+    height: 3px;
+    background: var(--text-primary);
+    border-radius: 2px;
+    transition: var(--transition-fast);
+    display: block;
 }
 
 .bar {
@@ -3116,15 +3164,23 @@ section {
     }
     
     .code-line {
-        font-size: 0.5rem;
+        font-size: 0.7rem;
+        opacity: 0.6;
     }
     
     .code-universe {
         opacity: 0.8;
     }
     
-    .rocket {
-        font-size: 2rem;
+    .rocket svg {
+        width: 70px;
+        height: 90px;
+    }
+    
+    .rocket-trail {
+        width: 10px;
+        height: 30px;
+        bottom: -15px;
     }
     
     .star {
@@ -3171,17 +3227,6 @@ section {
 
     .nav-toggle {
         display: flex;
-        flex-direction: column;
-        cursor: pointer;
-        gap: 4px;
-    }
-
-    .nav-toggle span {
-        width: 25px;
-        height: 3px;
-        background: var(--text-primary);
-        border-radius: 2px;
-        transition: var(--transition-fast);
     }
     
     .page-title {
