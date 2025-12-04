@@ -98,6 +98,52 @@
                 </div>
             </div>
         </div>
+        <!-- Alien Chat Agent -->
+        <div class="alien-chat-container" id="alienChat">
+            <div class="alien-avatar" onclick="toggleChat()">
+                <div class="alien-face">👽</div>
+                <div class="alien-glow"></div>
+                <div class="chat-bubble">
+                    <span>Greetings, Earthling! ✨</span>
+                </div>
+            </div>
+            
+            <div class="chat-interface" id="chatInterface">
+                <div class="chat-header">
+                    <div class="alien-info">
+                        <span class="alien-name">Zyx-9000 🛸</span>
+                        <span class="alien-status">Cosmic Guide • Online</span>
+                    </div>
+                    <button class="chat-close" onclick="toggleChat()">×</button>
+                </div>
+                
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message alien-message">
+                        <div class="message-content">
+                            <span class="alien-emoji">🌌✨🛸</span>
+                            <p>Greetings, curious Earthling! I'm Zyx-9000, your cosmic guide through Ruoyu's research universe! Ready to explore some mind-bending HCI adventures? (◕‿◕)✨</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="chat-input-container">
+                    <input type="text" id="chatInput" placeholder="Ask me about Ruoyu's research..." maxlength="200">
+                    <button id="sendButton" onclick="sendMessage()">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+                
+                <div class="chat-loading" id="chatLoading" style="display: none;">
+                    <div class="loading-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                    <span>Zyx-9000 is thinking... 🤔</span>
+                </div>
+            </div>
+        </div>
+
         <div class="scroll-indicator">
             <div class="scroll-arrow">
                 <i class="fas fa-chevron-down"></i>
@@ -247,6 +293,7 @@
     </footer>
 
     <script src="script.js"></script>
+    <script src="alien-chat.js"></script>
 </body>
 </html>
 <!-- Multi-page website structure --> 
