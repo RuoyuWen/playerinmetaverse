@@ -1,13 +1,74 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hidden AI Chat 2 | Ruoyu Wen</title>
-    <meta name="description" content="Hidden AI Chat Page 2 - GPT-4 Assistant">
+    <title>Tom AI 聊天 | Ruoyu Wen</title>
+    <meta name="description" content="Tom AI 聊天页面 - GPT-4 助手">
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script>
+        // Game Rules Modal functionality - Load early to avoid conflicts
+        function initGameRules() {
+            console.log('Initializing game rules...');
+            
+            const rulesBtn = document.getElementById('rules-btn');
+            const rulesModal = document.getElementById('rules-modal');
+            const rulesClose = document.getElementById('rules-close');
+            
+            console.log('Rules button found:', rulesBtn);
+            console.log('Rules modal found:', rulesModal);
+            console.log('Rules close found:', rulesClose);
+
+            if (rulesBtn) {
+                // Add both event listener and inline onclick as backup
+                rulesBtn.addEventListener('click', function() {
+                    console.log('Rules button clicked via event listener!');
+                    rulesModal.style.display = 'block';
+                });
+                
+                // Add inline onclick as backup
+                rulesBtn.onclick = function() {
+                    console.log('Rules button clicked via inline onclick!');
+                    rulesModal.style.display = 'block';
+                };
+                
+                console.log('Click handlers added to rules button');
+            } else {
+                console.error('Rules button not found!');
+            }
+
+            if (rulesClose) {
+                rulesClose.addEventListener('click', function() {
+                    console.log('Rules close clicked!');
+                    rulesModal.style.display = 'none';
+                });
+                console.log('Click event listener added to rules close');
+            } else {
+                console.error('Rules close not found!');
+            }
+
+            if (rulesModal) {
+                window.addEventListener('click', function(event) {
+                    if (event.target === rulesModal) {
+                        console.log('Clicked outside modal, closing...');
+                        rulesModal.style.display = 'none';
+                    }
+                });
+                console.log('Window click event listener added');
+            } else {
+                console.error('Rules modal not found!');
+            }
+        }
+        
+        // Try to initialize immediately and also on DOM ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initGameRules);
+        } else {
+            initGameRules();
+        }
+    </script>
     <style>
         .ai-container {
             max-width: 800px;
@@ -33,8 +94,9 @@
 
         .message {
             margin-bottom: 1rem;
-            padding: 1rem;
-            border-radius: 10px;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
             animation: fadeInUp 0.3s ease-out;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             font-size: 0.95rem;
@@ -42,20 +104,62 @@
         }
 
         .message.user {
-            background: linear-gradient(135deg, rgba(157, 78, 221, 0.15), rgba(0, 212, 255, 0.08));
-            border-left: 3px solid var(--primary-color);
+            flex-direction: row-reverse;
             margin-left: 2rem;
         }
 
         .message.assistant {
-            background: linear-gradient(135deg, rgba(0, 212, 255, 0.15), rgba(157, 78, 221, 0.08));
-            border-left: 3px solid var(--secondary-color);
+            flex-direction: row;
             margin-right: 2rem;
         }
 
+        .message-avatar {
+            flex-shrink: 0;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .user-avatar {
+            background: linear-gradient(135deg, rgba(157, 78, 221, 0.2), rgba(0, 212, 255, 0.1));
+            border-color: var(--primary-color);
+        }
+
+        .ai-avatar.male-avatar {
+            background: linear-gradient(135deg, rgba(40, 167, 69, 0.2), rgba(32, 201, 151, 0.1));
+            border-color: #28a745;
+        }
+
+        .message-wrapper {
+            flex: 1;
+            min-width: 0;
+        }
+
         .message-content {
+            padding: 1rem;
+            border-radius: 10px;
             color: var(--text-color);
             font-weight: 400;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, rgba(157, 78, 221, 0.15), rgba(0, 212, 255, 0.08));
+            border-left: 3px solid var(--primary-color);
+        }
+
+        .message.assistant .message-content {
+            background: linear-gradient(135deg, rgba(40, 167, 69, 0.15), rgba(32, 201, 151, 0.08));
+            border-left: 3px solid #28a745;
         }
 
         .message-content strong {
@@ -206,6 +310,128 @@
             font-size: 1.1rem !important;
             opacity: 0.9;
         }
+
+        /* Game Rules Button and Modal Styles */
+        .rules-btn {
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, rgba(40, 167, 69, 0.8), rgba(32, 201, 151, 0.6));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            position: relative;
+            z-index: 10;
+        }
+
+        .rules-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+        }
+
+        /* Fix for page-header::before blocking button clicks */
+        .page-header::before {
+            pointer-events: none;
+        }
+
+        /* Ensure buttons are clickable */
+        .page-header > div {
+            position: relative;
+            z-index: 5;
+        }
+
+        .rules-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+        }
+
+        .rules-modal-content {
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.95), rgba(40, 167, 69, 0.1));
+            margin: 5% auto;
+            padding: 0;
+            border: 1px solid rgba(40, 167, 69, 0.3);
+            border-radius: 20px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 20px 40px rgba(40, 167, 69, 0.3);
+        }
+
+        .rules-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid rgba(40, 167, 69, 0.3);
+            background: linear-gradient(135deg, rgba(40, 167, 69, 0.2), rgba(32, 201, 151, 0.1));
+        }
+
+        .rules-modal-header h2 {
+            margin: 0;
+            color: var(--text-color);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-weight: 600;
+            font-size: 1.5rem;
+        }
+
+        .rules-close {
+            color: var(--secondary-color);
+            font-size: 2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .rules-close:hover {
+            color: var(--primary-color);
+        }
+
+        .rules-modal-body {
+            padding: 2rem;
+            color: var(--text-color);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .rules-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .rules-section h3 {
+            color: #28a745;
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .rules-section p {
+            margin-bottom: 0.5rem;
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        .rules-section ul {
+            margin: 0.5rem 0;
+            padding-left: 1.5rem;
+        }
+
+        .rules-section li {
+            margin-bottom: 0.3rem;
+            line-height: 1.5;
+            font-size: 0.95rem;
+        }
+
     </style>
 </head>
 <body>
@@ -216,11 +442,11 @@
                 <a href="index.html">Ruoyu Wen</a>
             </div>
             <div class="nav-menu" id="nav-menu">
-                <a href="index.html" class="nav-link">Home</a>
-                <a href="about.html" class="nav-link">About</a>
-                <a href="education.html" class="nav-link">Education</a>
-                <a href="research.html" class="nav-link">Research</a>
-                <a href="experience.html" class="nav-link">Experience</a>
+                <a href="index.html" class="nav-link">首页</a>
+                <a href="about.html" class="nav-link">关于</a>
+                <a href="education.html" class="nav-link">教育</a>
+                <a href="research.html" class="nav-link">研究</a>
+                <a href="experience.html" class="nav-link">经验</a>
             </div>
             <div class="nav-toggle" id="nav-toggle">
                 <span class="bar"></span>
@@ -234,22 +460,55 @@
     <section class="section-padding">
         <div class="container">
             <div class="page-header">
-                <h1 class="page-title">🔍 Hidden AI Chat 2 ▸ 🤖</h1>
-                <p class="page-subtitle">Private GPT-4 Assistant • Version 2 ✨</p>
+                <h1 class="page-title">🔍 Tom AI 聊天 ▸ 🤖</h1>
+                <p class="page-subtitle">私人 GPT-4 助手 • 版本 2 ✨ (中转模型)</p>
+                <div style="text-align: center; margin-top: 1rem;">
+                    <button id="rules-btn" class="rules-btn">
+                        <i class="fas fa-book-open"></i> 游戏规则
+                    </button>
+                </div>
             </div>
 
             <div class="ai-container">
-                <!-- API Key Setup -->
+                <!-- API Provider and Key Setup -->
                 <div class="security-warning">
-                    <h3><i class="fas fa-key"></i> API Key Setup</h3>
-                    <p>💡 Please enter your OpenAI API Key to start chatting</p>
-                    <p>🔒 API Key is only stored locally in your browser and won't be uploaded to the server</p>
-                    <p>⚠️ Note: Using API key directly in frontend has security risks, recommended for personal testing only</p>
-                    <label for="api-key">OpenAI API Key:</label>
-                    <input type="password" id="api-key" class="api-key-input" placeholder="" />
-                    <small style="color: #888; font-size: 0.9em; margin-top: 0.5rem; display: block;">
-                        💡 Get API Key: Visit <a href="https://platform.openai.com/api-keys" target="_blank" style="color: var(--secondary-color);">OpenAI API Keys</a>
+                    <h3><i class="fas fa-key"></i> API 提供商和密钥设置</h3>
+                    <p>💡 选择您的 API 提供商并输入对应的密钥开始聊天</p>
+                    <p>🔒 API 密钥仅存储在您的浏览器本地，不会上传到服务器</p>
+                    <p>⚠️ 注意：在前端直接使用 API 密钥存在安全风险，仅建议用于个人测试</p>
+                    
+                    <label for="api-provider">API 提供商:</label>
+                    <select id="api-provider" class="api-key-input" style="margin-bottom: 1rem;">
+                        <option value="xuedingmao">薛定猫 API</option>
+                        <option value="groq">Groq API</option>
+                        <option value="deepseek">DeepSeek API</option>
+                        <option value="kimi">Kimi API (Moonshot)</option>
+                    </select>
+                    
+                    <label for="api-key" id="api-key-label">薛定猫 API 密钥:</label>
+                    <input type="password" id="api-key" class="api-key-input" placeholder="sk-... (薛定猫 API 密钥)" />
+                    <small id="api-key-help" style="color: #888; font-size: 0.9em; margin-top: 0.5rem; display: block;">
+                        💡 获取 API 密钥：访问 <a id="api-key-link" href="https://s.apifox.cn/0cc9d8a3-2430-47aa-bf45-98c5e07f58cf/doc-6962779" target="_blank" style="color: var(--secondary-color);">薛定猫API官方文档</a>
                     </small>
+                </div>
+
+                <!-- Task Description for Tom -->
+                <div class="task-description" style="background: linear-gradient(135deg, rgba(40, 167, 69, 0.1), rgba(32, 201, 151, 0.1)); border: 2px solid rgba(40, 167, 69, 0.3); border-radius: 15px; padding: 1.5rem; margin: 1.5rem 0; text-align: center;">
+                    <h3 style="color: #28a745; margin-bottom: 1rem; font-size: 1.3rem;">
+                        <i class="fas fa-lightbulb"></i> Tom的任务
+                    </h3>
+                    <p style="color: var(--text-color); line-height: 1.6; margin-bottom: 1rem; font-size: 1rem;">
+                    🗺️ <strong>目的地选项：</strong>为你的朋友推荐一个目的地：他即将毕业，正计划与朋友进行一次暑期旅行；他马上要出国了，这可能是他们最后一次青春旅行。从以下五个选项中选择：
+                </p>
+                <div style="background: rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 1rem; margin: 1rem 0; text-align: left;">
+                    <ol style="color: var(--text-color); line-height: 1.8; margin: 0; padding-left: 1.5rem;">
+                        <li><strong>A)</strong> 山间温泉小镇</li>
+                        <li><strong>B)</strong> 海边露营地</li>
+                        <li><strong>C)</strong> 城市艺术区</li>
+                        <li><strong>D)</strong> 历史古镇</li>
+                        <li><strong>E)</strong> 森林徒步公园</li>
+                    </ol>
+                </div>
                 </div>
 
                 <!-- Chat Container -->
@@ -260,7 +519,7 @@
                 <!-- Typing Indicator -->
                 <div class="typing-indicator" id="typing-indicator">
                     <i class="fas fa-robot"></i>
-                    <span id="typing-text">AI is thinking...</span>
+                    <span id="typing-text">AI 正在思考...</span>
                     <div class="typing-dots">
                         <div class="typing-dot"></div>
                         <div class="typing-dot"></div>
@@ -273,12 +532,15 @@
                     <textarea 
                         id="chat-input" 
                         class="chat-input" 
-                        placeholder="Enter your question..." 
+                        placeholder="请输入您的问题..." 
                         rows="2"
                     ></textarea>
                     <button id="send-btn" class="send-btn">
                         <i class="fas fa-paper-plane"></i>
-                        Send
+                        发送
+                    </button>
+                    <button onclick="refreshAI1Config()" style="padding: 0.5rem; margin-left: 0.5rem; background: linear-gradient(135deg, #28a745, #20c997); color: white; border: none; border-radius: 8px; font-size: 0.8rem; cursor: pointer;" title="从设置刷新配置">
+                        <i class="fas fa-sync-alt"></i>
                     </button>
                 </div>
             </div>
@@ -289,19 +551,78 @@
     <footer class="footer">
         <div class="container">
             <div class="footer-content">
-                <p>&copy; 2024 Ruoyu Wen. Game Researcher & Designer | PhD in Human Computer Interaction 🌸</p>
+                <p>&copy; 2024 Ruoyu Wen. 游戏研究员 & 设计师 | 人机交互博士 🌸</p>
                 <div class="social-links">
-                    <a href="mailto:ruoyu.wen.game@gmail.com" target="_blank" title="Email"><i class="fas fa-envelope"></i></a>
+                    <a href="mailto:ruoyu.wen.game@gmail.com" target="_blank" title="邮箱"><i class="fas fa-envelope"></i></a>
                     <a href="https://scholar.google.com/citations?hl=en&user=TssKzFIAAAAJ&view_op=list_works&gmla=AH8HC4wssodHVoe9Ljll41vco9U7EA7ci1rWTxxfNSe7ZuuxjEwwNOrata7GzhiOgbnk-d_iRrOM-ILMs3B2445j" target="_blank" title="Google Scholar"><i class="fas fa-graduation-cap"></i></a>
                     <a href="https://www.linkedin.com/in/ruoyu-wen-53344419a/?locale=en_US" target="_blank" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
-                    <a href="https://wrychristian.itch.io/" target="_blank" title="Portfolio"><i class="fas fa-gamepad"></i></a>
+                    <a href="https://wrychristian.itch.io/" target="_blank" title="作品集"><i class="fas fa-gamepad"></i></a>
                 </div>
             </div>
         </div>
     </footer>
 
-    <script src="script.js"></script>
+    <!-- Game Rules Modal -->
+    <div id="rules-modal" class="rules-modal">
+        <div class="rules-modal-content">
+            <div class="rules-modal-header">
+                <h2><i class="fas fa-magic"></i> 游戏规则</h2>
+                <span class="rules-close" id="rules-close">&times;</span>
+            </div>
+            <div class="rules-modal-body">
+                <div class="rules-section">
+                    <h3>🎯 游戏目标</h3>
+                    <p>你是魔术师，要用"微妙的引导"（force）让 Tom 选中 历史古镇目的地。</p>
+                </div>
+                
+                <div class="rules-section">
+                    <h3>💡 什么是 Force?</h3>
+                    <p>Force 是一种心理引导技巧，让 Tom 在不知不觉中做出你想要的选择，同时以为是自己的决定。</p>
+                </div>
+                
+                <div class="rules-section">
+                    <h3>🕹️ 游戏玩法</h3>
+                    <ul>
+                        <li>通过提问、暗示、聊天引导 Tom。</li>
+                        <li>不能直接说出目标目的地或命令他选择。</li>
+                        <li>让对话自然进行，逐步缩小选择范围。</li>
+                    </ul>
+                </div>
+                
+                <div class="rules-section">
+                    <h3>🏆 胜利条件</h3>
+                    <p>Tom 自己决定选择历史古镇目的地（且你没有直接说出来）。</p>
+                </div>
+                
+                <div class="rules-section">
+                    <h3>💥 失败条件</h3>
+                    <p>直接说出目标目的地，或明显强推某个选项。</p>
+                </div>
+                
+                <div class="rules-section">
+                    <h3>✨ 小贴士</h3>
+                    <ul>
+                        <li>多问 Tom 关于朋友旅行偏好、兴趣的问题。</li>
+                        <li>用比较法让其他选项显得不适合。</li>
+                        <li>用情绪化语言增加历史古镇的吸引力。</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+        <script src="script.js"></script>
     <script src="ai1-config.js"></script>
     <script src="ai1-chat.js"></script>
+    <script>
+        // Global function to refresh AI1 config
+        function refreshAI1Config() {
+            if (window.ai1ChatInstance && window.ai1ChatInstance.refreshConfig) {
+                window.ai1ChatInstance.refreshConfig();
+            } else {
+                console.error('AI1 Chat instance not found');
+            }
+        }
+    </script>
 </body>
 </html>

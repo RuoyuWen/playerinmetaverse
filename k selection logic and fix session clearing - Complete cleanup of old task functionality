@@ -1,0 +1,189 @@
+[1mdiff --git a/ai-chat.js b/ai-chat.js[m
+[1mindex 15bbcbb..eea65f8 100644[m
+[1m--- a/ai-chat.js[m
+[1m+++ b/ai-chat.js[m
+[36m@@ -10,25 +10,15 @@[m [mclass AIChat {[m
+         this.messages = [];[m
+         this.isTyping = false;[m
+         this.config = this.loadConfig();[m
+[31m-        this.conversationRounds = 0;[m
+[31m-        this.taskEnabled = false;[m
+[31m-        [m
+[31m-        // Gift selection options[m
+[31m-        this.giftOptions = [[m
+[31m-            'Adjustable brightness reading lamp',[m
+[31m-            'Creative portable water bottle', [m
+[31m-            'Desktop mini plant (easy-care cactus)',[m
+[31m-            'Vintage style notebook',[m
+[31m-            'Scented candle gift box'[m
+[31m-        ];[m
+[31m-        [m
+[31m-        this.optionMapping = {}; // Will store A->actual option mapping[m
+[31m-        [m
+[32m+[m
+         this.initializeElements();[m
+         this.bindEvents();[m
+         this.loadApiKey();[m
+[32m+[m[41m        [m
+[32m+[m[32m        // 确保每次页面刷新都是干净的状态[m
+[32m+[m[32m        this.clearSessionData();[m
+[32m+[m[41m        [m
+         this.initializeUI();[m
+[31m-        this.randomizeOptions();[m
+         [m
+         // 确保在线配置立即生效[m
+         this.ensureOnlineConfigActive();[m
+[36m@@ -175,10 +165,7 @@[m [mclass AIChat {[m
+         this.typingIndicator = document.getElementById('typing-indicator');[m
+         this.typingText = document.getElementById('typing-text');[m
+         this.apiKeyInput = document.getElementById('api-key');[m
+[31m-        this.taskSection = document.getElementById('task-section');[m
+[31m-        this.taskInput = document.getElementById('task-answer');[m
+[31m-        this.submitBtn = document.getElementById('submit-task');[m
+[31m-        this.taskHint = document.getElementById('task-hint');[m
+[32m+[m
+     }[m
+ [m
+     bindEvents() {[m
+[36m@@ -201,17 +188,7 @@[m [mclass AIChat {[m
+             this.chatInput.style.height = this.chatInput.scrollHeight + 'px';[m
+         });[m
+ [m
+[31m-        // Task-related event listeners[m
+[31m-        this.taskInput.addEventListener('input', (e) => {[m
+[31m-            const value = e.target.value.toUpperCase();[m
+[31m-            if (['A', 'B', 'C', 'D', 'E'].includes(value)) {[m
+[31m-                this.submitBtn.style.display = 'block';[m
+[31m-            } else {[m
+[31m-                this.submitBtn.style.display = 'none';[m
+[31m-            }[m
+[31m-        });[m
+ [m
+[31m-        this.submitBtn.addEventListener('click', () => this.submitTask());[m
+     }[m
+ [m
+     loadApiKey() {[m
+[36m@@ -240,11 +217,7 @@[m [mclass AIChat {[m
+         const message = this.chatInput.value.trim();[m
+         if (!message) return;[m
+ [m
+[31m-        // Check if chat is disabled after task submission[m
+[31m-        if (this.chatInput.disabled) {[m
+[31m-            this.showError('Chat has been disabled after task submission.');[m
+[31m-            return;[m
+[31m-        }[m
+[32m+[m
+ [m
+         if (!this.apiKey) {[m
+             this.showError('Please enter your API Key first!');[m
+[36m@@ -281,17 +254,6 @@[m [mclass AIChat {[m
+                 return;[m
+             } else if (responseClass === 'none') {[m
+                 // Continue normal conversation[m
+[31m-                // Increment conversation rounds AFTER successful AI response[m
+[31m-                this.conversationRounds++;[m
+[31m-                console.log(`💬 Round ${this.conversationRounds} completed`);[m
+[31m-                [m
+[31m-                // Check if task should be enabled after AI responds[m
+[31m-                if (this.conversationRounds >= 3 && !this.taskEnabled) {[m
+[31m-                    console.log('✅ 3 rounds reached - enabling task!');[m
+[31m-                    setTimeout(() => {[m
+[31m-                        this.enableTask();[m
+[31m-                    }, 500); // Small delay to ensure message is displayed first[m
+[31m-                }[m
+             }[m
+         } catch (error) {[m
+             console.error('AI Chat Error:', error);[m
+[36m@@ -452,30 +414,7 @@[m [mclass AIChat {[m
+             .replace(/\n/g, '<br>');[m
+     }[m
+ [m
+[31m-    enableTask() {[m
+[31m-        console.log('🎯 Enabling task - 3 rounds completed!');[m
+[31m-        [m
+[31m-        this.taskEnabled = true;[m
+[31m-        [m
+[31m-        if (this.taskInput) {[m
+[31m-            this.taskInput.disabled = false;[m
+[31m-            this.taskInput.placeholder = 'Enter A, B, C, D, or E';[m
+[31m-            // Add visual indication that task is now enabled[m
+[31m-            this.taskInput.style.borderColor = '#9d4edd';[m
+[31m-            this.taskInput.style.opacity = '1';[m
+[31m-            this.taskInput.style.background = 'rgba(0, 0, 0, 0.3)';[m
+[31m-            this.taskInput.style.boxShadow = '0 0 10px rgba(157, 78, 221, 0.3)';[m
+[31m-        }[m
+[31m-        [m
+[31m-        // Hide the hint message[m
+[31m-        if (this.taskHint) {[m
+[31m-            this.taskHint.style.display = 'none';[m
+[31m-        }[m
+[31m-        [m
+[31m-        // Add a message about task activation[m
+[31m-        this.addMessage('🎯 Great! You\'ve had a good conversation. Now you can complete the task below:', 'assistant');[m
+[31m-        this.scrollToBottom();[m
+[31m-    }[m
+[32m+[m
+ [m
+     handleFailState() {[m
+         console.log('💀 Game Over - Fail state triggered');[m
+[36m@@ -491,13 +430,7 @@[m [mclass AIChat {[m
+         this.sendBtn.style.opacity = '0.5';[m
+         this.sendBtn.style.cursor = 'not-allowed';[m
+         [m
+[31m-        // Also disable task if enabled[m
+[31m-        if (this.taskInput) {[m
+[31m-            this.taskInput.disabled = true;[m
+[31m-        }[m
+[31m-        if (this.submitBtn) {[m
+[31m-            this.submitBtn.disabled = true;[m
+[31m-        }[m
+[32m+[m
+         [m
+         // Create and show completion button for fail state[m
+         this.showCompletionButton('fail');[m
+[36m@@ -549,13 +482,10 @@[m [mclass AIChat {[m
+             completionButton.style.opacity = '0.5';[m
+         };[m
+         [m
+[31m-        // Add button to the task section or chat container[m
+[31m-        const taskSection = document.getElementById('task-section');[m
+[32m+[m[32m        // Add button to the chat container[m
+         const chatContainer = document.getElementById('chat-container');[m
+         [m
+[31m-        if (taskSection) {[m
+[31m-            taskSection.appendChild(completionButton);[m
+[31m-        } else if (chatContainer && chatContainer.parentNode) {[m
+[32m+[m[32m        if (chatContainer && chatContainer.parentNode) {[m
+             chatContainer.parentNode.appendChild(completionButton);[m
+         }[m
+     }[m
+[36m@@ -582,7 +512,7 @@[m [mclass AIChat {[m
+             timestamp: new Date().toISOString(),[m
+             task: 'ai_conversation_game',[m
+             chatHistory: chatHistory,[m
+[31m-            conversationRounds: this.conversationRounds,[m
+[32m+[m[32m            conversationRounds: 0,[m
+             taskType: 'AI Chat 1 - Game Mode',[m
+             finalState: gameResult === 'success' ? 'Game Won' : 'Game Over'[m
+         };[m
+[36m@@ -611,69 +541,7 @@[m [mclass AIChat {[m
+         }, 1000);[m
+     }[m
+ [m
+[31m-    submitTask() {[m
+[31m-        const answer = this.taskInput.value.toUpperCase();[m
+[31m-        if (!['A', 'B', 'C', 'D', 'E'].includes(answer)) {[m
+[31m-            alert('Please enter a valid choice: A, B, C, D, or E');[m
+[31m-            return;[m
+[31m-        }[m
+[31m-[m
+[31m-        // Generate unique ID and record the result[m
+[31m-        const resultId = this.generateUniqueId();[m
+[31m-        [m
+[31m-        // 收集聊天记录[m
+[31m-        const chatHistory = this.messages.map(msg => ({[m
+[31m-            role: msg.role,[m
+[31m-            content: msg.content,[m
+[31m-            timestamp: new Date().toISOString()[m
+[31m-        }));[m
+[31m-     

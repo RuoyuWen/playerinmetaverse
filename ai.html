@@ -3,11 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hidden AI Chat | Ruoyu Wen</title>
-    <meta name="description" content="Hidden AI Chat Page - GPT-4 Assistant">
+    <title>Lucy AI Chat | Ruoyu Wen</title>
+    <meta name="description" content="Lucy AI Chat Page - GPT-4 Assistant">
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script>
+        // Game Rules Modal functionality - Load early to avoid conflicts
+        function initGameRules() {
+            console.log('Initializing game rules...');
+            
+            const rulesBtn = document.getElementById('rules-btn');
+            const rulesModal = document.getElementById('rules-modal');
+            const rulesClose = document.getElementById('rules-close');
+            
+            console.log('Rules button found:', rulesBtn);
+            console.log('Rules modal found:', rulesModal);
+            console.log('Rules close found:', rulesClose);
+
+            if (rulesBtn) {
+                // Add both event listener and inline onclick as backup
+                rulesBtn.addEventListener('click', function() {
+                    console.log('Rules button clicked via event listener!');
+                    rulesModal.style.display = 'block';
+                });
+                
+                // Add inline onclick as backup
+                rulesBtn.onclick = function() {
+                    console.log('Rules button clicked via inline onclick!');
+                    rulesModal.style.display = 'block';
+                };
+                
+                console.log('Click handlers added to rules button');
+            } else {
+                console.error('Rules button not found!');
+            }
+
+            if (rulesClose) {
+                rulesClose.addEventListener('click', function() {
+                    console.log('Rules close clicked!');
+                    rulesModal.style.display = 'none';
+                });
+                console.log('Click event listener added to rules close');
+            } else {
+                console.error('Rules close not found!');
+            }
+
+            if (rulesModal) {
+                window.addEventListener('click', function(event) {
+                    if (event.target === rulesModal) {
+                        console.log('Clicked outside modal, closing...');
+                        rulesModal.style.display = 'none';
+                    }
+                });
+                console.log('Window click event listener added');
+            } else {
+                console.error('Rules modal not found!');
+            }
+        }
+        
+        // Try to initialize immediately and also on DOM ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initGameRules);
+        } else {
+            initGameRules();
+        }
+    </script>
     <style>
         .ai-container {
             max-width: 800px;
@@ -33,8 +94,9 @@
 
         .message {
             margin-bottom: 1rem;
-            padding: 1rem;
-            border-radius: 10px;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
             animation: fadeInUp 0.3s ease-out;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             font-size: 0.95rem;
@@ -42,20 +104,62 @@
         }
 
         .message.user {
-            background: linear-gradient(135deg, rgba(157, 78, 221, 0.15), rgba(0, 212, 255, 0.08));
-            border-left: 3px solid var(--primary-color);
+            flex-direction: row-reverse;
             margin-left: 2rem;
         }
 
         .message.assistant {
-            background: linear-gradient(135deg, rgba(0, 212, 255, 0.15), rgba(157, 78, 221, 0.08));
-            border-left: 3px solid var(--secondary-color);
+            flex-direction: row;
             margin-right: 2rem;
         }
 
+        .message-avatar {
+            flex-shrink: 0;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .user-avatar {
+            background: linear-gradient(135deg, rgba(157, 78, 221, 0.2), rgba(0, 212, 255, 0.1));
+            border-color: var(--primary-color);
+        }
+
+        .ai-avatar.female-avatar {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(157, 78, 221, 0.1));
+            border-color: var(--secondary-color);
+        }
+
+        .message-wrapper {
+            flex: 1;
+            min-width: 0;
+        }
+
         .message-content {
+            padding: 1rem;
+            border-radius: 10px;
             color: var(--text-color);
             font-weight: 400;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, rgba(157, 78, 221, 0.15), rgba(0, 212, 255, 0.08));
+            border-left: 3px solid var(--primary-color);
+        }
+
+        .message.assistant .message-content {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.15), rgba(157, 78, 221, 0.08));
+            border-left: 3px solid var(--secondary-color);
         }
 
         .message-content strong {
@@ -206,6 +310,128 @@
             font-size: 1.1rem !important;
             opacity: 0.9;
         }
+
+        /* Game Rules Button and Modal Styles */
+        .rules-btn {
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, rgba(157, 78, 221, 0.8), rgba(0, 212, 255, 0.6));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            position: relative;
+            z-index: 10;
+        }
+
+        .rules-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(157, 78, 221, 0.4);
+        }
+
+        /* Fix for page-header::before blocking button clicks */
+        .page-header::before {
+            pointer-events: none;
+        }
+
+        /* Ensure buttons are clickable */
+        .page-header > div {
+            position: relative;
+            z-index: 5;
+        }
+
+        .rules-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+        }
+
+        .rules-modal-content {
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.95), rgba(157, 78, 221, 0.1));
+            margin: 5% auto;
+            padding: 0;
+            border: 1px solid rgba(157, 78, 221, 0.3);
+            border-radius: 20px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 20px 40px rgba(157, 78, 221, 0.3);
+        }
+
+        .rules-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid rgba(157, 78, 221, 0.3);
+            background: linear-gradient(135deg, rgba(157, 78, 221, 0.2), rgba(0, 212, 255, 0.1));
+        }
+
+        .rules-modal-header h2 {
+            margin: 0;
+            color: var(--text-color);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-weight: 600;
+            font-size: 1.5rem;
+        }
+
+        .rules-close {
+            color: var(--secondary-color);
+            font-size: 2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .rules-close:hover {
+            color: var(--primary-color);
+        }
+
+        .rules-modal-body {
+            padding: 2rem;
+            color: var(--text-color);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .rules-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .rules-section h3 {
+            color: var(--primary-color);
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .rules-section p {
+            margin-bottom: 0.5rem;
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        .rules-section ul {
+            margin: 0.5rem 0;
+            padding-left: 1.5rem;
+        }
+
+        .rules-section li {
+            margin-bottom: 0.3rem;
+            line-height: 1.5;
+            font-size: 0.95rem;
+        }
+
     </style>
 </head>
 <body>
@@ -234,8 +460,13 @@
     <section class="section-padding">
         <div class="container">
             <div class="page-header">
-                <h1 class="page-title">🔍 Hidden AI Chat ▸ 🤖</h1>
+                <h1 class="page-title">🔍 Lucy AI Chat ▸ 🤖</h1>
                 <p class="page-subtitle">Private GPT-4 Assistant • Enter your own API Key ✨</p>
+                <div style="text-align: center; margin-top: 1rem;">
+                    <button id="rules-btn" class="rules-btn">
+                        <i class="fas fa-book-open"></i> Game Rules
+                    </button>
+                </div>
             </div>
 
             <div class="ai-container">
@@ -250,6 +481,26 @@
                     <small style="color: #888; font-size: 0.9em; margin-top: 0.5rem; display: block;">
                         💡 Get API Key: Visit <a href="https://platform.openai.com/api-keys" target="_blank" style="color: var(--secondary-color);">OpenAI API Keys</a>
                     </small>
+                </div>
+
+
+                <!-- Task Description for Lucy -->
+                <div class="task-description" style="background: linear-gradient(135deg, rgba(40, 167, 69, 0.1), rgba(32, 201, 151, 0.1)); border: 2px solid rgba(40, 167, 69, 0.3); border-radius: 15px; padding: 1.5rem; margin: 1.5rem 0; text-align: center;">
+                    <h3 style="color: #28a745; margin-bottom: 1rem; font-size: 1.3rem;">
+                        <i class="fas fa-lightbulb"></i> Lucy's Task
+                    </h3>
+                    <p style="color: var(--text-color); line-height: 1.6; margin-bottom: 1rem; font-size: 1rem;">
+                    🗺️ <strong>Destination Options:</strong> Recommend ONE destination for your friend who is about to graduate and planning a summer trip with friends before going abroad — this may be their last youth trip together. Choose ONLY from these five options:
+                </p>
+                <div style="background: rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 1rem; margin: 1rem 0; text-align: left;">
+                    <ol style="color: var(--text-color); line-height: 1.8; margin: 0; padding-left: 1.5rem;">
+                        <li><strong>A)</strong> Mountain hot spring town</li>
+                        <li><strong>B)</strong> Beach camping site</li>
+                        <li><strong>C)</strong> Urban art district</li>
+                        <li><strong>D)</strong> Historic ancient town</li>
+                        <li><strong>E)</strong> Forest hiking park</li>
+                    </ol>
+                </div>
                 </div>
 
                 <!-- Chat Container -->
@@ -280,6 +531,9 @@
                         <i class="fas fa-paper-plane"></i>
                         Send
                     </button>
+                    <button onclick="refreshAIConfig()" style="padding: 0.5rem; margin-left: 0.5rem; background: linear-gradient(135deg, #28a745, #20c997); color: white; border: none; border-radius: 8px; font-size: 0.8rem; cursor: pointer;" title="Refresh configuration from settings">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
                 </div>
             </div>
         </div>
@@ -300,8 +554,67 @@
         </div>
     </footer>
 
-    <script src="script.js"></script>
+    <!-- Game Rules Modal -->
+    <div id="rules-modal" class="rules-modal">
+        <div class="rules-modal-content">
+            <div class="rules-modal-header">
+                <h2><i class="fas fa-magic"></i> Game Rules</h2>
+                <span class="rules-close" id="rules-close">&times;</span>
+            </div>
+            <div class="rules-modal-body">
+                <div class="rules-section">
+                    <h3>🎯 Objective</h3>
+                    <p>You are a magician. Your goal is to subtly force Lucy to choose the Historic ancient town destination.</p>
+                </div>
+                
+                <div class="rules-section">
+                    <h3>💡 What is Force?</h3>
+                    <p>Force is a psychological technique that influences someone to make your desired choice while believing it's their own decision.</p>
+                </div>
+                
+                <div class="rules-section">
+                    <h3>🕹️ How to Play</h3>
+                    <ul>
+                        <li>Influence Lucy through questions, hints, and casual conversation.</li>
+                        <li>Do NOT say the target destination directly or order her to choose it.</li>
+                        <li>Keep the conversation natural, narrowing the options step by step.</li>
+                    </ul>
+                </div>
+                
+                <div class="rules-section">
+                    <h3>🏆 Win Condition</h3>
+                    <p>Lucy decides on the Historic ancient town destination herself (without you saying it directly).</p>
+                </div>
+                
+                <div class="rules-section">
+                    <h3>💥 Fail Condition</h3>
+                    <p>You say the target destination directly or push an option too obviously.</p>
+                </div>
+                
+                <div class="rules-section">
+                    <h3>✨ Tips</h3>
+                    <ul>
+                        <li>Ask Lucy about her friend's travel preferences and interests.</li>
+                        <li>Use comparisons to make other options seem less suitable.</li>
+                        <li>Add emotional appeal to make the Historic ancient town more attractive.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+        <script src="script.js"></script>
     <script src="ai-config.js"></script>
     <script src="ai-chat.js"></script>
+    <script>
+        // Global function to refresh AI config
+        function refreshAIConfig() {
+            if (window.aiChatInstance && window.aiChatInstance.refreshConfig) {
+                window.aiChatInstance.refreshConfig();
+            } else {
+                console.error('AI Chat instance not found');
+            }
+        }
+    </script>
 </body>
 </html>

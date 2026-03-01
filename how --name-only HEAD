@@ -1,0 +1,5 @@
+[33mc5b7b15[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Add gift selection task descriptions to both AI chat pages
+[33mccbd8cb[m Add task description section for Tom AI with Chinese content adapted from Lucy AI
+[33m3ef3fac[m Fix pointer-events issue blocking game rules button clicks
+[33m97d8127[m Fix game rules button functionality
+[33m1d78731[m Add game rules functionality to AI chat interfaces - Add clickable Game Rules button with modal popup - Include English rules in ai.html and Chinese rules in ai1.html - Implement responsive modal with blur effects and proper styling
