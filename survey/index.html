@@ -30,7 +30,7 @@
             <div class="survey-label">AI 辅助决策行为调查</div>
             <h1 class="survey-title">欢迎参与本次匿名问卷</h1>
             <p class="survey-desc">
-                本研究关注年轻群体（学生）如何使用 AI 辅助日常决策。问卷约需 8–10 分钟，包含基本信息、AI 使用习惯，以及一个真实的 AI 实操任务。
+                本研究关注年轻群体（学生）如何使用 AI 辅助日常决策。问卷约需 20–25 分钟，包含基本信息、AI 使用习惯，以及<strong>三个</strong>真实的 AI 实操决策任务。
             </p>
             <div class="privacy-note">
                 <strong>隐私声明：</strong>本问卷完全匿名，不收集姓名、学号或任何可识别身份的信息。数据仅用于学术研究，不会对外公开个体回答。
@@ -68,7 +68,7 @@
         <section class="survey-section" id="step-3-intro">
             <div class="survey-label">第三部分 · 实操任务</div>
             <h2 class="survey-title">两种 AI，两种用法</h2>
-            <p class="survey-desc">接下来你会做一个真实任务。请先了解两种 AI 模式的区别：</p>
+            <p class="survey-desc">接下来你会完成<strong>三个决策任务</strong>，每个任务都用下面两种 AI 模式。请先了解它们的区别：</p>
             <div class="concept-cards">
                 <div class="concept-card forest">
                     <h4>A. 对话式 AI（Copilot）</h4>
@@ -79,19 +79,18 @@
                     <p>像 Perplexity、秘塔、夸克 AI——你输入一个问题，它快速给你带来源的答案摘要。</p>
                 </div>
             </div>
-            <h3 class="survey-title" style="font-size:1.35rem" id="task-title"></h3>
-            <p class="survey-desc" id="task-scenario"></p>
-            <p class="survey-desc" style="color:var(--forest)" id="task-hint"></p>
+            <div class="task-overview" id="task-overview"></div>
             <div id="api-warning" class="api-warning" style="display:none"></div>
             <div class="survey-actions">
                 <button type="button" class="btn-survey btn-secondary" data-back="2">← 返回</button>
-                <button type="button" class="btn-survey btn-primary" id="btn-start-task">开始任务 →</button>
+                <button type="button" class="btn-survey btn-primary" id="btn-start-task">开始第一个任务 →</button>
             </div>
         </section>
 
         <!-- Step 3: Part 3 Task -->
         <section class="survey-section" id="step-3-task">
             <div class="survey-wrap wide" style="padding:0;max-width:1040px">
+                <div class="task-progress-bar" id="task-progress-bar">任务 1 / 3</div>
                 <div class="task-banner">
                     <div class="task-label">你的任务</div>
                     <p id="task-banner-text"></p>
@@ -108,11 +107,7 @@
                             <div class="panel-stats" id="chat-stats">0s · 0 轮</div>
                         </div>
                         <div class="panel-body" id="chat-messages">
-                            <div class="panel-placeholder">
-                                试着问我，比如：<br>
-                                「6000 预算，写代码 + 剪视频，买 Mac 还是 Windows？」<br>
-                                然后你可以继续追问细节。
-                            </div>
+                            <div class="panel-placeholder" id="chat-placeholder"></div>
                         </div>
                         <div class="panel-input-row">
                             <input type="text" id="chat-input" placeholder="输入问题，回车发送…" autocomplete="off">
@@ -133,11 +128,7 @@
                             <button type="button" class="clay" id="search-btn">搜索</button>
                         </div>
                         <div class="panel-body" id="search-body">
-                            <div class="panel-placeholder" id="search-placeholder">
-                                试着搜：<br>
-                                「6000 元价位 适合编程剪辑的笔记本推荐」<br>
-                                它会给你带来源的答案摘要。
-                            </div>
+                            <div class="panel-placeholder" id="search-placeholder"></div>
                             <div id="search-result" class="search-result" style="display:none"></div>
                         </div>
                     </div>
@@ -150,15 +141,15 @@
                         <div class="option-list horizontal" id="preferred-options"></div>
                     </div>
                     <div class="form-group">
-                        <div class="form-label">2. 你最终倾向于买什么？</div>
-                        <input type="text" class="text-input" id="decision-input" placeholder="例如：MacBook Air M3 / 某款 Windows 轻薄本…">
+                        <div class="form-label" id="decision-label">2. 你的最终决定是？</div>
+                        <input type="text" class="text-input" id="decision-input" placeholder="">
                     </div>
                     <div class="form-group">
                         <div class="form-label">3. 为什么这么选？（说说哪个工具帮你想清楚了）</div>
                         <textarea class="text-input" id="reason-input" rows="3"></textarea>
                     </div>
                     <p class="validation-error" id="part3-error">请完成以上三题后再提交。</p>
-                    <button type="button" class="btn-survey btn-accent" id="btn-submit-task">提交任务</button>
+                    <button type="button" class="btn-survey btn-accent" id="btn-submit-task">完成此项，继续下一项 →</button>
                 </div>
             </div>
         </section>

@@ -339,7 +339,55 @@ textarea.text-input {
 }
 
 /* Task banner */
-.task-banner {
+.task-progress-bar {
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  color: var(--clay);
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.task-overview {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.task-overview-item {
+  padding: 0.65rem 0;
+  border-bottom: 1px dashed var(--line);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.task-overview-item:last-child {
+  border-bottom: none;
+}
+
+.task-overview-item strong {
+  color: var(--forest);
+  display: block;
+  margin-bottom: 0.2rem;
+}
+
+.task-summary-block {
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--line);
+}
+
+.task-summary-block:last-child {
+  border-bottom: none;
+}
+
+.task-summary-block h4 {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  color: var(--forest);
+}
+
   background: var(--ink);
   color: var(--paper);
   border-radius: 12px;
