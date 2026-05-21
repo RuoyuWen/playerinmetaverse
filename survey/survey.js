@@ -291,18 +291,30 @@
   }
 
   async function checkApiConfig() {
+    let msg = '';
     try {
       const res = await fetch(backendUrl(cfg.CONFIG_PATH || '/api/survey/config'));
-      if (res.ok) {
+      if (!res.ok) {
+        msg =
+          '无法连接研究后端（HTTP ' +
+          res.status +
+          '）。请确认 Render 中 chi-backend 服务已正常运行，且 config.js 里的 BACKEND_URL 与 Render 显示的地址一致。';
+      } else {
         const data = await res.json();
-        state.claudeAvailable = !!data.claudeAvailable;
+        state.claudeAvailable = !!(data.aiAvailable ?? data.claudeAvailable);
+        if (!state.claudeAvailable) {
+          msg =
+            '后端已连接，但 AI Key 尚未配置。请在 Render → chi-backend → Environment 添加 RELAY_API_KEY（薛丁猫令牌），并设置 SURVEY_AI_PROVIDER=relay。';
+        }
       }
     } catch {
       state.claudeAvailable = false;
+      msg =
+        '无法连接研究后端。请检查 Render 服务是否在线，以及 survey/config.js 中的 BACKEND_URL 是否正确。';
     }
-    const msg = state.claudeAvailable
-      ? ''
-      : 'AI 服务暂未配置。你仍可填写问卷前两部分；第三部分 AI 面板将显示演示提示，行为数据仍会记录。';
+    if (!msg && !state.claudeAvailable) {
+      msg = 'AI 服务暂未配置。第三部分将以演示模式运行，你的输入仍会被记录。';
+    }
     ['api-warning', 'api-warning-task'].forEach((id) => {
       const el = $(id);
       if (el) {

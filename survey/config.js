@@ -11,8 +11,8 @@
  *   ANTHROPIC_MODEL        — default claude-sonnet-4-20250514
  */
 const SURVEY_CONFIG = {
-  // Render backend; override for local testing: 'http://localhost:8000'
-  BACKEND_URL: 'https://chi-backend.onrender.com',
+  // 必须与 Render 控制台显示的 chi-backend 地址一致
+  BACKEND_URL: 'https://chi-backend-jil8.onrender.com',
   CLAUDE_PATH: '/api/survey/claude',
   SUBMIT_PATH: '/api/survey/submit',
   CONFIG_PATH: '/api/survey/config',
