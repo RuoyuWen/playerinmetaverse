@@ -44,9 +44,11 @@ ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
 if ENVIRONMENT == "production":
     allowed_origins = [
         "https://playerinmetaverse.tech",
+        "https://www.playerinmetaverse.tech",
         "https://chi-frontend.onrender.com",
         "https://chi-backend.onrender.com",
-        "https://chi-backend-git.onrender.com"
+        "https://chi-backend-jif6.onrender.com",
+        "https://chi-backend-git.onrender.com",
     ]
 else:
     allowed_origins = ["*"]
@@ -167,7 +169,11 @@ async def _call_relay(messages: List[Dict[str, str]], system: str) -> str:
         )
     if response.status_code != 200:
         logger.error(f"Relay API error: {response.status_code} {response.text}")
-        raise HTTPException(status_code=502, detail="AI relay service temporarily unavailable")
+        detail = response.text[:200] if response.text else "unknown error"
+        raise HTTPException(
+            status_code=502,
+            detail=f"薛丁猫 API 错误 ({response.status_code}): {detail}",
+        )
     data = response.json()
     choices = data.get("choices") or []
     if not choices:

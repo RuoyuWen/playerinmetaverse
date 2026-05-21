@@ -324,13 +324,33 @@
     });
   }
 
+  function formatAiError(e) {
+    const msg = e && e.message ? String(e.message) : String(e);
+    if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
+      return '（网络错误：请用 https://playerinmetaverse.tech/survey/ 打开，勿用 www；首次请求需等待 15–30 秒）';
+    }
+    if (msg.includes('502') || msg.includes('薛丁猫')) {
+      return '（AI 中转服务出错：' + msg.slice(0, 120) + '…请稍后重试）';
+    }
+    return '（请求出错了：' + msg.slice(0, 150) + '）';
+  }
+
   async function callClaude(messages, system) {
     const res = await fetch(backendUrl(cfg.CLAUDE_PATH || '/api/survey/claude'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ messages, system }),
     });
-    if (!res.ok) throw new Error('API error');
+    if (!res.ok) {
+      let detail = '';
+      try {
+        const err = await res.json();
+        detail = typeof err.detail === 'string' ? err.detail : JSON.stringify(err.detail || err);
+      } catch {
+        detail = await res.text();
+      }
+      throw new Error('HTTP ' + res.status + (detail ? ': ' + detail : ''));
+    }
     const data = await res.json();
     return data.text || '（无回复）';
   }
@@ -394,7 +414,7 @@
         (m) =>
           `<div class="chat-msg ${m.role}"><div class="chat-bubble ${m.role}">${escapeHtml(m.content)}</div></div>`
       )
-      .join('') + (chatLoading ? '<div class="loading-text">思考中…</div>' : '');
+      .join('') + (chatLoading ? '<div class="loading-text">思考中…（首次约 15–30 秒，请稍候）</div>' : '');
     box.scrollTop = box.scrollHeight;
   }
 
@@ -435,8 +455,8 @@
         '你是一个对话式 AI 助手，正在帮一位学生做购买决策。可以追问、分析利弊、给出权衡建议。回答自然、有条理，鼓励对方继续追问。用中文。'
       );
       chatMessages.push({ role: 'assistant', content: reply });
-    } catch {
-      chatMessages.push({ role: 'assistant', content: '（请求出错了，请重试）' });
+    } catch (e) {
+      chatMessages.push({ role: 'assistant', content: formatAiError(e) });
     }
     chatLoading = false;
     renderChatMessages();
@@ -454,7 +474,7 @@
     placeholder.style.display = 'none';
     resultEl.style.display = 'block';
     searchLoading = true;
-    resultEl.innerHTML = '<div class="loading-text">检索中…</div>';
+    resultEl.innerHTML = '<div class="loading-text">检索中…（首次约 15–30 秒，请稍候）</div>';
 
     if (!state.claudeAvailable) {
       resultEl.textContent =
@@ -476,8 +496,8 @@
         '你是一个 AI 搜索引擎，特点是：一次性给出简洁、客观、带信息来源的答案摘要，不与用户多轮对话。用中文。'
       );
       resultEl.textContent = reply;
-    } catch {
-      resultEl.textContent = '（请求出错了，请重试）';
+    } catch (e) {
+      resultEl.textContent = formatAiError(e);
     }
     searchLoading = false;
   }
