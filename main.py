@@ -79,6 +79,7 @@ class SurveyClaudeRequest(BaseModel):
 class SurveySubmitPayload(BaseModel):
     sessionId: str
     submittedAt: str
+    locale: Optional[str] = None
     part1: Dict[str, Any]
     part2: Dict[str, Any]
     part3: Dict[str, Any]

@@ -8,15 +8,14 @@
     <meta name="robots" content="noindex, nofollow">
     <link rel="stylesheet" href="survey.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body class="survey-page">
     <header class="survey-header">
-        <span class="survey-header-title">AI 辅助决策行为调查</span>
+        <span class="survey-header-title" id="header-title">AI 辅助决策行为调查</span>
+        <button type="button" class="lang-toggle" id="lang-toggle" aria-label="Switch to English">EN</button>
     </header>
 
     <main class="survey-wrap" id="survey-root">
-        <!-- Progress -->
         <div class="survey-progress" id="progress-bar">
             <div class="progress-step active" data-step="0">开始</div>
             <div class="progress-step" data-step="1">基本信息</div>
@@ -25,84 +24,74 @@
             <div class="progress-step" data-step="4">完成</div>
         </div>
 
-        <!-- Step 0: Welcome -->
         <section class="survey-section active" id="step-0">
-            <div class="survey-label">AI 辅助决策行为调查</div>
-            <h1 class="survey-title">欢迎参与本次匿名问卷</h1>
-            <p class="survey-desc">
-                本研究关注年轻群体（学生）如何使用 AI 辅助日常决策。问卷约需 20–25 分钟，包含基本信息、AI 使用习惯，以及<strong>三个</strong>真实的 AI 实操决策任务。
-            </p>
-            <div class="privacy-note">
-                <strong>隐私声明：</strong>本问卷完全匿名，不收集姓名、学号或任何可识别身份的信息。数据仅用于学术研究，不会对外公开个体回答。
-            </div>
+            <div class="survey-label" id="step0-label">AI 辅助决策行为调查</div>
+            <h1 class="survey-title" id="step0-title">欢迎参与本次匿名问卷</h1>
+            <p class="survey-desc" id="step0-desc"></p>
+            <div class="privacy-note" id="privacy-note"></div>
             <div class="survey-actions">
                 <button type="button" class="btn-survey btn-primary" id="btn-start">开始填写 →</button>
             </div>
         </section>
 
-        <!-- Step 1: Part 1 Demographics -->
         <section class="survey-section" id="step-1">
-            <div class="survey-label">第一部分 · 基本信息</div>
-            <h2 class="survey-title">关于你</h2>
+            <div class="survey-label" id="step1-label">第一部分 · 基本信息</div>
+            <h2 class="survey-title" id="step1-title">关于你</h2>
             <div id="part1-questions"></div>
             <p class="validation-error" id="part1-error">请完成所有必答题。</p>
             <div class="survey-actions">
-                <button type="button" class="btn-survey btn-secondary" data-back="0">← 返回</button>
+                <button type="button" class="btn-survey btn-secondary" data-back="0" id="btn-part1-back">← 返回</button>
                 <button type="button" class="btn-survey btn-primary" id="btn-part1-next">下一步 →</button>
             </div>
         </section>
 
-        <!-- Step 2: Part 2 AI Usage -->
         <section class="survey-section" id="step-2">
-            <div class="survey-label">第二部分 · AI 使用情况</div>
-            <h2 class="survey-title">你如何使用 AI</h2>
+            <div class="survey-label" id="step2-label">第二部分 · AI 使用情况</div>
+            <h2 class="survey-title" id="step2-title">你如何使用 AI</h2>
             <div id="part2-questions"></div>
             <p class="validation-error" id="part2-error">请完成所有必答题。</p>
             <div class="survey-actions">
-                <button type="button" class="btn-survey btn-secondary" data-back="1">← 返回</button>
+                <button type="button" class="btn-survey btn-secondary" data-back="1" id="btn-part2-back">← 返回</button>
                 <button type="button" class="btn-survey btn-primary" id="btn-part2-next">下一步 →</button>
             </div>
         </section>
 
-        <!-- Step 3: Part 3 Intro -->
         <section class="survey-section" id="step-3-intro">
-            <div class="survey-label">第三部分 · 实操任务</div>
-            <h2 class="survey-title">两种 AI，两种用法</h2>
-            <p class="survey-desc">接下来你会完成<strong>三个决策任务</strong>，每个任务都用下面两种 AI 模式。请先了解它们的区别：</p>
+            <div class="survey-label" id="step3-label">第三部分 · 实操任务</div>
+            <h2 class="survey-title" id="step3-title">两种 AI，两种用法</h2>
+            <p class="survey-desc" id="step3-desc"></p>
             <div class="concept-cards">
                 <div class="concept-card forest">
-                    <h4>A. 对话式 AI（Copilot）</h4>
-                    <p>像 ChatGPT 网页版、Claude、豆包——你和它来回聊、追问、让它帮你分析利弊。</p>
+                    <h4 id="concept-chat-title">A. 对话式 AI（Copilot）</h4>
+                    <p id="concept-chat-desc"></p>
                 </div>
                 <div class="concept-card clay">
-                    <h4>B. AI 搜索</h4>
-                    <p>像 Perplexity、秘塔、夸克 AI——你输入一个问题，它快速给你带来源的答案摘要。</p>
+                    <h4 id="concept-search-title">B. AI 搜索</h4>
+                    <p id="concept-search-desc"></p>
                 </div>
             </div>
             <div class="task-overview" id="task-overview"></div>
             <div id="api-warning" class="api-warning" style="display:none"></div>
             <div class="survey-actions">
-                <button type="button" class="btn-survey btn-secondary" data-back="2">← 返回</button>
+                <button type="button" class="btn-survey btn-secondary" data-back="2" id="btn-part3-back">← 返回</button>
                 <button type="button" class="btn-survey btn-primary" id="btn-start-task">开始第一个任务 →</button>
             </div>
         </section>
 
-        <!-- Step 3: Part 3 Task -->
         <section class="survey-section" id="step-3-task">
             <div class="survey-wrap wide" style="padding:0;max-width:1040px">
                 <div class="task-progress-bar" id="task-progress-bar">任务 1 / 3</div>
                 <div class="task-banner">
-                    <div class="task-label">你的任务</div>
+                    <div class="task-label" id="task-banner-label">你的任务</div>
                     <p id="task-banner-text"></p>
                 </div>
                 <div id="api-warning-task" class="api-warning" style="display:none"></div>
                 <div class="panels-row">
-                    <!-- Chat panel -->
                     <div class="ai-panel forest" id="chat-panel">
                         <div class="panel-header forest">
                             <div>
-                                <h4>对话式 AI</h4>
-                                <div class="panel-sub">来回对话 · 可追问 · 帮你权衡</div>
+                                <h4 id="chat-title">对话式 AI</h4>
+                                <div class="panel-sub" id="chat-sub">来回对话 · 可追问 · 帮你权衡</div>
                             </div>
                             <div class="panel-stats" id="chat-stats">0s · 0 轮</div>
                         </div>
@@ -114,12 +103,11 @@
                             <button type="button" class="forest" id="chat-send">发送</button>
                         </div>
                     </div>
-                    <!-- Search panel -->
                     <div class="ai-panel clay" id="search-panel">
                         <div class="panel-header clay">
                             <div>
-                                <h4>AI 搜索</h4>
-                                <div class="panel-sub">一问一答 · 带来源 · 快速摘要</div>
+                                <h4 id="search-title">AI 搜索</h4>
+                                <div class="panel-sub" id="search-sub">一问一答 · 带来源 · 快速摘要</div>
                             </div>
                             <div class="panel-stats" id="search-stats">0s · 0 次</div>
                         </div>
@@ -135,9 +123,9 @@
                 </div>
 
                 <div class="post-task-form">
-                    <h3>用完之后，告诉我们：</h3>
+                    <h3 id="post-task-title">用完之后，告诉我们：</h3>
                     <div class="form-group">
-                        <div class="form-label">1. 这次任务里，你觉得哪个工具更帮到你？</div>
+                        <div class="form-label" id="preferred-q">1. 这次任务里，你觉得哪个工具更帮到你？</div>
                         <div class="option-list horizontal" id="preferred-options"></div>
                     </div>
                     <div class="form-group">
@@ -145,7 +133,7 @@
                         <input type="text" class="text-input" id="decision-input" placeholder="">
                     </div>
                     <div class="form-group">
-                        <div class="form-label">3. 为什么这么选？（说说哪个工具帮你想清楚了）</div>
+                        <div class="form-label" id="reason-q">3. 为什么这么选？</div>
                         <textarea class="text-input" id="reason-input" rows="3"></textarea>
                     </div>
                     <p class="validation-error" id="part3-error">请完成以上三题后再提交。</p>
@@ -154,14 +142,13 @@
             </div>
         </section>
 
-        <!-- Step 4: Complete -->
         <section class="survey-section" id="step-4">
-            <div class="survey-label">感谢参与</div>
-            <h2 class="survey-title">问卷已完成 ✓</h2>
+            <div class="survey-label" id="step4-label">感谢参与</div>
+            <h2 class="survey-title" id="step4-title">问卷已完成 ✓</h2>
             <p class="upload-status info" id="upload-status"></p>
             <div class="summary-box" id="summary-box"></div>
             <div id="entries-section" style="display:none">
-                <div class="entries-title">输入内容明细（研究分析用）</div>
+                <div class="entries-title" id="entries-title">输入内容明细（研究分析用）</div>
                 <div class="summary-box" id="entries-box"></div>
             </div>
             <div class="survey-actions">
@@ -171,6 +158,7 @@
     </main>
 
     <script src="config.js"></script>
+    <script src="survey-i18n.js"></script>
     <script src="survey.js"></script>
 </body>
 </html>

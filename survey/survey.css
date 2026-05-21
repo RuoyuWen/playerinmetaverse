@@ -37,13 +37,42 @@ body.survey-page {
   border-bottom: 1px solid var(--line);
   backdrop-filter: blur(16px);
   padding: 0.85rem 1.5rem;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .survey-header-title {
   font-size: 0.85rem;
   letter-spacing: 0.12em;
   color: var(--ink-soft);
+}
+
+.lang-toggle {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  border: 1.5px solid var(--forest);
+  background: var(--white);
+  color: var(--forest);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  letter-spacing: 0.05em;
+  transition: background 0.2s, color 0.2s;
+}
+
+.lang-toggle:hover {
+  background: var(--forest);
+  color: var(--white);
+}
+
+html[lang="en"] body.survey-page {
+  font-family: "Georgia", "Times New Roman", "Inter", serif;
 }
 
 .survey-wrap {
