@@ -10,7 +10,7 @@
   --forest-dim: #C8D5C2;
   --line: #DAD2C2;
   --white: #FCFAF5;
-  --nav-offset: 72px;
+  --nav-offset: 56px;
 }
 
 * {
@@ -25,24 +25,23 @@ body.survey-page {
   min-height: 100vh;
 }
 
-body.survey-page .navbar {
+.survey-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
   background: rgba(244, 239, 230, 0.95);
   border-bottom: 1px solid var(--line);
   backdrop-filter: blur(16px);
+  padding: 0.85rem 1.5rem;
+  text-align: center;
 }
 
-body.survey-page .nav-logo a,
-body.survey-page .nav-link {
-  color: var(--ink);
-}
-
-body.survey-page .nav-link:hover,
-body.survey-page .nav-link.active {
-  color: var(--forest);
-}
-
-body.survey-page .bar {
-  background: var(--ink);
+.survey-header-title {
+  font-size: 0.85rem;
+  letter-spacing: 0.12em;
+  color: var(--ink-soft);
 }
 
 .survey-wrap {

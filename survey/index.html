@@ -3,34 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 辅助决策调查 | Ruoyu Wen</title>
+    <title>AI 辅助决策调查</title>
     <meta name="description" content="匿名在线问卷：研究年轻群体如何使用 AI 辅助决策。">
+    <meta name="robots" content="noindex, nofollow">
     <link rel="stylesheet" href="../styles.css">
     <link rel="stylesheet" href="survey.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body class="page-transition survey-page">
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="nav-logo">
-                <a href="../index.html">Ruoyu Wen</a>
-            </div>
-            <div class="nav-menu" id="nav-menu">
-                <a href="../index.html" class="nav-link">Home</a>
-                <a href="../about.html" class="nav-link">About</a>
-                <a href="../education.html" class="nav-link">Education</a>
-                <a href="../research.html" class="nav-link">Research</a>
-                <a href="../experience.html" class="nav-link">Experience</a>
-                <a href="index.html" class="nav-link active">Survey</a>
-            </div>
-            <div class="nav-toggle" id="nav-toggle">
-                <span class="bar"></span>
-                <span class="bar"></span>
-                <span class="bar"></span>
-            </div>
-        </div>
-    </nav>
+    <header class="survey-header">
+        <span class="survey-header-title">AI 辅助决策行为调查</span>
+    </header>
 
     <main class="survey-wrap" id="survey-root">
         <!-- Progress -->
@@ -192,12 +176,10 @@
             </div>
             <div class="survey-actions">
                 <button type="button" class="btn-survey btn-secondary" id="btn-download">↓ 下载本次数据 (JSON)</button>
-                <a href="../index.html" class="btn-survey btn-primary" style="text-decoration:none;display:inline-block">返回首页</a>
             </div>
         </section>
     </main>
 
-    <script src="../script.js"></script>
     <script src="config.js"></script>
     <script src="survey.js"></script>
 </body>
