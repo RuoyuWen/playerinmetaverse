@@ -37,6 +37,7 @@ temp/
 
 # 其他不需要的目录
 node_modules/
+survey_submissions/
 *.zip
 *.rar
 *.7z

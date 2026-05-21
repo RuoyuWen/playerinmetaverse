@@ -3,12 +3,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 import uvicorn
 import os
 import logging
 from datetime import datetime
 import json
+import httpx
+from pathlib import Path
 
 # 配置日志记录
 logging.basicConfig(
@@ -67,6 +69,110 @@ class ChatResponse(BaseModel):
     response: str
     session_id: str
     timestamp: str
+
+class SurveyClaudeRequest(BaseModel):
+    messages: List[Dict[str, str]]
+    system: str
+
+class SurveySubmitPayload(BaseModel):
+    sessionId: str
+    submittedAt: str
+    part1: Dict[str, Any]
+    part2: Dict[str, Any]
+    part3: Dict[str, Any]
+
+SURVEY_DATA_DIR = Path(os.getenv("SURVEY_DATA_DIR", "survey_submissions"))
+
+# Survey AI — anthropic (direct) or relay (薛丁猫 OpenAI-compatible gateway)
+SURVEY_AI_PROVIDER = os.getenv("SURVEY_AI_PROVIDER", "auto").lower()  # auto | anthropic | relay
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
+ANTHROPIC_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-20250514")
+RELAY_API_KEY = os.getenv("RELAY_API_KEY", "") or os.getenv("XUEDINGMAO_API_KEY", "")
+RELAY_BASE_URL = os.getenv("RELAY_BASE_URL", "https://xuedingmao.top/v1")
+RELAY_MODEL = os.getenv("RELAY_MODEL", "gpt-5.4-mini")
+SURVEY_MAX_TOKENS = int(os.getenv("SURVEY_MAX_TOKENS", "1000"))
+
+
+def _relay_chat_completions_url() -> str:
+    """Normalize 薛丁猫 base URL to OpenAI chat/completions endpoint."""
+    base = RELAY_BASE_URL.rstrip("/")
+    if base.endswith("/chat/completions"):
+        return base
+    if base.endswith("/v1"):
+        return f"{base}/chat/completions"
+    return f"{base}/v1/chat/completions"
+
+
+def _resolve_survey_provider() -> Optional[str]:
+    """Pick provider: explicit env, or auto (relay first, then anthropic)."""
+    if SURVEY_AI_PROVIDER == "anthropic":
+        return "anthropic" if ANTHROPIC_API_KEY else None
+    if SURVEY_AI_PROVIDER == "relay":
+        return "relay" if RELAY_API_KEY else None
+    if RELAY_API_KEY:
+        return "relay"
+    if ANTHROPIC_API_KEY:
+        return "anthropic"
+    return None
+
+
+def _survey_model(provider: str) -> str:
+    return RELAY_MODEL if provider == "relay" else ANTHROPIC_MODEL
+
+
+async def _call_anthropic(messages: List[Dict[str, str]], system: str) -> str:
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        response = await client.post(
+            "https://api.anthropic.com/v1/messages",
+            headers={
+                "Content-Type": "application/json",
+                "x-api-key": ANTHROPIC_API_KEY,
+                "anthropic-version": "2023-06-01",
+            },
+            json={
+                "model": ANTHROPIC_MODEL,
+                "max_tokens": SURVEY_MAX_TOKENS,
+                "system": system,
+                "messages": messages,
+            },
+        )
+    if response.status_code != 200:
+        logger.error(f"Anthropic API error: {response.status_code} {response.text}")
+        raise HTTPException(status_code=502, detail="AI service temporarily unavailable")
+    data = response.json()
+    return "".join(
+        block.get("text", "")
+        for block in data.get("content", [])
+        if block.get("type") == "text"
+    )
+
+
+async def _call_relay(messages: List[Dict[str, str]], system: str) -> str:
+    """薛丁猫中转 — OpenAI Chat Completions 格式。"""
+    openai_messages: List[Dict[str, str]] = [{"role": "system", "content": system}]
+    openai_messages.extend(messages)
+
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        response = await client.post(
+            _relay_chat_completions_url(),
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {RELAY_API_KEY}",
+            },
+            json={
+                "model": RELAY_MODEL,
+                "messages": openai_messages,
+                "max_tokens": SURVEY_MAX_TOKENS,
+            },
+        )
+    if response.status_code != 200:
+        logger.error(f"Relay API error: {response.status_code} {response.text}")
+        raise HTTPException(status_code=502, detail="AI relay service temporarily unavailable")
+    data = response.json()
+    choices = data.get("choices") or []
+    if not choices:
+        raise HTTPException(status_code=502, detail="AI relay returned empty response")
+    return (choices[0].get("message") or {}).get("content") or ""
 
 @app.get("/", response_class=HTMLResponse)
 async def root():
@@ -391,6 +497,56 @@ async def chat(request: ChatRequest):
         return response
     except Exception as e:
         logger.error(f"Chat error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/survey/config")
+async def survey_config():
+    """Survey frontend configuration."""
+    provider = _resolve_survey_provider()
+    available = provider is not None
+    return {
+        "claudeAvailable": available,
+        "aiAvailable": available,
+        "provider": provider,
+        "model": _survey_model(provider) if provider else None,
+        "submitAvailable": True,
+    }
+
+@app.post("/api/survey/claude")
+async def survey_claude(request: SurveyClaudeRequest):
+    """Proxy survey AI — Anthropic direct or 薛丁猫 relay (key stays server-side)."""
+    provider = _resolve_survey_provider()
+    if not provider:
+        raise HTTPException(
+            status_code=503,
+            detail="Survey AI not configured (set RELAY_API_KEY or ANTHROPIC_API_KEY)",
+        )
+    try:
+        if provider == "relay":
+            text = await _call_relay(request.messages, request.system)
+        else:
+            text = await _call_anthropic(request.messages, request.system)
+        return {"text": text, "provider": provider, "model": _survey_model(provider)}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Survey AI proxy error ({provider}): {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/survey/submit")
+async def survey_submit(payload: SurveySubmitPayload):
+    """Store anonymous survey responses as JSON files."""
+    try:
+        SURVEY_DATA_DIR.mkdir(parents=True, exist_ok=True)
+        safe_id = "".join(c for c in payload.sessionId if c.isalnum() or c in "-_")
+        filename = f"{safe_id or 'unknown'}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        filepath = SURVEY_DATA_DIR / filename
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump(payload.model_dump(), f, ensure_ascii=False, indent=2)
+        logger.info(f"Survey submitted: {filename}")
+        return {"ok": True, "filename": filename}
+    except Exception as e:
+        logger.error(f"Survey submit error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/upload-documents")

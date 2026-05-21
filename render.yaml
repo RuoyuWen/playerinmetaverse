@@ -10,4 +10,14 @@ services:
         generateValue: true
       - key: ENVIRONMENT
         value: production
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: SURVEY_AI_PROVIDER
+        value: auto
+      - key: RELAY_API_KEY
+        sync: false
+      - key: RELAY_BASE_URL
+        value: https://xuedingmao.top/v1
+      - key: RELAY_MODEL
+        value: gpt-5.4-mini
     autoDeploy: true
