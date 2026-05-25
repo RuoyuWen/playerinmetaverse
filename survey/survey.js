@@ -123,16 +123,7 @@
     $('search-sub').textContent = t('searchSub');
     $('search-input').placeholder = t('searchInputPh');
     $('search-btn').textContent = t('searchBtn');
-    $('post-task-title').textContent = t('postTaskTitle');
-    $('preferred-q').textContent = t('preferredQ');
-    $('trust-chat-q').textContent = t('trustChatQ');
-    $('trust-search-q').textContent = t('trustSearchQ');
-    $('trust-chat-low').textContent = t('trustLow');
-    $('trust-chat-high').textContent = t('trustHigh');
-    $('trust-search-low').textContent = t('trustLow');
-    $('trust-search-high').textContent = t('trustHigh');
-    $('reason-q').textContent = t('reasonQ');
-    $('part3-error').textContent = t('part3Error');
+    applyPostTaskFormUI();
 
     $('step4-label').textContent = t('completeLabel');
     $('step4-title').textContent = t('completeTitle');
@@ -142,6 +133,38 @@
     renderTaskOverview();
     if (state.currentTask) applyTaskUI(false);
     updatePanelStats();
+  }
+
+  function applyPostTaskFormUI() {
+    const setText = (id, key) => {
+      const el = $(id);
+      if (el) el.textContent = t(key);
+    };
+    setText('post-task-title', 'postTaskTitle');
+    setText('preferred-q', 'preferredQ');
+    setText('trust-chat-q', 'trustChatQ');
+    setText('trust-search-q', 'trustSearchQ');
+    setText('trust-chat-low', 'trustLow');
+    setText('trust-chat-high', 'trustHigh');
+    setText('trust-search-low', 'trustLow');
+    setText('trust-search-high', 'trustHigh');
+    setText('reason-q', 'reasonQ');
+    setText('part3-error', 'part3Error');
+
+    const def = getTaskDef(state.currentTaskIndex);
+    if (def) {
+      const decisionLabel = $('decision-label');
+      if (decisionLabel) decisionLabel.textContent = '4. ' + def.decisionLabel;
+      const decisionInput = $('decision-input');
+      if (decisionInput) decisionInput.placeholder = def.decisionPlaceholder;
+    }
+
+    const submitBtn = $('btn-submit-task');
+    if (submitBtn) {
+      const tasks = getTasks();
+      submitBtn.textContent =
+        state.currentTaskIndex < tasks.length - 1 ? t('btnNextTask') : t('btnSubmitAll');
+    }
   }
 
   function createTaskLog(taskDef) {
@@ -177,10 +200,7 @@
     const tasks = getTasks();
     $('task-progress-bar').textContent = `${t('taskN')} ${state.currentTaskIndex + 1} / ${tasks.length} · ${def.title}`;
     $('task-banner-text').textContent = def.scenario;
-    $('decision-label').textContent = '4. ' + def.decisionLabel;
-    $('decision-input').placeholder = def.decisionPlaceholder;
-    $('btn-submit-task').textContent =
-      state.currentTaskIndex < tasks.length - 1 ? t('btnNextTask') : t('btnSubmitAll');
+    applyPostTaskFormUI();
     if (resetInputs) {
       $('decision-input').value = '';
       $('reason-input').value = '';
@@ -733,7 +753,11 @@
     applyStaticUI();
     renderQuestions('part1-questions', I18n.getPart1(), 'part1');
     renderQuestions('part2-questions', I18n.getPart2(), 'part2');
-    if (state.currentTask) updateTrustScaleUI();
+    applyPostTaskFormUI();
+    if (state.currentTask) {
+      initPreferredChips();
+      updateTrustScaleUI();
+    }
     checkApiConfig();
   }
 
