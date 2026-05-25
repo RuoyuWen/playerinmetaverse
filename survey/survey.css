@@ -597,7 +597,22 @@ textarea.text-input {
 }
 
 /* Post-task form */
-.post-task-form {
+.trust-scale-hint {
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  margin: -0.35rem 0 0.5rem;
+}
+
+.post-task-form .scale-row {
+  margin-bottom: 0.25rem;
+}
+
+.post-task-form .scale-row .chip.clay.selected {
+  border-color: var(--clay);
+  background: var(--clay);
+  color: var(--white);
+}
+
   background: var(--white);
   border: 1px solid var(--line);
   border-radius: 12px;

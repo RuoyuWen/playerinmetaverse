@@ -45,8 +45,10 @@
       searchBtn: '搜索',
       postTaskTitle: '用完之后，告诉我们：',
       preferredQ: '1. 这次任务里，你觉得哪个工具更帮到你？',
-      reasonQ: '3. 为什么这么选？（说说哪个工具帮你想清楚了）',
-      part3Error: '请完成以上三题后再提交。',
+      trustChatQ: '2. 你对「对话式 AI」回答的信任度？（1 完全不信 — 5 完全信任）',
+      trustSearchQ: '3. 你对「AI 搜索」回答的信任度？（1 完全不信 — 5 完全信任）',
+      reasonQ: '5. 为什么这么选？（说说哪个工具帮你想清楚了）',
+      part3Error: '请完成以上所有问题后再提交。',
       btnNextTask: '完成此项，继续下一项 →',
       btnSubmitAll: '提交全部问卷 ✓',
       completeLabel: '感谢参与',
@@ -76,6 +78,8 @@
       summarySearchCount: '搜索次数',
       summaryDuration: '耗时',
       summaryPreferred: '更偏好',
+      summaryTrustChat: '对话式 AI 信任度',
+      summaryTrustSearch: 'AI 搜索信任度',
       summaryDecision: '最终决定',
       summaryReason: '理由',
       toolChat: '对话式 AI',
@@ -136,8 +140,10 @@
       searchBtn: 'Search',
       postTaskTitle: 'After using both tools, tell us:',
       preferredQ: '1. Which tool helped you more in this task?',
-      reasonQ: '3. Why did you choose that? (Which tool helped you think it through?)',
-      part3Error: 'Please complete all three questions before continuing.',
+      trustChatQ: '2. How much do you trust the conversational AI responses? (1 = not at all — 5 = completely)',
+      trustSearchQ: '3. How much do you trust the AI search responses? (1 = not at all — 5 = completely)',
+      reasonQ: '5. Why did you choose that? (Which tool helped you think it through?)',
+      part3Error: 'Please complete all questions before continuing.',
       btnNextTask: 'Finish & next task →',
       btnSubmitAll: 'Submit survey ✓',
       completeLabel: 'Thank you',
@@ -167,6 +173,8 @@
       summarySearchCount: 'Search queries',
       summaryDuration: 'Duration',
       summaryPreferred: 'Preferred tool',
+      summaryTrustChat: 'Trust in conversational AI',
+      summaryTrustSearch: 'Trust in AI search',
       summaryDecision: 'Final decision',
       summaryReason: 'Reason',
       toolChat: 'Conversational AI',
@@ -363,7 +371,7 @@
           '试着问我，比如：<br>「6000 预算，写代码 + 剪视频，买 Mac 还是 Windows？」<br>然后你可以继续追问细节。',
         searchPlaceholder:
           '试着搜：<br>「6000 元价位 适合编程剪辑的笔记本推荐」<br>它会给你带来源的答案摘要。',
-        decisionLabel: '2. 你最终倾向于买什么？',
+        decisionLabel: '你最终倾向于买什么？',
         decisionPlaceholder: '例如：MacBook Air M3 / 某款 Windows 轻薄本…',
       },
       en: {
@@ -376,7 +384,7 @@
           'Try asking:<br>“Budget ~6000 CNY, coding + light video — Mac or Windows?”<br>Then follow up with details.',
         searchPlaceholder:
           'Try searching:<br>“Best laptops around 6000 CNY for coding and video editing”',
-        decisionLabel: '2. What would you buy?',
+        decisionLabel: 'What would you buy?',
         decisionPlaceholder: 'e.g. MacBook Air M3 / a Windows ultrabook…',
       },
     },
@@ -391,7 +399,7 @@
         chatPlaceholder:
           '试着聊：<br>「我比较怕考试，又想学点实用的，心理学和编程入门怎么选？」<br>然后继续说说你的顾虑。',
         searchPlaceholder: '试着搜：<br>「大学通识课 心理学 vs 编程入门 哪个好过 学到什么」',
-        decisionLabel: '2. 你最终倾向于选哪门课？',
+        decisionLabel: '你最终倾向于选哪门课？',
         decisionPlaceholder: '例如：心理学 / 编程入门…',
       },
       en: {
@@ -404,7 +412,7 @@
           'Try:<br>“I fear exams but want something practical — Psychology vs Intro to Programming?”<br>Share your concerns.',
         searchPlaceholder:
           'Try searching:<br>“Psychology vs intro programming elective which is easier what do you learn”',
-        decisionLabel: '2. Which course would you pick?',
+        decisionLabel: 'Which course would you pick?',
         decisionPlaceholder: 'e.g. Psychology / Intro to Programming…',
       },
     },
@@ -420,7 +428,7 @@
           '试着聊：<br>「大厂 offer 通勤远、方向不对口，小公司还在等，我该怎么选？」<br>把你的纠结和顾虑都说出来。',
         searchPlaceholder:
           '试着搜：<br>「实习选择 大厂品牌 vs 小公司对口味 通勤成本 怎么权衡」',
-        decisionLabel: '2. 你最终倾向于怎么做？',
+        decisionLabel: '你最终倾向于怎么做？',
         decisionPlaceholder: '例如：先接大厂 / 等小公司 / 两家都谈再决定…',
       },
       en: {
@@ -433,7 +441,7 @@
           'Try:<br>“Big-company offer with long commute vs waiting on a smaller fit — what should I do?”<br>Share your trade-offs.',
         searchPlaceholder:
           'Try searching:<br>“internship choice big company brand vs startup fit commute opportunity cost”',
-        decisionLabel: '2. What would you do?',
+        decisionLabel: 'What would you do?',
         decisionPlaceholder: 'e.g. Accept big co. / wait / negotiate both…',
       },
     },

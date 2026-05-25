@@ -125,6 +125,8 @@
     $('search-btn').textContent = t('searchBtn');
     $('post-task-title').textContent = t('postTaskTitle');
     $('preferred-q').textContent = t('preferredQ');
+    $('trust-chat-q').textContent = t('trustChatQ');
+    $('trust-search-q').textContent = t('trustSearchQ');
     $('reason-q').textContent = t('reasonQ');
     $('part3-error').textContent = t('part3Error');
 
@@ -149,6 +151,8 @@
       entries: [],
       startedAt: Date.now(),
       preferred: '',
+      trustChat: null,
+      trustSearch: null,
       decision: '',
       reason: '',
     };
@@ -169,7 +173,7 @@
     const tasks = getTasks();
     $('task-progress-bar').textContent = `${t('taskN')} ${state.currentTaskIndex + 1} / ${tasks.length} · ${def.title}`;
     $('task-banner-text').textContent = def.scenario;
-    $('decision-label').textContent = def.decisionLabel;
+    $('decision-label').textContent = '4. ' + def.decisionLabel;
     $('decision-input').placeholder = def.decisionPlaceholder;
     $('btn-submit-task').textContent =
       state.currentTaskIndex < tasks.length - 1 ? t('btnNextTask') : t('btnSubmitAll');
@@ -178,6 +182,7 @@
       $('reason-input').value = '';
       $('part3-error').classList.remove('show');
       clearPreferredSelection();
+      clearTrustSelection();
       resetPanels();
     } else {
       const ph = $('search-placeholder');
@@ -185,6 +190,7 @@
       if (chatMessages.length === 0) renderChatMessages();
     }
     initPreferredChips();
+    initTrustScales();
   }
 
   function renderTaskUI() {
@@ -193,6 +199,16 @@
 
   function clearPreferredSelection() {
     document.querySelectorAll('#preferred-options .chip').forEach((c) => c.classList.remove('selected'));
+  }
+
+  function clearTrustSelection() {
+    document.querySelectorAll('#trust-chat-options .chip, #trust-search-options .chip').forEach((c) => {
+      c.classList.remove('selected');
+    });
+    if (state.currentTask) {
+      state.currentTask.trustChat = null;
+      state.currentTask.trustSearch = null;
+    }
   }
 
   function resetPanels() {
@@ -568,7 +584,7 @@
     const log = state.currentTask;
     log.decision = $('decision-input').value.trim();
     log.reason = $('reason-input').value.trim();
-    if (!log.preferred || !log.decision || !log.reason) {
+    if (!log.preferred || !log.trustChat || !log.trustSearch || !log.decision || !log.reason) {
       $('part3-error').classList.add('show');
       return false;
     }
@@ -617,6 +633,8 @@
         [t('summarySearchCount'), task.searchQueries],
         [t('summaryDuration'), task.totalSeconds + ' ' + t('summarySeconds')],
         [t('summaryPreferred'), I18n.preferredLabel(task.preferred) || t('dash')],
+        [t('summaryTrustChat'), task.trustChat ?? t('dash')],
+        [t('summaryTrustSearch'), task.trustSearch ?? t('dash')],
         [t('summaryDecision'), task.decision || t('dash')],
         [t('summaryReason'), task.reason || t('dash')],
       ]
@@ -651,6 +669,42 @@
     URL.revokeObjectURL(url);
   }
 
+  function initTrustScales() {
+    const scales = ['1', '2', '3', '4', '5'];
+    const chatVal = state.currentTask?.trustChat;
+    const searchVal = state.currentTask?.trustSearch;
+
+    const chatBox = $('trust-chat-options');
+    chatBox.innerHTML = scales
+      .map(
+        (v) =>
+          `<button type="button" class="chip forest${chatVal === Number(v) ? ' selected' : ''}" data-trust="chat" data-val="${v}">${v}</button>`
+      )
+      .join('');
+    chatBox.querySelectorAll('.chip').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        chatBox.querySelectorAll('.chip').forEach((c) => c.classList.remove('selected'));
+        chip.classList.add('selected');
+        if (state.currentTask) state.currentTask.trustChat = Number(chip.dataset.val);
+      });
+    });
+
+    const searchBox = $('trust-search-options');
+    searchBox.innerHTML = scales
+      .map(
+        (v) =>
+          `<button type="button" class="chip clay${searchVal === Number(v) ? ' selected' : ''}" data-trust="search" data-val="${v}">${v}</button>`
+      )
+      .join('');
+    searchBox.querySelectorAll('.chip').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        searchBox.querySelectorAll('.chip').forEach((c) => c.classList.remove('selected'));
+        chip.classList.add('selected');
+        if (state.currentTask) state.currentTask.trustSearch = Number(chip.dataset.val);
+      });
+    });
+  }
+
   function initPreferredChips() {
     const container = $('preferred-options');
     const current = state.currentTask?.preferred || '';
@@ -675,6 +729,7 @@
     applyStaticUI();
     renderQuestions('part1-questions', I18n.getPart1(), 'part1');
     renderQuestions('part2-questions', I18n.getPart2(), 'part2');
+    if (state.currentTask) initTrustScales();
     checkApiConfig();
   }
 
