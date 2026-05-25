@@ -2,7 +2,7 @@ from fastapi import FastAPI, UploadFile, File, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional, List, Dict, Any
 import uvicorn
 import os
@@ -77,12 +77,11 @@ class SurveyClaudeRequest(BaseModel):
     system: str
 
 class SurveySubmitPayload(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
     sessionId: str
     submittedAt: str
     locale: Optional[str] = None
-    part1: Dict[str, Any]
-    part2: Dict[str, Any]
-    part3: Dict[str, Any]
 
 SURVEY_DATA_DIR = Path(os.getenv("SURVEY_DATA_DIR", "survey_submissions"))
 

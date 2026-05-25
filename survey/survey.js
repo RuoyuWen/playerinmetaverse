@@ -638,56 +638,23 @@
     searchLoading = false;
   }
 
-  function exportTask(task) {
-    const preferred = I18n.preferredMeta(task.preferred);
-    return {
-      taskId: task.taskId,
-      task: task.task,
-      scenario: task.scenario,
-      firstUsed: task.firstUsed,
-      chatTurns: task.chatTurns,
-      searchQueries: task.searchQueries,
-      chatSeconds: task.chatSeconds ?? 0,
-      searchSeconds: task.searchSeconds ?? 0,
-      sequence: [...(task.sequence || [])],
-      entries: [...(task.entries || [])],
-      chatHistory: [...(task.chatHistory || [])],
-      searchHistory: [...(task.searchHistory || [])],
-      totalSeconds: task.totalSeconds ?? 0,
-      preferred: task.preferred,
-      preferredLabel: preferred[I18n.lang] || preferred.zh,
-      preferredOption: preferred,
-      trustChat: task.trustChat,
-      trustSearch: task.trustSearch,
-      decision: task.decision,
-      reason: task.reason,
-      startedAt: new Date(task.startedAt).toISOString(),
-      completedAt: task.completedAt || null,
-    };
-  }
-
   function buildPayload() {
     collectPart1();
     collectPart2();
 
-    const tasks = state.part3.tasks.map(exportTask);
     const locale = state.lang;
+    const tasks = state.part3.tasks.map((task) => I18n.exportTask(task, locale));
 
     return {
-      exportVersion: '2.0',
+      exportVersion: '3.0',
       sessionId,
       submittedAt: new Date().toISOString(),
+      填写语言: locale === 'en' ? 'English' : '中文',
       locale,
-      part1: { ...state.part1 },
-      part1Responses: I18n.exportPart1(state.part1, locale),
-      part2: { ...state.part2 },
-      part2Responses: I18n.exportPart2(state.part2, locale),
-      part3: {
-        startedAt: state.part3.startedAt ? new Date(state.part3.startedAt).toISOString() : null,
-        totalSeconds: state.part3.startedAt ? Math.round((Date.now() - state.part3.startedAt) / 1000) : 0,
-        taskCount: tasks.length,
-        tasks,
-      },
+      基本信息: I18n.exportPart1(state.part1, locale),
+      AI使用情况: I18n.exportPart2(state.part2, locale),
+      实操任务: tasks,
+      第三部分总用时秒: state.part3.startedAt ? Math.round((Date.now() - state.part3.startedAt) / 1000) : 0,
     };
   }
 
@@ -741,13 +708,14 @@
     statusEl.textContent =
       state.uploadState === 'ok' ? t('uploadOk') : state.uploadState === 'fail' ? t('uploadFail') : t('uploadLocal');
 
-    const p3 = payload.part3;
+    const rawTasks = state.part3.tasks;
+    const part3Seconds = payload['第三部分总用时秒'] ?? 0;
     let summaryHtml = `<div class="summary-row"><span>${t('summarySession')}</span><span>${sessionId}</span></div>`;
     summaryHtml += `<div class="summary-row"><span>${t('summaryLocale')}</span><span>${state.lang === 'en' ? 'English' : '中文'}</span></div>`;
-    summaryHtml += `<div class="summary-row"><span>${t('summaryTaskCount')}</span><span>${p3.tasks.length}</span></div>`;
-    summaryHtml += `<div class="summary-row"><span>${t('summaryPart3Time')}</span><span>${p3.totalSeconds} ${t('summarySeconds')}</span></div>`;
+    summaryHtml += `<div class="summary-row"><span>${t('summaryTaskCount')}</span><span>${rawTasks.length}</span></div>`;
+    summaryHtml += `<div class="summary-row"><span>${t('summaryPart3Time')}</span><span>${part3Seconds} ${t('summarySeconds')}</span></div>`;
 
-    p3.tasks.forEach((task, i) => {
+    rawTasks.forEach((task, i) => {
       summaryHtml += `<div class="task-summary-block"><h4>${t('taskN')} ${i + 1}：${escapeHtml(task.task)}</h4>`;
       summaryHtml += [
         [t('summaryFirstUsed'), task.firstUsed === 'chat' ? t('toolChat') : task.firstUsed === 'search' ? t('toolSearch') : t('dash')],
@@ -768,7 +736,7 @@
     });
     $('summary-box').innerHTML = summaryHtml;
 
-    const allEntries = p3.tasks.flatMap((task) => task.entries || []);
+    const allEntries = rawTasks.flatMap((task) => task.entries || []);
     if (allEntries.length > 0) {
       $('entries-section').style.display = 'block';
       $('entries-box').innerHTML = allEntries

@@ -460,29 +460,82 @@
     return { value: opt.value || value, zh: opt.zh, en: opt.en };
   }
 
-  function buildPartResponses(questions, raw, lang) {
-    return questions.map((q) => {
-      const rawValue = raw[q.id];
-      const row = {
-        id: q.id,
-        question: q.label,
-        type: q.type,
-        value: rawValue,
-      };
-      if (q.type === 'checkbox' && Array.isArray(rawValue)) {
-        row.options = rawValue.map((v) => optionMeta(q, v));
-        row.label = rawValue.map((v) => optionMeta(q, v)[lang] || optionMeta(q, v).zh);
-      } else if (q.type === 'scale') {
-        row.label = rawValue;
-      } else {
-        const meta = optionMeta(q, rawValue);
-        row.label = meta[lang] || meta.zh;
-        row.option = meta;
-      }
-      const otherKey = q.id + 'Other';
-      if (raw[otherKey]) row.otherText = raw[otherKey];
-      return row;
+  function formatAnswer(q, raw, lang) {
+    const rawValue = raw[q.id];
+    if (rawValue == null || rawValue === '' || (Array.isArray(rawValue) && rawValue.length === 0)) {
+      return '';
+    }
+    const sep = lang === 'en' ? '; ' : '、';
+    if (q.type === 'checkbox' && Array.isArray(rawValue)) {
+      return rawValue
+        .map((v) => {
+          const meta = optionMeta(q, v);
+          let text = meta[lang] || meta.zh;
+          if (v === OPT.OTHER && raw[q.id + 'Other']) {
+            text += lang === 'en' ? ': ' + raw[q.id + 'Other'] : '：' + raw[q.id + 'Other'];
+          }
+          return text;
+        })
+        .join(sep);
+    }
+    if (q.type === 'scale') {
+      return String(rawValue);
+    }
+    const meta = optionMeta(q, rawValue);
+    return meta[lang] || meta.zh;
+  }
+
+  function buildPartQA(questions, raw, lang) {
+    return questions.map((q) => ({
+      问题: q.label,
+      回答: formatAnswer(q, raw, lang),
+    }));
+  }
+
+  function taskDefById(taskId, lang) {
+    const L = lang === 'en' ? 'en' : 'zh';
+    const t = TASKS[taskId];
+    return t ? { id: taskId, ...t[L] } : null;
+  }
+
+  function buildTaskPostTaskQA(task, lang) {
+    const L = lang === 'en' ? 'en' : 'zh';
+    const s = STR[L];
+    const def = taskDefById(task.taskId, lang);
+    const preferred = PREFERRED.find((p) => p.value === task.preferred);
+    const preferredText = preferred ? preferred[L] : task.preferred || '';
+
+    return [
+      { 问题: s.preferredQ, 回答: preferredText },
+      { 问题: s.trustChatQ, 回答: task.trustChat != null ? String(task.trustChat) : '' },
+      { 问题: s.trustSearchQ, 回答: task.trustSearch != null ? String(task.trustSearch) : '' },
+      { 问题: '4. ' + (def?.decisionLabel || ''), 回答: task.decision || '' },
+      { 问题: s.reasonQ, 回答: task.reason || '' },
+    ];
+  }
+
+  function formatToolName(tool, lang) {
+    return tool === 'chat' ? STR[lang === 'en' ? 'en' : 'zh'].toolChat : STR[lang === 'en' ? 'en' : 'zh'].toolSearch;
+  }
+
+  function buildTaskInteractionSummary(task, lang) {
+    const L = lang === 'en' ? 'en' : 'zh';
+    const userTag = L === 'en' ? 'User' : '用户';
+    const aiTag = L === 'en' ? 'AI' : 'AI';
+    const searchTag = L === 'en' ? 'Search' : '搜索';
+
+    const 对话记录 = (task.chatHistory || []).map((m) => {
+      const role = m.role === 'user' ? userTag : aiTag;
+      const sec = m.t != null ? `@${(m.t / 1000).toFixed(0)}s` : '';
+      return `【${role}${sec}】${m.content}`;
     });
+
+    const 搜索记录 = (task.searchHistory || []).map((s) => {
+      const sec = s.t != null ? `@${(s.t / 1000).toFixed(0)}s` : '';
+      return `【${searchTag}${sec}】问：${s.query}\n答：${s.response}`;
+    });
+
+    return { 对话记录, 搜索记录 };
   }
 
   const api = {
@@ -541,12 +594,41 @@
 
     exportPart1(raw, lang) {
       const L = lang === 'en' ? 'en' : lang === 'zh' ? 'zh' : this.lang;
-      return buildPartResponses(part1Data(L), raw, L);
+      return buildPartQA(part1Data(L), raw, L);
     },
 
     exportPart2(raw, lang) {
       const L = lang === 'en' ? 'en' : lang === 'zh' ? 'zh' : this.lang;
-      return buildPartResponses(part2Data(L), raw, L);
+      return buildPartQA(part2Data(L), raw, L);
+    },
+
+    exportTask(task, lang) {
+      const L = lang === 'en' ? 'en' : lang === 'zh' ? 'zh' : this.lang;
+      const def = taskDefById(task.taskId, L);
+      const interaction = buildTaskInteractionSummary(task, L);
+      const firstUsedText =
+        task.firstUsed === 'chat'
+          ? STR[L].toolChat
+          : task.firstUsed === 'search'
+            ? STR[L].toolSearch
+            : '';
+
+      return {
+        任务标题: task.task || def?.title || task.taskId,
+        任务场景: task.scenario || def?.scenario || '',
+        问卷回答: buildTaskPostTaskQA(task, L),
+        行为摘要: {
+          首次使用工具: firstUsedText,
+          对话轮次: task.chatTurns ?? 0,
+          搜索次数: task.searchQueries ?? 0,
+          对话用时秒: task.chatSeconds ?? 0,
+          搜索用时秒: task.searchSeconds ?? 0,
+          任务总用时秒: task.totalSeconds ?? 0,
+          工具使用顺序: (task.sequence || []).map((tool) => formatToolName(tool, L)),
+        },
+        对话记录: interaction.对话记录,
+        搜索记录: interaction.搜索记录,
+      };
     },
 
     setLang(lang) {
