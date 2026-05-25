@@ -171,11 +171,16 @@
     return {
       taskId: taskDef.id,
       task: taskDef.title,
+      scenario: taskDef.scenario,
       firstUsed: null,
       chatTurns: 0,
       searchQueries: 0,
+      chatSeconds: 0,
+      searchSeconds: 0,
       sequence: [],
       entries: [],
+      chatHistory: [],
+      searchHistory: [],
       startedAt: Date.now(),
       preferred: '',
       trustChat: null,
@@ -562,12 +567,14 @@
     if (!text || chatLoading) return;
     input.value = '';
     setFocused('chat');
-    chatMessages.push({ role: 'user', content: text });
+    const userT = Date.now() - state.currentTask.startedAt;
+    chatMessages.push({ role: 'user', content: text, t: userT });
     onActivity('chat', text);
     renderChatMessages();
 
     if (!state.claudeAvailable) {
-      chatMessages.push({ role: 'assistant', content: t('demoChat') });
+      const demo = t('demoChat');
+      chatMessages.push({ role: 'assistant', content: demo, t: Date.now() - state.currentTask.startedAt });
       renderChatMessages();
       return;
     }
@@ -582,9 +589,13 @@
           .map((m) => ({ role: m.role, content: m.content })),
         def.chatSystem
       );
-      chatMessages.push({ role: 'assistant', content: reply });
+      chatMessages.push({ role: 'assistant', content: reply, t: Date.now() - state.currentTask.startedAt });
     } catch (e) {
-      chatMessages.push({ role: 'assistant', content: formatAiError(e) });
+      chatMessages.push({
+        role: 'assistant',
+        content: formatAiError(e),
+        t: Date.now() - state.currentTask.startedAt,
+      });
     }
     chatLoading = false;
     renderChatMessages();
@@ -603,8 +614,11 @@
     searchLoading = true;
     resultEl.innerHTML = `<div class="loading-text">${t('searching')}</div>`;
 
+    const searchT = Date.now() - state.currentTask.startedAt;
     if (!state.claudeAvailable) {
-      resultEl.textContent = t('demoSearch');
+      const demo = t('demoSearch');
+      resultEl.textContent = demo;
+      state.currentTask.searchHistory.push({ query: text, response: demo, t: searchT });
       searchLoading = false;
       return;
     }
@@ -615,24 +629,61 @@
         t('searchSystem')
       );
       resultEl.textContent = reply;
+      state.currentTask.searchHistory.push({ query: text, response: reply, t: searchT });
     } catch (e) {
-      resultEl.textContent = formatAiError(e);
+      const errText = formatAiError(e);
+      resultEl.textContent = errText;
+      state.currentTask.searchHistory.push({ query: text, response: errText, t: searchT, error: true });
     }
     searchLoading = false;
   }
 
-  function buildPayload() {
-    const tasks = state.part3.tasks.map((task) => ({
-      ...task,
-      totalSeconds: task.totalSeconds ?? Math.round((Date.now() - task.startedAt) / 1000),
-    }));
+  function exportTask(task) {
+    const preferred = I18n.preferredMeta(task.preferred);
     return {
+      taskId: task.taskId,
+      task: task.task,
+      scenario: task.scenario,
+      firstUsed: task.firstUsed,
+      chatTurns: task.chatTurns,
+      searchQueries: task.searchQueries,
+      chatSeconds: task.chatSeconds ?? 0,
+      searchSeconds: task.searchSeconds ?? 0,
+      sequence: [...(task.sequence || [])],
+      entries: [...(task.entries || [])],
+      chatHistory: [...(task.chatHistory || [])],
+      searchHistory: [...(task.searchHistory || [])],
+      totalSeconds: task.totalSeconds ?? 0,
+      preferred: task.preferred,
+      preferredLabel: preferred[I18n.lang] || preferred.zh,
+      preferredOption: preferred,
+      trustChat: task.trustChat,
+      trustSearch: task.trustSearch,
+      decision: task.decision,
+      reason: task.reason,
+      startedAt: new Date(task.startedAt).toISOString(),
+      completedAt: task.completedAt || null,
+    };
+  }
+
+  function buildPayload() {
+    collectPart1();
+    collectPart2();
+
+    const tasks = state.part3.tasks.map(exportTask);
+    const locale = state.lang;
+
+    return {
+      exportVersion: '2.0',
       sessionId,
       submittedAt: new Date().toISOString(),
-      locale: state.lang,
+      locale,
       part1: { ...state.part1 },
+      part1Responses: I18n.exportPart1(state.part1, locale),
       part2: { ...state.part2 },
+      part2Responses: I18n.exportPart2(state.part2, locale),
       part3: {
+        startedAt: state.part3.startedAt ? new Date(state.part3.startedAt).toISOString() : null,
         totalSeconds: state.part3.startedAt ? Math.round((Date.now() - state.part3.startedAt) / 1000) : 0,
         taskCount: tasks.length,
         tasks,
@@ -650,13 +701,24 @@
     }
     $('part3-error').classList.remove('show');
     log.totalSeconds = Math.round((Date.now() - log.startedAt) / 1000);
-    log.task = getTaskDef(state.currentTaskIndex).title;
+    log.chatSeconds = Math.round(chatElapsed / 1000);
+    log.searchSeconds = Math.round(searchElapsed / 1000);
+    log.chatHistory = chatMessages.map((m) => ({
+      role: m.role,
+      content: m.content,
+      t: m.t ?? null,
+    }));
+    log.completedAt = new Date().toISOString();
+    const def = getTaskDef(state.currentTaskIndex);
+    log.task = def.title;
+    log.scenario = def.scenario;
     state.part3.tasks.push({ ...log });
     return true;
   }
 
   async function submitSurvey() {
     const payload = buildPayload();
+    lastPayload = payload;
     try {
       const res = await fetch(backendUrl(cfg.SUBMIT_PATH || '/api/survey/submit'), {
         method: 'POST',
@@ -719,8 +781,11 @@
     }
   }
 
+  let lastPayload = null;
+
   function downloadJSON() {
-    const blob = new Blob([JSON.stringify(buildPayload(), null, 2)], { type: 'application/json' });
+    const payload = lastPayload || buildPayload();
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;

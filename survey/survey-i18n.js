@@ -453,6 +453,38 @@
 
   const TASK_ORDER = ['laptop', 'course', 'internship'];
 
+  function optionMeta(q, value) {
+    if (value == null || value === '') return { value, zh: value, en: value };
+    const opt = q.options?.find((o) => (o.value || o) === value);
+    if (!opt || typeof opt !== 'object') return { value, zh: value, en: value };
+    return { value: opt.value || value, zh: opt.zh, en: opt.en };
+  }
+
+  function buildPartResponses(questions, raw, lang) {
+    return questions.map((q) => {
+      const rawValue = raw[q.id];
+      const row = {
+        id: q.id,
+        question: q.label,
+        type: q.type,
+        value: rawValue,
+      };
+      if (q.type === 'checkbox' && Array.isArray(rawValue)) {
+        row.options = rawValue.map((v) => optionMeta(q, v));
+        row.label = rawValue.map((v) => optionMeta(q, v)[lang] || optionMeta(q, v).zh);
+      } else if (q.type === 'scale') {
+        row.label = rawValue;
+      } else {
+        const meta = optionMeta(q, rawValue);
+        row.label = meta[lang] || meta.zh;
+        row.option = meta;
+      }
+      const otherKey = q.id + 'Other';
+      if (raw[otherKey]) row.otherText = raw[otherKey];
+      return row;
+    });
+  }
+
   const api = {
     lang: 'zh',
     OPT,
@@ -500,6 +532,21 @@
     preferredLabel(value) {
       const p = PREFERRED.find((x) => x.value === value);
       return p ? p[this.lang] : value;
+    },
+
+    preferredMeta(value) {
+      const p = PREFERRED.find((x) => x.value === value);
+      return p ? { value: p.value, zh: p.zh, en: p.en } : { value, zh: value, en: value };
+    },
+
+    exportPart1(raw, lang) {
+      const L = lang === 'en' ? 'en' : lang === 'zh' ? 'zh' : this.lang;
+      return buildPartResponses(part1Data(L), raw, L);
+    },
+
+    exportPart2(raw, lang) {
+      const L = lang === 'en' ? 'en' : lang === 'zh' ? 'zh' : this.lang;
+      return buildPartResponses(part2Data(L), raw, L);
     },
 
     setLang(lang) {
