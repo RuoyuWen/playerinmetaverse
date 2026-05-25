@@ -130,11 +130,31 @@
                     </div>
                     <div class="form-group">
                         <div class="form-label" id="trust-chat-q">2. 你对「对话式 AI」回答的信任度？</div>
-                        <div class="scale-row" id="trust-chat-options"></div>
+                        <div class="scale-row trust-scale" id="trust-chat-options">
+                            <button type="button" class="chip forest" data-val="1">1</button>
+                            <button type="button" class="chip forest" data-val="2">2</button>
+                            <button type="button" class="chip forest" data-val="3">3</button>
+                            <button type="button" class="chip forest" data-val="4">4</button>
+                            <button type="button" class="chip forest" data-val="5">5</button>
+                        </div>
+                        <div class="trust-scale-labels">
+                            <span id="trust-chat-low">完全不信</span>
+                            <span id="trust-chat-high">完全信任</span>
+                        </div>
                     </div>
                     <div class="form-group">
                         <div class="form-label" id="trust-search-q">3. 你对「AI 搜索」回答的信任度？</div>
-                        <div class="scale-row" id="trust-search-options"></div>
+                        <div class="scale-row trust-scale" id="trust-search-options">
+                            <button type="button" class="chip clay" data-val="1">1</button>
+                            <button type="button" class="chip clay" data-val="2">2</button>
+                            <button type="button" class="chip clay" data-val="3">3</button>
+                            <button type="button" class="chip clay" data-val="4">4</button>
+                            <button type="button" class="chip clay" data-val="5">5</button>
+                        </div>
+                        <div class="trust-scale-labels">
+                            <span id="trust-search-low">完全不信</span>
+                            <span id="trust-search-high">完全信任</span>
+                        </div>
                     </div>
                     <div class="form-group">
                         <div class="form-label" id="decision-label">4. 你的最终决定是？</div>

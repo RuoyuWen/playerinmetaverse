@@ -607,6 +607,34 @@ textarea.text-input {
   margin-bottom: 0.25rem;
 }
 
+.trust-scale {
+  margin-top: 0.35rem;
+}
+
+.trust-scale .chip {
+  flex: 1;
+  min-width: 2.75rem;
+  max-width: 4rem;
+  padding: 0.55rem 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.trust-scale-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+  margin-top: 0.35rem;
+  padding: 0 0.15rem;
+}
+
+.post-task-form .scale-row .chip.forest.selected {
+  border-color: var(--forest);
+  background: var(--forest);
+  color: var(--white);
+}
+
 .post-task-form .scale-row .chip.clay.selected {
   border-color: var(--clay);
   background: var(--clay);

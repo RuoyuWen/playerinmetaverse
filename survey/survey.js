@@ -127,6 +127,10 @@
     $('preferred-q').textContent = t('preferredQ');
     $('trust-chat-q').textContent = t('trustChatQ');
     $('trust-search-q').textContent = t('trustSearchQ');
+    $('trust-chat-low').textContent = t('trustLow');
+    $('trust-chat-high').textContent = t('trustHigh');
+    $('trust-search-low').textContent = t('trustLow');
+    $('trust-search-high').textContent = t('trustHigh');
     $('reason-q').textContent = t('reasonQ');
     $('part3-error').textContent = t('part3Error');
 
@@ -190,7 +194,7 @@
       if (chatMessages.length === 0) renderChatMessages();
     }
     initPreferredChips();
-    initTrustScales();
+    updateTrustScaleUI();
   }
 
   function renderTaskUI() {
@@ -209,6 +213,42 @@
       state.currentTask.trustChat = null;
       state.currentTask.trustSearch = null;
     }
+  }
+
+  function updateTrustScaleUI() {
+    const chatVal = state.currentTask?.trustChat;
+    const searchVal = state.currentTask?.trustSearch;
+    document.querySelectorAll('#trust-chat-options .chip').forEach((chip) => {
+      chip.classList.toggle('selected', chatVal === Number(chip.dataset.val));
+    });
+    document.querySelectorAll('#trust-search-options .chip').forEach((chip) => {
+      chip.classList.toggle('selected', searchVal === Number(chip.dataset.val));
+    });
+  }
+
+  function bindTrustScales() {
+    const chatBox = $('trust-chat-options');
+    const searchBox = $('trust-search-options');
+    if (!chatBox || chatBox.dataset.bound) return;
+
+    chatBox.addEventListener('click', (e) => {
+      const chip = e.target.closest('.chip');
+      if (!chip || !chatBox.contains(chip)) return;
+      chatBox.querySelectorAll('.chip').forEach((c) => c.classList.remove('selected'));
+      chip.classList.add('selected');
+      if (state.currentTask) state.currentTask.trustChat = Number(chip.dataset.val);
+    });
+
+    searchBox.addEventListener('click', (e) => {
+      const chip = e.target.closest('.chip');
+      if (!chip || !searchBox.contains(chip)) return;
+      searchBox.querySelectorAll('.chip').forEach((c) => c.classList.remove('selected'));
+      chip.classList.add('selected');
+      if (state.currentTask) state.currentTask.trustSearch = Number(chip.dataset.val);
+    });
+
+    chatBox.dataset.bound = '1';
+    searchBox.dataset.bound = '1';
   }
 
   function resetPanels() {
@@ -669,42 +709,6 @@
     URL.revokeObjectURL(url);
   }
 
-  function initTrustScales() {
-    const scales = ['1', '2', '3', '4', '5'];
-    const chatVal = state.currentTask?.trustChat;
-    const searchVal = state.currentTask?.trustSearch;
-
-    const chatBox = $('trust-chat-options');
-    chatBox.innerHTML = scales
-      .map(
-        (v) =>
-          `<button type="button" class="chip forest${chatVal === Number(v) ? ' selected' : ''}" data-trust="chat" data-val="${v}">${v}</button>`
-      )
-      .join('');
-    chatBox.querySelectorAll('.chip').forEach((chip) => {
-      chip.addEventListener('click', () => {
-        chatBox.querySelectorAll('.chip').forEach((c) => c.classList.remove('selected'));
-        chip.classList.add('selected');
-        if (state.currentTask) state.currentTask.trustChat = Number(chip.dataset.val);
-      });
-    });
-
-    const searchBox = $('trust-search-options');
-    searchBox.innerHTML = scales
-      .map(
-        (v) =>
-          `<button type="button" class="chip clay${searchVal === Number(v) ? ' selected' : ''}" data-trust="search" data-val="${v}">${v}</button>`
-      )
-      .join('');
-    searchBox.querySelectorAll('.chip').forEach((chip) => {
-      chip.addEventListener('click', () => {
-        searchBox.querySelectorAll('.chip').forEach((c) => c.classList.remove('selected'));
-        chip.classList.add('selected');
-        if (state.currentTask) state.currentTask.trustSearch = Number(chip.dataset.val);
-      });
-    });
-  }
-
   function initPreferredChips() {
     const container = $('preferred-options');
     const current = state.currentTask?.preferred || '';
@@ -729,7 +733,7 @@
     applyStaticUI();
     renderQuestions('part1-questions', I18n.getPart1(), 'part1');
     renderQuestions('part2-questions', I18n.getPart2(), 'part2');
-    if (state.currentTask) initTrustScales();
+    if (state.currentTask) updateTrustScaleUI();
     checkApiConfig();
   }
 
@@ -785,6 +789,7 @@
     renderQuestions('part1-questions', I18n.getPart1(), 'part1');
     renderQuestions('part2-questions', I18n.getPart2(), 'part2');
     bindEvents();
+    bindTrustScales();
     checkApiConfig();
   }
 
