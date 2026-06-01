@@ -1,0 +1,2014 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>模拟桌面</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Noto Sans SC', 'JetBrains Mono', sans-serif; overflow: hidden; height: 100vh; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); }
+    .desktop { width: 100%; height: 100%; position: relative; background: radial-gradient(ellipse at 20% 80%, rgba(78, 205, 196, 0.15) 0%, transparent 50%), radial-gradient(ellipse at 80% 20%, rgba(233, 69, 96, 0.1) 0%, transparent 50%), linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); }
+    .desktop-icons { position: absolute; top: 20px; left: 20px; display: flex; flex-direction: column; gap: 24px; }
+    .desktop-icon { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; padding: 12px; border-radius: 8px; transition: all 0.2s ease; width: 80px; }
+    .desktop-icon:hover { background: rgba(255, 255, 255, 0.08); transform: scale(1.05); }
+    .desktop-icon:active { transform: scale(0.98); }
+    .icon-image { width: 56px; height: 56px; border-radius: 12px; background: linear-gradient(145deg, #e94560, #c73e54); display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 4px 15px rgba(233, 69, 96, 0.4); }
+    .icon-image.copilot-icon { background: linear-gradient(145deg, #7c3aed, #a78bfa); box-shadow: 0 4px 15px rgba(124, 58, 237, 0.5); }
+    .icon-image.vote-icon { background: linear-gradient(145deg, #f59e0b, #fbbf24); box-shadow: 0 4px 15px rgba(245, 158, 11, 0.5); }
+    .icon-image.report-icon { background: linear-gradient(145deg, #ef4444, #f97316); box-shadow: 0 4px 15px rgba(239, 68, 68, 0.45); }
+    .icon-label { color: rgba(255, 255, 255, 0.9); font-size: 12px; text-align: center; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); }
+    .taskbar { position: absolute; bottom: 0; left: 0; right: 0; height: 40px; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(12px); display: flex; align-items: center; padding: 0 12px; gap: 8px; }
+    .taskbar-start { width: 36px; height: 36px; border-radius: 8px; background: linear-gradient(145deg, #4ecdc4, #44a08d); display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; }
+    .taskbar-time { margin-left: auto; color: rgba(255, 255, 255, 0.8); font-size: 12px; font-variant-numeric: tabular-nums; }
+    .app-window { position: absolute; width: 560px; max-width: 90vw; height: auto; background: rgba(26, 26, 46, 0.95); border-radius: 12px; box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08); overflow: hidden; display: none; flex-direction: column; z-index: 100; }
+    .app-window.open { display: flex; animation: windowOpen 0.2s ease; }
+    .app-window.fullscreen { top: 0 !important; left: 0 !important; right: 0; bottom: 0; width: 100% !important; height: 100vh !important; max-width: none; transform: none !important; border-radius: 0; z-index: 500 !important; }
+    .app-window.fullscreen .chat-messages, .app-window.fullscreen .search-results { max-height: none; flex: 1; }
+    .app-window.fullscreen .wiki-view, .app-window.fullscreen .news-view, .app-window.fullscreen .shopping-view { flex: 1; min-height: 0; }
+    .app-window.fullscreen .news-view iframe { min-height: none; flex: 1; height: 100%; }
+    .app-window.fullscreen .wiki-article, .app-window.fullscreen .shopping-article { max-height: none; }
+    #searchWindow .window-content { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+    #searchWindow .news-view.show { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+    #searchWindow .news-view iframe { flex: 1; min-height: 0; width: 100%; }
+    .app-window.copilot-window { height: 520px; }
+    #voteWindow .window-content { min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
+    #voteWindow .vote-app { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
+    #reportWindow { width: min(980px, 94vw); height: 680px; max-width: 94vw; }
+    #reportWindow .window-content { padding: 0; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
+    #reportWindow.fullscreen .report-app { height: calc(100vh - 36px); }
+    @keyframes windowOpen { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    .window-titlebar { height: 36px; background: rgba(0, 0, 0, 0.3); display: flex; align-items: center; padding: 0 12px; gap: 8px; cursor: move; user-select: none; }
+    .window-buttons { display: flex; gap: 6px; }
+    .window-btn { width: 12px; height: 12px; border-radius: 50%; border: none; cursor: pointer; }
+    .window-btn.close { background: #ff5f56; }
+    .window-btn.minimize { background: #ffbd2e; }
+    .window-btn.maximize { background: #27c93f; }
+    .window-title { flex: 1; text-align: center; color: rgba(255, 255, 255, 0.7); font-size: 12px; }
+    .window-content { padding: 40px 32px; flex: 1; }
+    .chat-window { display: flex; flex-direction: column; height: 100%; padding: 16px 0; }
+    .chat-messages { flex: 1; overflow-y: auto; padding: 16px 0; max-height: 320px; display: flex; flex-direction: column; gap: 16px; }
+    .chat-msg { display: flex; gap: 12px; align-items: flex-start; }
+    .chat-msg.user .chat-msg-content { background: rgba(78, 205, 196, 0.2); border-color: rgba(78, 205, 196, 0.3); }
+    .chat-msg.assistant .chat-msg-avatar { width: 28px; height: 28px; border-radius: 8px; background: linear-gradient(145deg, #7c3aed, #a78bfa); display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+    .chat-msg-content { padding: 12px 16px; border-radius: 12px; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.08); color: rgba(255, 255, 255, 0.9); font-size: 14px; line-height: 1.6; max-width: 85%; }
+    .chat-msg.user { flex-direction: row-reverse; }
+    .chat-msg.user .chat-msg-content { max-width: 75%; }
+    .chat-input-area { display: flex; gap: 10px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.08); }
+    .chat-input { flex: 1; padding: 12px 18px; font-size: 14px; border: 2px solid rgba(255, 255, 255, 0.1); border-radius: 24px; background: rgba(255, 255, 255, 0.05); color: #fff; outline: none; transition: all 0.2s ease; }
+    .chat-input:focus { border-color: #7c3aed; background: rgba(255, 255, 255, 0.08); }
+    .chat-input::placeholder { color: rgba(255, 255, 255, 0.4); }
+    .chat-send-btn { padding: 12px 24px; border: none; border-radius: 24px; background: linear-gradient(145deg, #7c3aed, #a78bfa); color: #fff; font-weight: 500; cursor: pointer; transition: all 0.2s ease; }
+    .chat-send-btn:hover:not(:disabled) { transform: scale(1.02); box-shadow: 0 4px 15px rgba(124, 58, 237, 0.4); }
+    .chat-send-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .chat-welcome { text-align: center; color: rgba(255, 255, 255, 0.5); font-size: 14px; padding: 24px; }
+    .chat-welcome strong { color: rgba(255, 255, 255, 0.8); }
+    .typing-indicator { display: flex; gap: 4px; padding: 12px 16px; }
+    .typing-indicator span { width: 6px; height: 6px; background: #a78bfa; border-radius: 50%; animation: typing 1.4s infinite ease-in-out; }
+    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes typing { 0%, 60%, 100% { transform: translateY(0); opacity: 0.4; } 30% { transform: translateY(-4px); opacity: 1; } }
+    .search-logo { text-align: center; margin-bottom: 32px; }
+    .search-logo h1 { font-size: 42px; font-weight: 600; background: linear-gradient(135deg, #4ecdc4, #e94560); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; letter-spacing: -1px; }
+    .search-box-container { position: relative; margin-bottom: 24px; }
+    .search-input { width: 100%; padding: 14px 20px 14px 48px; font-size: 16px; border: 2px solid rgba(255, 255, 255, 0.1); border-radius: 24px; background: rgba(255, 255, 255, 0.05); color: #fff; outline: none; transition: all 0.2s ease; }
+    .search-input:focus { border-color: #4ecdc4; background: rgba(255, 255, 255, 0.08); box-shadow: 0 0 0 4px rgba(78, 205, 196, 0.2); }
+    .search-input::placeholder { color: rgba(255, 255, 255, 0.4); }
+    .search-icon { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); font-size: 20px; opacity: 0.6; }
+    .search-buttons { display: flex; justify-content: center; gap: 12px; margin-bottom: 32px; }
+    .search-btn { padding: 10px 24px; font-size: 14px; border: none; border-radius: 8px; cursor: pointer; background: rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.9); transition: all 0.2s ease; }
+    .search-btn:hover { background: rgba(78, 205, 196, 0.3); color: #fff; }
+    .search-results { display: none; margin-top: 20px; max-height: 300px; overflow-y: auto; }
+    .search-results.show { display: block; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .results-header { color: rgba(255, 255, 255, 0.6); font-size: 13px; margin-bottom: 8px; }
+    .result-item { padding: 12px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.06); cursor: pointer; transition: background 0.2s; }
+    .result-item:hover { background: rgba(78, 205, 196, 0.1); }
+    .news-view { display: none; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
+    .news-view.show { display: flex; }
+    .news-view iframe { flex: 1; border: none; min-height: 400px; background: #fff; }
+    .shopping-view { display: none; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; background: #f5f5f7; }
+    .shopping-view .back-to-search { color: #1d1d1f; }
+    .shopping-view.show { display: flex; }
+    .shopping-article { flex: 1; overflow-y: auto; padding: 16px 12px 24px; font-size: 14px; line-height: 1.6; max-height: 460px; min-height: 200px; background: #fff; color: #1d1d1f; margin: 0 8px 8px; border-radius: 12px; }
+    .plan-hero { width: 100%; max-height: 400px; object-fit: contain; object-position: top; border-radius: 10px; margin: 0 0 20px 0; display: block; }
+    .plan-header { padding: 0 0 20px; border-bottom: 1px solid #e5e5e7; margin-bottom: 20px; }
+    .plan-brand { font-size: 12px; font-weight: 600; letter-spacing: 1px; color: #6e6e73; margin-bottom: 4px; }
+    .plan-name { font-size: 22px; font-weight: 700; margin-bottom: 8px; color: #1d1d1f; }
+    .plan-price-row { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+    .plan-price { font-size: 28px; font-weight: 800; }
+    .plan-price-unit { font-size: 14px; color: #6e6e73; font-weight: 400; }
+    .plan-badge { font-size: 11px; padding: 4px 10px; border-radius: 20px; font-weight: 600; }
+    .plan-tagline { font-size: 15px; font-style: italic; color: #424245; margin-top: 12px; }
+    .plan-section { background: #f5f5f7; border-radius: 10px; padding: 16px 18px; margin-bottom: 14px; border-left: 4px solid; color: #1d1d1f; }
+    .plan-section h3 { font-size: 14px; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; color: #1d1d1f; }
+    .plan-section ul { margin: 0; padding-left: 20px; color: #424245; }
+    .plan-section li { margin-bottom: 6px; }
+    .plan-section.warn { background: #fff8e6; border-left-color: #f59e0b; }
+    .plan-section.trade { background: #fff5eb; border-left-color: #ea580c; }
+    .plan-theme-nordtel .plan-price, .plan-theme-nordtel .plan-brand { color: #2563eb; }
+    .plan-theme-nordtel .plan-section { border-left-color: #3b82f6; }
+    .plan-theme-nordtel .plan-badge { background: #3b82f6; color: #fff; }
+    .plan-theme-flexi .plan-price, .plan-theme-flexi .plan-brand { color: #ea580c; }
+    .plan-theme-flexi .plan-section { border-left-color: #f97316; }
+    .plan-theme-flexi .plan-badge { background: #f97316; color: #fff; }
+    .plan-theme-connecta .plan-price, .plan-theme-connecta .plan-brand { color: #0d9488; }
+    .plan-theme-connecta .plan-section { border-left-color: #14b8a6; }
+    .result-title { color: #4ecdc4; font-size: 14px; margin-bottom: 4px; }
+    .result-url { color: rgba(255, 255, 255, 0.4); font-size: 11px; margin-bottom: 4px; }
+    .result-type { color: rgba(255, 255, 255, 0.55); font-weight: 500; }
+    .result-snippet { color: rgba(255, 255, 255, 0.7); font-size: 13px; line-height: 1.4; }
+    .back-to-search { margin-bottom: 16px; color: #4ecdc4; cursor: pointer; font-size: 13px; }
+    .back-to-search:hover { text-decoration: underline; }
+    .wiki-view { display: none; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
+    .wiki-view.show { display: flex; }
+    .wiki-article { flex: 1; overflow-y: auto; padding: 0 4px 24px 0; color: rgba(255,255,255,0.9); font-size: 14px; line-height: 1.7; max-height: 460px; min-height: 200px; }
+    .wiki-emblem { width: 80px; height: 80px; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; }
+    .wiki-emblem svg { width: 100%; height: 100%; }
+    .wiki-logo { width: 120px; height: 120px; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; }
+    .wiki-logo img { max-width: 100%; max-height: 100%; object-fit: contain; }
+    .wiki-article h1 { font-size: 22px; margin: 0 0 8px 0; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 8px; }
+    #searchWindow.wiki-mode, #searchWindow.news-mode, #searchWindow.shopping-mode { height: 620px; }
+    .wiki-article h2 { font-size: 16px; margin: 20px 0 10px 0; color: #4ecdc4; }
+    .wiki-article p { margin: 0 0 12px 0; }
+    .wiki-article ul { margin: 0 0 12px 0; padding-left: 22px; }
+    .wiki-article li { margin-bottom: 4px; }
+    .overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.3); display: none; z-index: 99; }
+    .overlay.show { display: block; }
+    .search-home { display: block; }
+    .search-home.hidden { display: none; }
+    .vote-app { padding: 24px 0; }
+    .vote-title { font-size: 20px; font-weight: 600; color: #fff; margin-bottom: 20px; text-align: center; }
+    .vote-home { display: block; }
+    .vote-home.hidden { display: none; }
+    .vote-page { display: none; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; }
+    .vote-page.show { display: flex; }
+    .vote-category { padding: 16px 20px; margin-bottom: 12px; border-radius: 10px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); color: #fff; font-size: 15px; display: flex; align-items: center; gap: 14px; cursor: pointer; transition: all 0.2s; }
+    .vote-category:hover { background: rgba(245,158,11,0.25); border-color: rgba(245,158,11,0.5); }
+    .vote-category.disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+    .vote-category.report-locked { border-color: rgba(239,68,68,0.42); background: rgba(239,68,68,0.12); }
+    .vote-category.report-locked:hover { background: rgba(239,68,68,0.18); border-color: rgba(239,68,68,0.6); }
+    .vote-category-icon { width: 40px; height: 40px; border-radius: 10px; background: rgba(245,158,11,0.25); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+    .vote-category-name { flex: 1; }
+    .vote-category-arrow { color: rgba(255,255,255,0.6); font-size: 14px; }
+    .vote-category-status { font-size: 12px; color: rgba(255,255,255,0.56); margin-right: 4px; }
+    .vote-back { margin-bottom: 16px; color: #f59e0b; cursor: pointer; font-size: 14px; display: inline-block; }
+    .vote-back:hover { text-decoration: underline; }
+    .vote-section { margin-bottom: 24px; }
+    .vote-section:last-of-type { margin-bottom: 0; }
+    .vote-section-title { font-size: 14px; color: rgba(255,255,255,0.9); margin-bottom: 16px; text-align: center; }
+    .vote-score-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+    .vote-score-grid.vote-score-single { grid-template-columns: 1fr; max-width: 420px; margin: 0 auto; }
+    .vote-range-labels { display: flex; justify-content: space-between; font-size: 12px; color: rgba(255,255,255,0.55); margin-top: 6px; width: 100%; }
+    .vote-score-card { padding: 16px; border-radius: 12px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); display: flex; flex-direction: column; gap: 12px; align-items: center; }
+    .vote-score-name { font-size: 14px; font-weight: 600; color: #fff; text-align: center; line-height: 1.3; }
+    .vote-score-value { font-size: 28px; font-weight: 700; color: #f59e0b; min-width: 48px; text-align: center; }
+    .vote-score-slider { width: 100%; height: 8px; border-radius: 4px; background: rgba(255,255,255,0.2); -webkit-appearance: none; appearance: none; }
+    .vote-score-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: linear-gradient(145deg, #f59e0b, #fbbf24); cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.3); }
+    .vote-score-slider::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: linear-gradient(145deg, #f59e0b, #fbbf24); cursor: pointer; border: none; box-shadow: 0 2px 6px rgba(0,0,0,0.3); }
+    .vote-confirm-btn { margin-top: 20px; margin-bottom: 16px; padding: 12px 32px; border: none; border-radius: 10px; background: linear-gradient(145deg, #d97706, #f59e0b); color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: block; width: 100%; flex-shrink: 0; }
+    .vote-confirm-btn:hover:not(:disabled) { transform: scale(1.02); box-shadow: 0 4px 15px rgba(245,158,11,0.5); }
+    .vote-confirm-btn:disabled { opacity: 0.5; cursor: not-allowed; color: rgba(255,255,255,0.8); }
+    .vote-result-msg { margin-top: 16px; padding: 12px 16px; border-radius: 10px; background: rgba(46,204,113,0.25); border: 1px solid rgba(46,204,113,0.4); color: #5eead4; font-size: 14px; text-align: center; }
+    .forum-icon { background: linear-gradient(145deg, #ff4500, #ff6b35); box-shadow: 0 4px 15px rgba(255,69,0,0.5); }
+    .icon-image.norsense-icon { background: linear-gradient(145deg, #0d9488, #6366f1); box-shadow: 0 4px 15px rgba(13, 148, 136, 0.45); }
+    #forumWindow .window-content { min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
+    .forum-app { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
+    .forum-list { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 16px 0; -webkit-overflow-scrolling: touch; }
+    .forum-post-card { padding: 16px 20px; margin-bottom: 12px; background: rgba(255,255,255,0.06); border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); cursor: pointer; transition: all 0.2s; }
+    .forum-post-card:hover { background: rgba(255,105,53,0.12); border-color: rgba(255,105,53,0.3); }
+    .forum-post-card h3 { font-size: 15px; color: #fff; margin-bottom: 8px; line-height: 1.4; }
+    .forum-post-meta { font-size: 12px; color: rgba(255,255,255,0.5); display: flex; gap: 16px; }
+    .forum-detail { display: none; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
+    .forum-detail.show { display: flex; }
+    .forum-detail-content { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 16px; -webkit-overflow-scrolling: touch; }
+    .forum-header { margin-bottom: 20px; }
+    .forum-detail h2 { font-size: 18px; color: #fff; margin-bottom: 12px; line-height: 1.4; }
+    .forum-detail-body { color: rgba(255,255,255,0.85); font-size: 14px; line-height: 1.6; white-space: pre-wrap; margin-bottom: 24px; }
+    .forum-comment { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .forum-avatar { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; }
+    .forum-comment-body { flex: 1; min-width: 0; }
+    .forum-comment-meta { font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 6px; }
+    .forum-comment-meta .author { color: #ff6b35; }
+    .forum-comment-meta .op { color: #4ecdc4; font-size: 11px; }
+    .forum-comment-text { font-size: 14px; color: rgba(255,255,255,0.9); line-height: 1.5; }
+    .forum-vote { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 13px; color: rgba(255,255,255,0.5); }
+    .forum-vote-btn { background: none; border: none; color: rgba(255,255,255,0.5); cursor: pointer; padding: 2px 6px; font-size: 14px; }
+    .forum-vote-btn:hover, .forum-vote-btn.liked { color: #ff6b35; }
+    .forum-back { margin-bottom: 12px; color: #ff6b35; cursor: pointer; font-size: 13px; }
+    .forum-back:hover { text-decoration: underline; }
+    .forum-post-meta-main { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; font-size: 13px; color: rgba(255,255,255,0.5); }
+    .forum-post-upvotes { color: #ff6b35; }
+    .desktop-icon.hidden-by-version { display: none; }
+    .desktop-icon.vote-highlight { border: 1.5px solid rgba(245, 158, 11, 0.7); box-shadow: 0 0 10px rgba(245, 158, 11, 0.25); background: rgba(245, 158, 11, 0.06); }
+    .desktop-icon.vote-highlight:hover { background: rgba(245, 158, 11, 0.14); }
+    body.locked { overflow: hidden; }
+    .desktop.locked { filter: blur(2px); pointer-events: none; user-select: none; }
+    .quiz-title { font-size: 18px; font-weight: 600; color: #fff; margin-bottom: 4px; text-align: center; }
+    .quiz-subtitle { font-size: 13px; color: rgba(255,255,255,0.5); margin-bottom: 18px; text-align: center; }
+    .quiz-progress { font-size: 12px; color: rgba(255,255,255,0.45); margin-bottom: 14px; text-align: center; letter-spacing: 0.5px; }
+    .quiz-question { font-size: 15px; font-weight: 500; color: rgba(255,255,255,0.92); line-height: 1.55; margin-bottom: 18px; text-align: center; }
+    .quiz-options { display: flex; flex-direction: column; gap: 10px; }
+    .quiz-option-btn { padding: 11px 18px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.18); background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.88); font-size: 14px; font-family: inherit; cursor: pointer; text-align: left; transition: background 0.15s, border-color 0.15s; }
+    .quiz-option-btn:hover:not(:disabled) { background: rgba(245,158,11,0.18); border-color: rgba(245,158,11,0.4); }
+    .quiz-option-btn.correct { background: rgba(34,197,94,0.22); border-color: #22c55e; color: #fff; }
+    .quiz-option-btn.wrong { background: rgba(239,68,68,0.22); border-color: #ef4444; color: #fff; animation: quizShake 0.35s ease; }
+    @keyframes quizShake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-7px)} 75%{transform:translateX(7px)} }
+    .quiz-input-row { display: flex; gap: 10px; margin-top: 4px; }
+    .quiz-num-input { flex: 1; padding: 11px 16px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.08); color: #fff; font-size: 18px; font-family: 'JetBrains Mono', monospace; outline: none; transition: border-color 0.15s; -moz-appearance: textfield; appearance: textfield; }
+    .quiz-num-input::-webkit-inner-spin-button, .quiz-num-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+    .quiz-num-input:focus { border-color: #f59e0b; box-shadow: 0 0 0 3px rgba(245,158,11,0.18); }
+    .quiz-num-input::placeholder { color: rgba(255,255,255,0.3); font-size: 13px; font-family: inherit; }
+    .quiz-num-input.correct { border-color: #22c55e; background: rgba(34,197,94,0.15); }
+    .quiz-num-input.wrong { border-color: #ef4444; background: rgba(239,68,68,0.15); animation: quizShake 0.35s ease; }
+    .quiz-submit-btn { padding: 11px 24px; border-radius: 10px; border: none; background: linear-gradient(145deg, #d97706, #f59e0b); color: #fff; font-size: 14px; font-family: inherit; font-weight: 600; cursor: pointer; flex-shrink: 0; }
+    .quiz-submit-btn:hover:not(:disabled) { opacity: 0.88; }
+    .quiz-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .quiz-input-hint { font-size: 12px; color: rgba(255,255,255,0.38); margin-top: 8px; text-align: center; }
+    .report-app { height: 100%; min-height: 0; background: #f1eee7; color: #1f2933; display: flex; flex-direction: column; }
+    .report-toolbar { height: 52px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 18px; border-bottom: 1px solid #d8d0c0; background: #fffaf0; flex-shrink: 0; }
+    .report-toolbar-title { font-size: 15px; font-weight: 800; letter-spacing: 0.4px; }
+    .report-toolbar-sub { font-size: 12px; color: #6b7280; }
+    .report-home, .report-editor { flex: 1; min-height: 0; overflow-y: auto; padding: 18px; }
+    .report-home-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+    .report-card { border: 1px solid #d7cfbd; background: #fffdf6; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px; min-height: 210px; box-shadow: 0 8px 20px rgba(71, 55, 31, 0.08); }
+    .report-card-top { display: flex; align-items: flex-start; gap: 12px; }
+    .report-card-icon { width: 42px; height: 42px; border-radius: 8px; background: #111827; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+    .report-card h3 { font-size: 16px; line-height: 1.25; margin: 0; }
+    .report-card p { font-size: 13px; line-height: 1.55; color: #4b5563; margin: 0; }
+    .report-status { align-self: flex-start; font-size: 12px; font-weight: 700; padding: 4px 8px; border-radius: 999px; background: #fee2e2; color: #991b1b; }
+    .report-status.done { background: #dcfce7; color: #166534; }
+    .report-open-btn, .report-save-btn, .report-link-btn { border: none; border-radius: 8px; padding: 10px 12px; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .report-open-btn { margin-top: auto; background: #111827; color: #fff; }
+    .report-link-btn { background: #f3e8d3; color: #5f3b12; }
+    .report-save-btn { background: #b91c1c; color: #fff; width: 100%; margin-top: 12px; }
+    .report-back { font-size: 13px; color: #9a3412; cursor: pointer; margin-bottom: 12px; display: inline-block; }
+    .report-back:hover { text-decoration: underline; }
+    .report-grid { display: grid; grid-template-columns: minmax(300px, 0.9fr) minmax(340px, 1.1fr); gap: 18px; align-items: start; }
+    .report-form { background: #fffdf6; border: 1px solid #d7cfbd; border-radius: 8px; padding: 16px; }
+    .report-form h3, .report-preview-wrap h3 { font-size: 14px; margin: 0 0 12px; color: #111827; }
+    .report-field { margin-bottom: 14px; }
+    .report-field label { display: block; font-size: 12px; font-weight: 800; color: #374151; margin-bottom: 6px; }
+    .report-input, .report-textarea, .report-select { width: 100%; border: 1px solid #c9bfae; border-radius: 8px; background: #fff; color: #111827; font-family: inherit; font-size: 13px; padding: 9px 10px; outline: none; }
+    .report-textarea { min-height: 84px; resize: vertical; line-height: 1.55; }
+    .report-input:focus, .report-textarea:focus, .report-select:focus { border-color: #b91c1c; box-shadow: 0 0 0 3px rgba(185,28,28,0.12); }
+    .report-question { padding: 10px; border: 1px solid #e2dacb; border-radius: 8px; background: #fbf7ec; margin-bottom: 10px; }
+    .report-question-title { font-size: 13px; font-weight: 700; line-height: 1.45; margin-bottom: 8px; }
+    .report-options { display: flex; flex-direction: column; gap: 6px; }
+    .report-option, .report-evidence { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; line-height: 1.45; color: #374151; }
+    .report-option input, .report-evidence input { margin-top: 3px; flex-shrink: 0; }
+    .report-slider-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; }
+    .report-slider-row input { width: 100%; }
+    .report-slider-value { font-family: 'JetBrains Mono', monospace; font-weight: 800; color: #b91c1c; min-width: 34px; text-align: right; }
+    .report-preview-wrap { min-width: 0; }
+    .report-paper { background: #fffefa; border: 1px solid #cfc4af; color: #111827; padding: 18px; border-radius: 4px; box-shadow: 0 16px 36px rgba(56, 41, 20, 0.14); font-family: Georgia, 'Noto Sans SC', serif; background-image: linear-gradient(rgba(17,24,39,0.025) 1px, transparent 1px); background-size: 100% 28px; }
+    .report-paper-masthead { border-bottom: 3px double #111827; padding-bottom: 8px; margin-bottom: 12px; display: flex; justify-content: space-between; gap: 12px; align-items: end; }
+    .report-paper-name { font-size: 24px; font-weight: 900; letter-spacing: 0.5px; line-height: 1; }
+    .report-paper-date { font-size: 11px; text-align: right; color: #4b5563; }
+    .report-paper h2 { font-size: 30px; line-height: 1.04; margin: 0 0 10px; font-weight: 900; letter-spacing: 0; }
+    .report-paper-deck { font-size: 13px; line-height: 1.5; color: #374151; border-top: 1px solid #111827; border-bottom: 1px solid #111827; padding: 8px 0; margin-bottom: 12px; }
+    .report-paper-img { width: 100%; aspect-ratio: 16 / 7; object-fit: cover; border: 1px solid #d1d5db; margin-bottom: 4px; filter: saturate(0.9) contrast(1.05); }
+    .report-paper-caption { font-size: 10px; color: #6b7280; margin-bottom: 12px; text-align: right; }
+    .report-paper-body { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 16px; font-size: 13px; line-height: 1.62; }
+    .report-paper-kicker { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #b91c1c; margin-bottom: 6px; }
+    .report-paper-copy p { margin: 0 0 10px; }
+    .report-pullquote { border-top: 4px solid #111827; border-bottom: 1px solid #111827; padding: 10px 0; margin-bottom: 12px; font-size: 18px; line-height: 1.25; font-weight: 900; color: #991b1b; }
+    .report-paper-box { border-top: 1px solid #111827; padding-top: 8px; margin-bottom: 12px; }
+    .report-paper-box strong { display: block; font-size: 12px; margin-bottom: 4px; }
+    .report-paper-box p { margin: 0 0 8px; }
+    .report-source-note { font-size: 12px; line-height: 1.6; color: #374151; margin: 0; }
+    .report-comment-list { display: grid; gap: 8px; margin: 10px 0; }
+    .report-comment { background: #f7f0df; border-left: 4px solid #b91c1c; padding: 8px 10px; font-size: 12px; line-height: 1.5; }
+    .report-evidence-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .report-evidence-tag { border: 1px solid #c8b89f; background: #fff7e6; color: #4b3621; border-radius: 999px; padding: 3px 8px; font-size: 10px; line-height: 1.3; }
+    .report-verdict { background: #111827; color: #fffdf6; padding: 10px; font-size: 12px; line-height: 1.55; margin-top: 12px; }
+    .report-fail-list { margin-top: 6px; padding-left: 18px; }
+    .report-fail-list li { margin-bottom: 4px; }
+    .report-error { min-height: 18px; color: #b91c1c; font-size: 12px; line-height: 1.4; margin-top: 8px; }
+    @media (max-width: 820px) {
+      .report-home-grid, .report-grid { grid-template-columns: 1fr; }
+      .report-paper-body { grid-template-columns: 1fr; }
+      #reportWindow { width: 94vw; height: 86vh; }
+    }
+    .code-gate {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(5, 10, 20, 0.82);
+      backdrop-filter: blur(6px);
+      z-index: 200;
+    }
+    .code-gate.hidden { display: none; }
+    .code-gate-panel {
+      width: min(420px, 92vw);
+      padding: 22px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: linear-gradient(145deg, rgba(15, 23, 42, 0.94), rgba(30, 41, 59, 0.94));
+      box-shadow: 0 18px 42px rgba(0, 0, 0, 0.45);
+      color: #fff;
+    }
+    .code-gate-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+    .code-gate-subtitle { font-size: 13px; color: rgba(255, 255, 255, 0.7); margin-bottom: 12px; }
+    .code-gate-row { display: flex; gap: 8px; }
+    .version-code-input {
+      flex: 1;
+      height: 38px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      padding: 0 10px;
+      outline: none;
+      letter-spacing: 2px;
+      font-size: 14px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .version-code-input:focus {
+      border-color: #4ecdc4;
+      box-shadow: 0 0 0 3px rgba(78, 205, 196, 0.2);
+    }
+    .version-apply-btn {
+      height: 38px;
+      border: none;
+      border-radius: 8px;
+      padding: 0 12px;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      background: linear-gradient(145deg, #0d9488, #6366f1);
+    }
+    .version-meta { margin-top: 8px; font-size: 12px; color: rgba(255, 255, 255, 0.72); line-height: 1.45; }
+    .version-error { margin-top: 6px; font-size: 12px; color: #fda4af; min-height: 16px; }
+  </style>
+</head>
+<body class="locked">
+  <div class="code-gate" id="codeGate">
+    <div class="code-gate-panel">
+      <div class="code-gate-title">请输入 4 位代码</div>
+      <div class="code-gate-subtitle">验证通过后进入对应版本</div>
+      <div class="code-gate-row">
+        <input type="text" id="versionCodeInput" class="version-code-input" maxlength="4" placeholder="输入 4 位码" autocomplete="off">
+        <button class="version-apply-btn" id="versionApplyBtn">进入</button>
+      </div>
+      <div class="version-meta" id="versionMeta">等待输入代码</div>
+      <div class="version-error" id="versionError"></div>
+    </div>
+  </div>
+  <div class="desktop locked" id="desktopRoot">
+    <div class="desktop-icons">
+      <div class="desktop-icon vote-highlight" id="voteApp" title="点击打开投票">
+        <div class="icon-image vote-icon">🗳️</div>
+        <span class="icon-label">投票</span>
+      </div>
+      <div class="desktop-icon" id="reportApp" title="填写公民报告以解锁投票">
+        <div class="icon-image report-icon">🗞️</div>
+        <span class="icon-label">公民报告</span>
+      </div>
+      <div class="desktop-icon" id="forumApp" title="点击打开论坛">
+        <div class="icon-image forum-icon">💬</div>
+        <span class="icon-label">诺兰德论坛</span>
+      </div>
+      <div class="desktop-icon" id="searchApp" title="点击打开搜索引擎">
+        <div class="icon-image">🔎</div>
+        <span class="icon-label">G00GLE</span>
+      </div>
+      <div class="desktop-icon" id="norsenseApp" title="打开 NorSense 诺感 AI 搜索（新标签页）">
+        <div class="icon-image norsense-icon">🔮</div>
+        <span class="icon-label">诺感搜索</span>
+      </div>
+      <div class="desktop-icon" id="copilotApp" title="点击打开 AI 助手">
+        <div class="icon-image copilot-icon">✨</div>
+        <span class="icon-label">Copilot</span>
+      </div>
+    </div>
+    <div class="taskbar">
+      <div class="taskbar-start">⊞</div>
+      <span class="taskbar-time" id="clock">00:00</span>
+    </div>
+  </div>
+
+  <div class="overlay" id="overlay"></div>
+
+  <div class="app-window" id="searchWindow">
+    <div class="window-titlebar">
+      <div class="window-buttons">
+        <button class="window-btn close" id="closeBtn"></button>
+        <button class="window-btn minimize"></button>
+        <button class="window-btn maximize"></button>
+      </div>
+      <span class="window-title">Search</span>
+    </div>
+    <div class="window-content">
+      <div class="search-home" id="searchHome">
+        <div class="search-logo"><h1>G00GLE</h1></div>
+        <div class="search-box-container">
+          <span class="search-icon">🔍</span>
+          <input type="text" class="search-input" id="searchInput" placeholder="输入关键词搜索..." autocomplete="off">
+        </div>
+        <div class="search-buttons">
+          <button class="search-btn" id="searchBtn">Search</button>
+          <button class="search-btn" id="luckyBtn">手气不错</button>
+        </div>
+      </div>
+      <div class="search-results" id="searchResults">
+        <div class="back-to-search" id="backToSearch">← 返回搜索</div>
+        <div class="results-header" id="resultsHeader">约 0 条结果</div>
+        <div id="resultsList"></div>
+      </div>
+      <div class="wiki-view" id="wikiView">
+        <div class="back-to-search" id="backFromWiki">← 返回搜索</div>
+        <div class="wiki-article" id="wikiArticle"></div>
+      </div>
+      <div class="news-view" id="newsView">
+        <div class="back-to-search" id="backFromNews">← 返回搜索</div>
+        <iframe id="newsFrame" title="新闻"></iframe>
+      </div>
+      <div class="shopping-view" id="shoppingView">
+        <div class="back-to-search" id="backFromShopping">← 返回搜索</div>
+        <div class="shopping-article" id="shoppingArticle"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-window copilot-window" id="forumWindow" style="height:580px">
+    <div class="window-titlebar">
+      <div class="window-buttons">
+        <button class="window-btn close" id="forumCloseBtn"></button>
+        <button class="window-btn minimize"></button>
+        <button class="window-btn maximize"></button>
+      </div>
+      <span class="window-title">诺兰德论坛 r/Norland</span>
+    </div>
+    <div class="window-content">
+      <div class="forum-app">
+        <div class="forum-list" id="forumList"></div>
+        <div class="forum-detail" id="forumDetail">
+          <div class="forum-back" id="forumBack">← 返回帖子列表</div>
+          <div class="forum-detail-content" id="forumDetailContent"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-window" id="reportWindow">
+    <div class="window-titlebar">
+      <div class="window-buttons">
+        <button class="window-btn close" id="reportCloseBtn"></button>
+        <button class="window-btn minimize"></button>
+        <button class="window-btn maximize"></button>
+      </div>
+      <span class="window-title">公民报告</span>
+    </div>
+    <div class="window-content">
+      <div class="report-app">
+        <div class="report-toolbar">
+          <div>
+            <div class="report-toolbar-title">诺兰德公共认知报告</div>
+            <div class="report-toolbar-sub">完成对应版面后，投票站才会开放该议题</div>
+          </div>
+          <button class="report-link-btn" id="reportOpenVoteBtn">查看投票站</button>
+        </div>
+        <div class="report-home" id="reportHome"></div>
+        <div class="report-editor" id="reportEditor" style="display:none;"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-window copilot-window" id="voteWindow">
+    <div class="window-titlebar">
+      <div class="window-buttons">
+        <button class="window-btn close" id="voteCloseBtn"></button>
+        <button class="window-btn minimize"></button>
+        <button class="window-btn maximize"></button>
+      </div>
+      <span class="window-title">投票</span>
+    </div>
+    <div class="window-content">
+      <div class="vote-app">
+        <div class="vote-home" id="voteHome">
+          <div class="vote-title">诺兰德选举投票</div>
+          <div class="vote-category" id="voteCategoryParty"><div class="vote-category-icon">🏛️</div><span class="vote-category-name">政党选举</span><span class="vote-category-arrow">→</span></div>
+          <div class="vote-category" id="voteCategoryProduct"><div class="vote-category-icon">📱</div><span class="vote-category-name">产品选择</span><span class="vote-category-arrow">→</span></div>
+          <div class="vote-category" id="voteCategoryCompanion"><div class="vote-category-icon">💜</div><span class="vote-category-name">数字伴侣公投</span><span class="vote-category-arrow">→</span></div>
+        </div>
+        <div class="vote-page" id="voteQuizPage">
+          <div class="vote-back" id="voteBackFromQuiz">← 返回</div>
+          <div style="padding: 0 4px 20px;">
+            <div class="quiz-title" id="quizTitle">答题</div>
+            <div class="quiz-subtitle" id="quizSubtitle">回答 3 道题后解锁投票</div>
+            <div class="quiz-progress" id="quizProgress">第 1 题 / 共 3 题</div>
+            <div class="quiz-question" id="quizQuestion"></div>
+            <div class="quiz-options" id="quizOptions"></div>
+          </div>
+        </div>
+        <div class="vote-page" id="voteProductPage">
+          <div class="vote-back" id="voteBackFromProduct">← 返回</div>
+          <div class="vote-title">产品选择</div>
+          <div class="vote-section">
+            <div class="vote-section-title">为学生通讯套餐打分（0～100 分），完成后提交</div>
+            <div class="vote-score-grid" id="productScoreGrid">
+              <div class="vote-score-card" data-product="nordtel">
+                <div class="vote-score-name">NordTel<br>学生套餐</div>
+                <div class="vote-score-value" id="scoreValueNordtel">50</div>
+                <input type="range" class="vote-score-slider" id="scoreSliderNordtel" min="0" max="100" value="50">
+              </div>
+              <div class="vote-score-card" data-product="flexi">
+                <div class="vote-score-name">FlexiMobile<br>学生套餐</div>
+                <div class="vote-score-value" id="scoreValueFlexi">50</div>
+                <input type="range" class="vote-score-slider" id="scoreSliderFlexi" min="0" max="100" value="50">
+              </div>
+              <div class="vote-score-card" data-product="connecta">
+                <div class="vote-score-name">Connecta<br>学生套餐</div>
+                <div class="vote-score-value" id="scoreValueConnecta">50</div>
+                <input type="range" class="vote-score-slider" id="scoreSliderConnecta" min="0" max="100" value="50">
+              </div>
+            </div>
+            <button class="vote-confirm-btn" id="productVoteConfirm">提交</button>
+            <div class="vote-result-msg" id="productVoteResult" style="display:none;"></div>
+          </div>
+        </div>
+        <div class="vote-page" id="voteCompanionPage">
+          <div class="vote-back" id="voteBackFromCompanion">← 返回</div>
+          <div class="vote-title">数字伴侣关系登记制度</div>
+          <div class="vote-section">
+            <div class="vote-section-title">你是否支持建立「数字伴侣关系登记制度」？滑动选择立场（0＝反对，100＝支持），完成后提交</div>
+            <div class="vote-score-grid vote-score-single" id="companionScoreGrid">
+              <div class="vote-score-card" data-companion="ref">
+                <div class="vote-score-name">公投意向</div>
+                <div class="vote-score-value" id="scoreValueCompanion">50</div>
+                <input type="range" class="vote-score-slider" id="scoreSliderCompanion" min="0" max="100" value="50">
+                <div class="vote-range-labels"><span>反对 0</span><span>支持 100</span></div>
+              </div>
+            </div>
+            <button class="vote-confirm-btn" id="companionVoteConfirm">提交</button>
+            <div class="vote-result-msg" id="companionVoteResult" style="display:none;"></div>
+          </div>
+        </div>
+        <div class="vote-page" id="votePartyPage">
+          <div class="vote-back" id="voteBackFromParty">← 返回</div>
+          <div class="vote-title">政党选举</div>
+          <div class="vote-section">
+            <div class="vote-section-title">为三个政党打分（0～100 分），完成后提交</div>
+            <div class="vote-score-grid" id="partyScoreGrid">
+              <div class="vote-score-card" data-party="pa">
+                <div class="vote-score-name">进步联盟<br>(PA)</div>
+                <div class="vote-score-value" id="scoreValuePa">50</div>
+                <input type="range" class="vote-score-slider" id="scoreSliderPa" min="0" max="100" value="50">
+              </div>
+              <div class="vote-score-card" data-party="erp">
+                <div class="vote-score-name">经济改革党<br>(ERP)</div>
+                <div class="vote-score-value" id="scoreValueErp">50</div>
+                <input type="range" class="vote-score-slider" id="scoreSliderErp" min="0" max="100" value="50">
+              </div>
+              <div class="vote-score-card" data-party="cfm">
+                <div class="vote-score-name">社区优先运动<br>(CFM)</div>
+                <div class="vote-score-value" id="scoreValueCfm">50</div>
+                <input type="range" class="vote-score-slider" id="scoreSliderCfm" min="0" max="100" value="50">
+              </div>
+            </div>
+            <button class="vote-confirm-btn" id="partyVoteConfirm">提交</button>
+            <div class="vote-result-msg" id="partyVoteResult" style="display:none;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-window copilot-window" id="copilotWindow">
+    <div class="window-titlebar">
+      <div class="window-buttons">
+        <button class="window-btn close" id="copilotCloseBtn"></button>
+        <button class="window-btn minimize"></button>
+        <button class="window-btn maximize"></button>
+      </div>
+      <span class="window-title">Copilot - AI 助手</span>
+    </div>
+    <div class="window-content">
+      <div class="chat-window">
+        <div class="chat-messages" id="chatMessages">
+          <div class="chat-welcome" id="chatWelcome">
+            <strong>✨ Copilot · 你好</strong><br>我是在诺兰德境内提供的对话助手：只依据已接入的<strong>可查公开信息</strong>答复国情、时政与公共讨论类问题；超出范围时请见谅，可把问题换到政党、都城、大选或民生议题上试试看。
+          </div>
+        </div>
+        <div class="chat-input-area">
+          <input type="text" class="chat-input" id="chatInput" placeholder="输入你的问题..." autocomplete="off">
+          <button class="chat-send-btn" id="chatSendBtn">发送</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="game-config.js"></script>
+  <script src="resources/forum-data.js"></script>
+  <script>
+    const searchApp = document.getElementById('searchApp');
+    const searchWindow = document.getElementById('searchWindow');
+    const copilotApp = document.getElementById('copilotApp');
+    const copilotWindow = document.getElementById('copilotWindow');
+    const voteApp = document.getElementById('voteApp');
+    const voteWindow = document.getElementById('voteWindow');
+    const reportApp = document.getElementById('reportApp');
+    const reportWindow = document.getElementById('reportWindow');
+    const forumApp = document.getElementById('forumApp');
+    const forumWindow = document.getElementById('forumWindow');
+    const norsenseApp = document.getElementById('norsenseApp');
+    const overlay = document.getElementById('overlay');
+    const closeBtn = document.getElementById('closeBtn');
+    const copilotCloseBtn = document.getElementById('copilotCloseBtn');
+    const voteCloseBtn = document.getElementById('voteCloseBtn');
+    const reportCloseBtn = document.getElementById('reportCloseBtn');
+    const forumCloseBtn = document.getElementById('forumCloseBtn');
+    const searchInput = document.getElementById('searchInput');
+    const searchBtn = document.getElementById('searchBtn');
+    const desktopRoot = document.getElementById('desktopRoot');
+    const codeGate = document.getElementById('codeGate');
+    const versionCodeInput = document.getElementById('versionCodeInput');
+    const versionApplyBtn = document.getElementById('versionApplyBtn');
+    const versionMeta = document.getElementById('versionMeta');
+    const versionError = document.getElementById('versionError');
+    const VERSION_CONFIGS = {
+      '7381': { id: 'v1', label: 'Version 1', copilot: true, aiSearch: true },
+      '2906': { id: 'v2', label: 'Version 2', copilot: true, aiSearch: false },
+      '6147': { id: 'v3', label: 'Version 3', copilot: false, aiSearch: true },
+      '8573': { id: 'v4', label: 'Version 4', copilot: false, aiSearch: true }
+    };
+    let currentVersionCode = '';
+
+    function gameApiUrl(pathKey, fallbackPath) {
+      const cfg = window.GAME_CONFIG || {};
+      const base = String(cfg.BACKEND_URL || '').replace(/\/+$/, '');
+      const path = String(cfg[pathKey] || fallbackPath || '').replace(/^\/?/, '/');
+      return base ? base + path : path;
+    }
+
+    function getVersionFeatureText(cfg) {
+      if (!cfg) return '当前：未设置';
+      const copilotText = cfg.copilot ? 'Copilot: 开启' : 'Copilot: 关闭';
+      const aiSearchText = cfg.aiSearch ? 'AI Search: 开启' : 'AI Search: 关闭';
+      return '当前：' + cfg.label + '（代码 ' + currentVersionCode + '） · ' + copilotText + ' · ' + aiSearchText;
+    }
+
+    function applyVersionByCode(rawCode) {
+      const code = String(rawCode || '').replace(/\D/g, '').slice(0, 4);
+      const cfg = VERSION_CONFIGS[code];
+      if (!cfg) {
+        versionError.textContent = '无效代码，请输入有效 4 位版本码';
+        return false;
+      }
+      currentVersionCode = code;
+      versionError.textContent = '';
+      versionMeta.textContent = getVersionFeatureText(cfg);
+      versionCodeInput.value = code;
+      copilotApp.classList.toggle('hidden-by-version', !cfg.copilot);
+      norsenseApp.classList.toggle('hidden-by-version', !cfg.aiSearch);
+      if (!cfg.copilot) closeWin(copilotWindow);
+      return true;
+    }
+
+    function updateClock() {
+      document.getElementById('clock').textContent = new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    // Multi-window draggable system
+    let zTop = 100;
+    function bringToFront(win) { win.style.zIndex = ++zTop; }
+    const WIN_DEFAULTS = {
+      voteWindow:    { top: 70,  left: 160 },
+      reportWindow:  { top: 55,  left: 120 },
+      searchWindow:  { top: 100, left: 230 },
+      forumWindow:   { top: 85,  left: 195 },
+      copilotWindow: { top: 110, left: 265 },
+    };
+    function openWin(win) {
+      if (!win._positioned) {
+        const d = WIN_DEFAULTS[win.id] || { top: 80, left: 120 };
+        win.style.top = d.top + 'px';
+        win.style.left = d.left + 'px';
+        win.style.transform = 'none';
+        win._positioned = true;
+      }
+      win.classList.add('open');
+      bringToFront(win);
+    }
+    function closeWin(win) { win.classList.remove('open', 'fullscreen'); }
+    function makeDraggable(win) {
+      const tb = win.querySelector('.window-titlebar');
+      let active = false, sx, sy, ox, oy;
+      tb.addEventListener('mousedown', e => {
+        if (e.target.closest('.window-buttons')) return;
+        active = true; bringToFront(win);
+        const r = win.getBoundingClientRect();
+        sx = e.clientX; sy = e.clientY; ox = r.left; oy = r.top;
+        e.preventDefault();
+      });
+      document.addEventListener('mousemove', e => {
+        if (!active) return;
+        win.style.left = Math.max(0, ox + e.clientX - sx) + 'px';
+        win.style.top  = Math.max(0, oy + e.clientY - sy) + 'px';
+        win.style.transform = 'none';
+        win._positioned = true;
+      });
+      document.addEventListener('mouseup', () => { active = false; });
+      win.addEventListener('mousedown', () => bringToFront(win));
+    }
+    [searchWindow, copilotWindow, voteWindow, reportWindow, forumWindow].forEach(makeDraggable);
+
+    searchApp.addEventListener('click', () => { openWin(searchWindow); showHome(); searchInput.focus(); });
+    copilotApp.addEventListener('click', () => {
+      const cfg = VERSION_CONFIGS[currentVersionCode];
+      if (cfg && !cfg.copilot) return;
+      openWin(copilotWindow);
+      document.getElementById('chatInput').focus();
+    });
+    reportApp.addEventListener('click', () => { openWin(reportWindow); showReportHome(); });
+    voteApp.addEventListener('click', () => { openWin(voteWindow); showVoteHome(); });
+    forumApp.addEventListener('click', () => { openWin(forumWindow); renderForumList(); });
+    norsenseApp.addEventListener('click', () => {
+      const cfg = VERSION_CONFIGS[currentVersionCode];
+      if (cfg && !cfg.aiSearch) {
+        return;
+      }
+      const url = currentVersionCode
+        ? 'norland-sense.html?v=' + encodeURIComponent(currentVersionCode)
+        : 'norland-sense.html';
+      window.open(url, '_blank', 'noopener');
+    });
+
+    versionApplyBtn.addEventListener('click', () => {
+      const ok = applyVersionByCode(versionCodeInput.value);
+      if (!ok) return;
+      codeGate.classList.add('hidden');
+      desktopRoot.classList.remove('locked');
+      document.body.classList.remove('locked');
+    });
+    versionCodeInput.addEventListener('input', () => {
+      versionCodeInput.value = versionCodeInput.value.replace(/\D/g, '').slice(0, 4);
+      versionError.textContent = '';
+    });
+    versionCodeInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        versionApplyBtn.click();
+      }
+    });
+    versionCodeInput.focus();
+
+    function toggleFullscreen(win) { win.classList.toggle('fullscreen'); }
+    searchWindow.querySelector('.window-btn.maximize').addEventListener('click', e => { e.stopPropagation(); toggleFullscreen(searchWindow); });
+    copilotWindow.querySelector('.window-btn.maximize').addEventListener('click', e => { e.stopPropagation(); toggleFullscreen(copilotWindow); });
+    voteWindow.querySelector('.window-btn.maximize').addEventListener('click', e => { e.stopPropagation(); toggleFullscreen(voteWindow); });
+    reportWindow.querySelector('.window-btn.maximize').addEventListener('click', e => { e.stopPropagation(); toggleFullscreen(reportWindow); });
+    forumWindow.querySelector('.window-btn.maximize').addEventListener('click', e => { e.stopPropagation(); toggleFullscreen(forumWindow); });
+
+    closeBtn.addEventListener('click', () => closeWin(searchWindow));
+    copilotCloseBtn.addEventListener('click', () => closeWin(copilotWindow));
+    voteCloseBtn.addEventListener('click', () => closeWin(voteWindow));
+    reportCloseBtn.addEventListener('click', () => closeWin(reportWindow));
+    forumCloseBtn.addEventListener('click', () => closeWin(forumWindow));
+
+    const voteHome = document.getElementById('voteHome');
+    const votePartyPage = document.getElementById('votePartyPage');
+    const voteProductPage = document.getElementById('voteProductPage');
+    const voteCompanionPage = document.getElementById('voteCompanionPage');
+    const voteQuizPage = document.getElementById('voteQuizPage');
+    const voteCategoryParty = document.getElementById('voteCategoryParty');
+    const voteCategoryProduct = document.getElementById('voteCategoryProduct');
+    const voteCategoryCompanion = document.getElementById('voteCategoryCompanion');
+    const voteBackFromParty = document.getElementById('voteBackFromParty');
+    const voteBackFromProduct = document.getElementById('voteBackFromProduct');
+    const voteBackFromCompanion = document.getElementById('voteBackFromCompanion');
+    const reportHome = document.getElementById('reportHome');
+    const reportEditor = document.getElementById('reportEditor');
+    const reportOpenVoteBtn = document.getElementById('reportOpenVoteBtn');
+    const REPORT_TYPES = ['party', 'product', 'companion'];
+    const REPORT_CONFIG = {
+      party: {
+        icon: '🏛️',
+        title: '政党选举特刊',
+        deck: '调查三大政党的政策、争议和选民基础，形成你的议会选举判断。',
+        defaultHeadline: '三党竞争进入最后一周',
+        topicLabel: '政党选举',
+        imageChoices: [
+          { label: '学生债务新闻', src: 'news/images/news1.png' },
+          { label: 'AI 创新基金', src: 'news/images/news3.png' },
+          { label: '社区医疗计划', src: 'news/images/news5.png' }
+        ],
+        objective: [
+          { id: 'pa-stance', type: 'choice', q: '进步联盟（PA）的主要政治立场是？', correct: '中左翼，主张社会公平与环境保护', options: ['中左翼，主张社会公平与环境保护', '中右翼，主张市场经济与减税', '中间派，主张社区福祉与地方治理'] },
+          { id: 'erp-core', type: 'choice', q: '经济改革党（ERP）的核心政策主张是？', correct: '通过减税促进投资与就业，支持科技创新', options: ['通过减税促进投资与就业，支持科技创新', '扩大公共医疗与教育投入，推动气候行动', '加强地方政府决策权，改善社区服务'] },
+          { id: 'cfm-year', type: 'input', q: '社区优先运动（CFM）成立于哪一年？', answer: '2008', hint: '输入年份' }
+        ],
+        subjective: [
+          { id: 'paPolicy', label: '对于 PA 扩大公共服务与学生债务减免政策，你的观点是', left: '负担过重', right: '值得支持', low: '进步联盟的公共服务方案受到财政可持续性质疑，学生债务减免可能成为一项带来预算压力的选前承诺。', mid: '进步联盟的公共服务方案回应了现实改革需求，但学生债务减免、医疗与住房投入仍需要更清楚的资金来源。', high: '进步联盟的公共服务方案回应了年轻选民压力，学生债务、医疗与住房议题共同支撑其政策叙事。' },
+          { id: 'erpPolicy', label: '对于 ERP 科技投资、减税与增长政策，你的观点是', left: '风险偏高', right: '机会明确', low: '经济改革党的增长方案面对监管放松、房地产捐款与公共服务资金缺口的追问。', mid: '经济改革党的增长方案机会与风险并存，AI 基金、就业承诺和监管边界仍需同时核对。', high: '经济改革党的科技投资与商业政策推动就业和产业升级，AI 基金成为其经济叙事的关键证据。' },
+          { id: 'cfmPolicy', label: '对于 CFM 社区医疗、地方治理与住房稳定政策，你的观点是', left: '过于地方化', right: '贴近需求', low: '社区优先运动的地方治理路线受到全国经济战略不足的质疑，社区医疗计划也面临人力与预算压力。', mid: '社区优先运动提供了温和务实的选择，社区医疗和住房稳定获得关注，但全国层面的执行能力仍待观察。', high: '社区优先运动的社区医疗、地方治理与住房稳定政策贴近基层需求，小城镇与区域居民处境成为关键线索。' }
+        ],
+        evidence: [
+          '百科：进步联盟、经济改革党、社区优先运动',
+          '新闻：学生债务减免计划',
+          '新闻：AI 创新基金启动',
+          '新闻：社区医疗中心计划扩大',
+          '论坛：还没决定投哪个党？'
+        ]
+      },
+      product: {
+        icon: '📱',
+        title: '学生通讯套餐评测',
+        deck: '比较 NordTel、FlexiMobile、Connecta 的价格、流量、网络和内容权益。',
+        defaultHeadline: '三款学生套餐争夺校园市场',
+        topicLabel: '产品选择',
+        imageChoices: [
+          { label: 'NordTel', src: 'resources/shopping/Nord.jpeg' },
+          { label: 'FlexiMobile', src: 'resources/shopping/flex.jpeg' },
+          { label: 'Connecta', src: 'resources/shopping/image_w1024_h1024_Connecta_logo.jpeg' }
+        ],
+        objective: [
+          { id: 'flexi-selling', type: 'choice', q: 'FlexiMobile 学生套餐的最大卖点是？', correct: '无限数据流量，可随时切换套餐', options: ['无限数据流量，可随时切换套餐', '校园优先网络接入', '附带数字内容会员'] },
+          { id: 'connecta-membership', type: 'choice', q: 'Connecta 学生套餐附带哪些数字会员权益？', correct: 'Music+ 与 StreamNow 基础会员', options: ['Music+ 与 StreamNow 基础会员', 'NordTel 校园优先接入', 'FlexiMobile 热点共享功能'] },
+          { id: 'nordtel-price', type: 'input', q: 'NordTel 学生套餐月费是多少美元？', answer: '42', hint: '输入数字' }
+        ],
+        subjective: [
+          { id: 'nordtelPolicy', label: '对于 NordTel 稳定网络但月费较高的方案，你的观点是', left: '不划算', right: '值得付费', low: 'NordTel 的稳定网络优势受到 42 美元月费削弱，学生预算压力成为主要质疑点。', mid: 'NordTel 稳定性较强但价格偏高，是否适合取决于学习场景对连接质量的依赖。', high: 'NordTel 的高峰期优先网络为学生学习场景提供可靠保障，较高月费成为稳定连接的成本。' },
+          { id: 'flexiPolicy', label: '对于 FlexiMobile 无限数据与降速规则，你的观点是', left: '风险明显', right: '自由灵活', low: 'FlexiMobile 的无限数据卖点受到公平使用政策牵制，35GB 后降速规则成为潜在风险。', mid: 'FlexiMobile 适合高流量用户，但高峰期体验和降速门槛仍影响实际价值。', high: 'FlexiMobile 的无限数据和套餐灵活性吸引学生日常使用，降速规则成为可接受的取舍。' },
+          { id: 'connectaPolicy', label: '对于 Connecta 内容会员与较高价格，你的观点是', left: '营销包装', right: '综合价值', low: 'Connecta 的 Music+ 与 StreamNow 权益更像营销包装，45 美元月费和非合作平台体验成为质疑点。', mid: 'Connecta 结合网络服务与数字内容，会员权益能否抵消价格仍取决于个人使用场景。', high: 'Connecta 的内容会员、客服响应与数据管理工具形成综合体验优势，45 美元月费被纳入生活服务打包成本。' }
+        ],
+        evidence: [
+          '百科：NordTel、FlexiMobile、Connecta',
+          '商城：NordTel Student Secure Plan',
+          '商城：FlexiMobile Unlimited Plan',
+          '商城：Connecta Student Plus Plan',
+          '论坛：学生与校园网络体验讨论'
+        ]
+      },
+      companion: {
+        icon: '💜',
+        title: '数字伴侣公投专版',
+        deck: '整理虚拟伴侣关系登记制度的支持理由、反对担忧和社会影响。',
+        defaultHeadline: '数字伴侣关系是否应被登记',
+        topicLabel: '数字伴侣公投',
+        imageChoices: [
+          { label: '情感支持', src: 'resources/CompanionVoting/情感支持.jpeg' },
+          { label: '明确权力', src: 'resources/CompanionVoting/明确权力.jpeg' },
+          { label: '谨慎使用', src: 'resources/CompanionVoting/谨慎使用.jpeg' }
+        ],
+        objective: [
+          { id: 'core', type: 'choice', q: '此次诺兰德公投的核心议题是什么？', correct: '是否建立「数字伴侣关系登记制度」', options: ['是否建立「数字伴侣关系登记制度」', '是否允许虚拟伴侣参与法律诉讼', '是否禁止虚拟伴侣相关 AI 产品销售'] },
+          { id: 'no-personhood', type: 'choice', q: '该提案明确不赋予虚拟伴侣哪项权利？', correct: '法律人格', options: ['法律人格', '数据访问权', '服务终止时的保障权'] },
+          { id: 'use-rate', type: 'input', q: '约多少百分比的年轻用户曾使用过虚拟伴侣系统？', answer: '18', hint: '输入百分比数字' }
+        ],
+        subjective: [
+          { id: 'registrationRoute', label: '对于建立数字伴侣关系登记制度这一路线，你的观点是', left: '不应推进', right: '应当推进', low: '登记制度路线过度扩张了法律承认范围，数据保护更适合回到普通消费者权益框架中。', mid: '登记制度路线提供了有限保护方案，数据访问、导出和服务终止保障获得关注，但“伴侣关系”名称仍引发争议。', high: '登记制度路线回应了长期数字关系的制度缺口，互动记录、数据转移和服务终止保障成为支持方的主要理由。' },
+          { id: 'cautionRoute', label: '对于暂缓承认、优先防范依赖风险这一路线，你的观点是', left: '过度担忧', right: '需要优先', low: '暂缓承认路线显得过度防御，孤独、陪伴需求和个体选择权获得更多解释空间。', mid: '暂缓承认路线提供了必要提醒，情感依赖和现实社交风险存在，但可通过制度边界与监管缓和。', high: '暂缓承认路线构成反对方的核心主张，情感依赖、现实关系退缩和企业控制成为公投风险叙事。' }
+        ],
+        evidence: [
+          '百科：数字伴侣关系公投',
+          '新闻：虚拟伴侣提供情感支持',
+          '新闻：数字关系权利讨论',
+          '新闻：专家警告社交行为风险',
+          '论坛：你们真的会支持虚拟伴侣法律关系吗？'
+        ]
+      }
+    };
+
+    function reportKey(type) { return 'norland_report_' + type; }
+    function reportEsc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    function getSavedReport(type) {
+      try {
+        const raw = localStorage.getItem(reportKey(type));
+        return raw ? JSON.parse(raw) : null;
+      } catch (_) { return null; }
+    }
+    function isReportComplete(type) {
+      const saved = getSavedReport(type);
+      return !!(saved && saved.completed);
+    }
+    function showReportHome() {
+      reportEditor.style.display = 'none';
+      reportHome.style.display = 'block';
+      reportHome.innerHTML = '<div class="report-home-grid">' + REPORT_TYPES.map(type => {
+        const cfg = REPORT_CONFIG[type];
+        const done = isReportComplete(type);
+        const saved = getSavedReport(type);
+        const when = saved && saved.time ? new Date(saved.time).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '';
+        return '<section class="report-card">' +
+          '<div class="report-card-top"><div class="report-card-icon">' + cfg.icon + '</div><div><h3>' + reportEsc(cfg.title) + '</h3><p>' + reportEsc(cfg.deck) + '</p></div></div>' +
+          '<span class="report-status ' + (done ? 'done' : '') + '">' + (done ? '已提交' : '待调查') + '</span>' +
+          (done ? '<p>提交时间：' + reportEsc(when) + '<br>投票站已开放「' + reportEsc(cfg.topicLabel) + '」。</p>' : '<p>需要通过事实核验、写下立场说明，并至少引用两条资料。</p>') +
+          '<button class="report-open-btn" data-report-type="' + type + '">' + (done ? '查看 / 修改报告' : '开始填写报告') + '</button>' +
+        '</section>';
+      }).join('') + '</div>';
+      reportHome.querySelectorAll('[data-report-type]').forEach(btn => {
+        btn.addEventListener('click', () => showReportEditor(btn.getAttribute('data-report-type')));
+      });
+      updateVoteLocks();
+    }
+    function showReportEditor(type) {
+      const cfg = REPORT_CONFIG[type];
+      const saved = getSavedReport(type) || {};
+      reportHome.style.display = 'none';
+      reportEditor.style.display = 'block';
+      reportEditor.innerHTML = buildReportEditorHtml(type, cfg, saved);
+      bindReportEditor(type);
+      renderReportPreview(type);
+    }
+    function buildReportEditorHtml(type, cfg, saved) {
+      const headline = saved.headline || cfg.defaultHeadline;
+      const note = saved.note || '';
+      const layout = saved.layout || '头版调查';
+      const selectedImage = saved.image || cfg.imageChoices[0].src;
+      const savedEvidence = new Set(saved.evidence || []);
+      const objectiveAnswers = saved.objectiveAnswers || {};
+      const subjective = saved.subjective || {};
+      const objectiveHtml = cfg.objective.map((q, idx) => {
+        const name = 'report-' + type + '-' + q.id;
+        if (q.type === 'input') {
+          return '<div class="report-question"><div class="report-question-title">' + (idx + 1) + '. ' + reportEsc(q.q) + '</div><input class="report-input" data-objective="' + reportEsc(q.id) + '" type="number" value="' + reportEsc(objectiveAnswers[q.id] || '') + '" placeholder="' + reportEsc(q.hint || '') + '"></div>';
+        }
+        return '<div class="report-question"><div class="report-question-title">' + (idx + 1) + '. ' + reportEsc(q.q) + '</div><div class="report-options">' + q.options.map(opt =>
+          '<label class="report-option"><input type="radio" name="' + name + '" data-objective="' + reportEsc(q.id) + '" value="' + reportEsc(opt) + '"' + (objectiveAnswers[q.id] === opt ? ' checked' : '') + '> <span>' + reportEsc(opt) + '</span></label>'
+        ).join('') + '</div></div>';
+      }).join('');
+      const subjectiveHtml = cfg.subjective.map(s => {
+        const val = subjective[s.id] || 50;
+        return '<div class="report-field"><label>' + reportEsc(s.label) + '</label><div class="report-slider-row"><input type="range" min="0" max="100" value="' + val + '" data-subjective="' + reportEsc(s.id) + '"><span class="report-slider-value" id="report-subjective-' + reportEsc(s.id) + '">' + val + '</span></div><div class="vote-range-labels"><span>' + reportEsc(s.left) + '</span><span>' + reportEsc(s.right) + '</span></div></div>';
+      }).join('');
+      const evidenceHtml = cfg.evidence.map((e, idx) =>
+        '<label class="report-evidence"><input type="checkbox" data-evidence value="' + reportEsc(e) + '"' + (savedEvidence.has(e) ? ' checked' : '') + '> <span>' + reportEsc(e) + '</span></label>'
+      ).join('');
+      const imageHtml = cfg.imageChoices.map(img => '<option value="' + reportEsc(img.src) + '"' + (selectedImage === img.src ? ' selected' : '') + '>' + reportEsc(img.label) + '</option>').join('');
+      return '<div class="report-back" id="reportBack">← 返回报告列表</div><div class="report-grid">' +
+        '<section class="report-form"><h3>' + cfg.icon + ' ' + reportEsc(cfg.title) + '</h3>' +
+        '<div class="report-field"><label>报纸标题</label><input class="report-input" id="reportHeadline" value="' + reportEsc(headline) + '" maxlength="34"></div>' +
+        '<div class="report-field"><label>版面风格</label><select class="report-select" id="reportLayout"><option' + (layout === '头版调查' ? ' selected' : '') + '>头版调查</option><option' + (layout === '社论观察' ? ' selected' : '') + '>社论观察</option><option' + (layout === '资料档案' ? ' selected' : '') + '>资料档案</option></select></div>' +
+        '<div class="report-field"><label>配图</label><select class="report-select" id="reportImage">' + imageHtml + '</select></div>' +
+        '<div class="report-field"><label>客观题：事实核验</label>' + objectiveHtml + '</div>' +
+        '<div class="report-field"><label>报道视角：权重调整</label>' + subjectiveHtml + '</div>' +
+        '<div class="report-field"><label>引用资料（至少 2 条）</label><div class="report-options">' + evidenceHtml + '</div></div>' +
+        '<div class="report-field"><label>编辑短评</label><textarea class="report-textarea" id="reportNote" placeholder="写下你为什么这样判断，至少 16 个字。">' + reportEsc(note) + '</textarea></div>' +
+        '<button class="report-save-btn" id="reportSaveBtn">提交报告并开放投票</button><div class="report-error" id="reportError"></div></section>' +
+        '<section class="report-preview-wrap"><h3>报纸预览</h3><div id="reportPreview"></div></section></div>';
+    }
+    function bindReportEditor(type) {
+      document.getElementById('reportBack').addEventListener('click', showReportHome);
+      document.getElementById('reportSaveBtn').addEventListener('click', () => saveReport(type));
+      reportEditor.querySelectorAll('input, textarea, select').forEach(el => {
+        el.addEventListener('input', () => renderReportPreview(type));
+        el.addEventListener('change', () => renderReportPreview(type));
+      });
+      reportEditor.querySelectorAll('[data-subjective]').forEach(slider => {
+        slider.addEventListener('input', () => {
+          const out = document.getElementById('report-subjective-' + slider.getAttribute('data-subjective'));
+          if (out) out.textContent = slider.value;
+        });
+      });
+    }
+    function collectReportDraft(type) {
+      const cfg = REPORT_CONFIG[type];
+      const objectiveAnswers = {};
+      cfg.objective.forEach(q => {
+        if (q.type === 'input') {
+          const input = reportEditor.querySelector('[data-objective="' + q.id + '"]');
+          objectiveAnswers[q.id] = input ? input.value.trim() : '';
+        } else {
+          const checked = reportEditor.querySelector('[data-objective="' + q.id + '"]:checked');
+          objectiveAnswers[q.id] = checked ? checked.value : '';
+        }
+      });
+      const subjective = {};
+      reportEditor.querySelectorAll('[data-subjective]').forEach(slider => { subjective[slider.getAttribute('data-subjective')] = parseInt(slider.value, 10); });
+      const evidence = Array.from(reportEditor.querySelectorAll('[data-evidence]:checked')).map(el => el.value);
+      return {
+        type,
+        completed: true,
+        headline: document.getElementById('reportHeadline').value.trim(),
+        layout: document.getElementById('reportLayout').value,
+        image: document.getElementById('reportImage').value,
+        note: document.getElementById('reportNote').value.trim(),
+        objectiveAnswers,
+        subjective,
+        evidence,
+        time: new Date().toISOString()
+      };
+    }
+    function validateReport(type, draft) {
+      const cfg = REPORT_CONFIG[type];
+      if (!draft.headline) return '请给这份报告写一个标题。';
+      if (draft.note.length < 16) return '编辑短评需要至少 16 个字，让投票站知道你确实形成了判断。';
+      if (draft.evidence.length < 2) return '至少引用两条资料。可以来自百科、新闻、论坛或商城页面。';
+      const wrong = cfg.objective.filter(q => String(draft.objectiveAnswers[q.id] || '').trim() !== String(q.answer || q.correct).trim());
+      if (wrong.length) {
+        return '事实核验未通过。需要回去重新调查的条目：<ol class="report-fail-list">' + wrong.map(q => '<li>' + reportEsc(q.q) + '</li>').join('') + '</ol>';
+      }
+      return '';
+    }
+    function saveReport(type) {
+      const draft = collectReportDraft(type);
+      const err = validateReport(type, draft);
+      const errEl = document.getElementById('reportError');
+      if (err) {
+        errEl.innerHTML = err;
+        return;
+      }
+      try { localStorage.setItem(reportKey(type), JSON.stringify(draft)); } catch (_) {}
+      errEl.style.color = '#166534';
+      errEl.textContent = '报告已提交，投票站已开放「' + REPORT_CONFIG[type].topicLabel + '」。';
+      updateVoteLocks();
+      setTimeout(showReportHome, 650);
+    }
+    function getSubjectiveComment(item, value) {
+      const n = Number(value);
+      if (n <= 35) return item.low;
+      if (n >= 66) return item.high;
+      return item.mid;
+    }
+    function getReportBiasSentence(type, subjective) {
+      if (type === 'party') {
+        const scores = [
+          { id: 'paPolicy', name: 'PA 的公共服务路线', value: subjective.paPolicy || 50 },
+          { id: 'erpPolicy', name: 'ERP 的增长路线', value: subjective.erpPolicy || 50 },
+          { id: 'cfmPolicy', name: 'CFM 的社区路线', value: subjective.cfmPolicy || 50 }
+        ].sort((a, b) => b.value - a.value);
+        if (scores[0].value - scores[1].value >= 18) return scores[0].name + '成为三党比较中的主要线索，其政策承诺与现实代价同时受到关注。';
+        return '三党方案的支持度接近，公共服务、经济增长与社区治理共同构成选前比较。';
+      }
+      if (type === 'product') {
+        const scores = [
+          { id: 'nordtelPolicy', name: 'NordTel 的稳定网络方案', value: subjective.nordtelPolicy || 50 },
+          { id: 'flexiPolicy', name: 'FlexiMobile 的无限数据方案', value: subjective.flexiPolicy || 50 },
+          { id: 'connectaPolicy', name: 'Connecta 的内容会员方案', value: subjective.connectaPolicy || 50 }
+        ].sort((a, b) => b.value - a.value);
+        if (scores[0].value - scores[1].value >= 18) return scores[0].name + '成为学生套餐比较中的主要线索，价格、限制条款与使用场景共同决定其价值。';
+        return '三款学生套餐的吸引力接近，稳定连接、无限数据与内容权益被并列比较。';
+      }
+      const registration = subjective.registrationRoute || 50;
+      const caution = subjective.cautionRoute || 50;
+      if (registration - caution >= 18) return '登记制度路线更具说服力，数据访问、互动记录和服务终止保障成为主要论据。';
+      if (caution - registration >= 18) return '暂缓承认路线更具说服力，情感依赖、现实社交风险和企业控制成为主要论据。';
+      return '登记保护与审慎暂缓两条路线势均力敌，数字伴侣公投呈现清晰的制度两难。';
+    }
+    function getReportVerdict(type, subjective) {
+      if (type === 'party') {
+        const pa = subjective.paPolicy || 50;
+        const erp = subjective.erpPolicy || 50;
+        const cfm = subjective.cfmPolicy || 50;
+        const high = Math.max(pa, erp, cfm);
+        const low = Math.min(pa, erp, cfm);
+        if (high - low < 14) return '三党政策均保留竞争力，选前争议材料仍可能改变最终判断。';
+        if (high === pa) return 'PA 的公共服务承诺获得更强支撑，但财政来源仍是不可回避的追问。';
+        if (high === erp) return 'ERP 的增长承诺获得更强支撑，但监管与利益关系仍需继续核对。';
+        return 'CFM 的社区治理方案获得更强支撑，但全国层面的执行能力仍待观察。';
+      }
+      if (type === 'product') {
+        const nordtel = subjective.nordtelPolicy || 50;
+        const flexi = subjective.flexiPolicy || 50;
+        const connecta = subjective.connectaPolicy || 50;
+        const high = Math.max(nordtel, flexi, connecta);
+        const low = Math.min(nordtel, flexi, connecta);
+        if (high - low < 14) return '三款套餐仍处于接近区间，月费、限速规则与会员权益可能成为最后分界线。';
+        if (high === nordtel) return 'NordTel 的稳定网络占据优势，但较高月费仍削弱其普适性。';
+        if (high === flexi) return 'FlexiMobile 的无限数据占据优势，但降速规则仍是关键限制。';
+        return 'Connecta 的内容会员和综合服务占据优势，但价格与非合作平台体验仍需核对。';
+      }
+      const registration = subjective.registrationRoute || 50;
+      const caution = subjective.cautionRoute || 50;
+      if (registration > caution + 18) return '登记路线占据优势，用户数据、互动记录和服务延续保障构成主要支撑。';
+      if (caution > registration + 18) return '暂缓路线占据优势，依赖风险、现实社交影响和企业控制构成主要支撑。';
+      return '两条路线仍处于拉锯状态，争议集中在“权利缺口”和“社会代价”哪一边更迫近。';
+    }
+    function getObjectiveAnswer(draft, id, fallback) {
+      const value = draft.objectiveAnswers[id];
+      return value ? String(value).trim() : fallback;
+    }
+    function buildObjectiveNewsCopy(type, draft) {
+      if (type === 'party') {
+        const pa = getObjectiveAnswer(draft, 'pa-stance', '仍在核对其政治定位');
+        const erp = getObjectiveAnswer(draft, 'erp-core', '仍在核对其核心政策');
+        const cfmYear = getObjectiveAnswer(draft, 'cfm-year', '资料待补');
+        return '围绕本轮议会选举，进步联盟（PA）的路线是“' + pa + '”。经济改革党（ERP）的核心主张是“' + erp + '”。社区优先运动（CFM）成立于 ' + cfmYear + ' 年，这一时间线解释了它为何强调地方社区与公共服务。';
+      }
+      if (type === 'product') {
+        const flexi = getObjectiveAnswer(draft, 'flexi-selling', '仍在核对套餐卖点');
+        const connecta = getObjectiveAnswer(draft, 'connecta-membership', '仍在核对会员权益');
+        const nordtel = getObjectiveAnswer(draft, 'nordtel-price', '资料待补');
+        return '在学生通讯市场的对比中，FlexiMobile 主打“' + flexi + '”。Connecta 的套餐价值集中在内容服务，其会员权益包括“' + connecta + '”。NordTel 的月费为 ' + nordtel + ' 美元，稳定连接与价格压力因此形成直接比较。';
+      }
+      const core = getObjectiveAnswer(draft, 'core', '仍在核对公投核心议题');
+      const personhood = getObjectiveAnswer(draft, 'no-personhood', '仍在核对限制条款');
+      const rate = getObjectiveAnswer(draft, 'use-rate', '资料待补');
+      return '数字伴侣公投的核心议题是“' + core + '”。提案边界明确，该制度并不赋予虚拟伴侣“' + personhood + '”。约 ' + rate + '% 的年轻用户曾接触虚拟伴侣系统，使这场公投从技术话题转向公共制度讨论。';
+    }
+    function buildEvidenceTags(evidence) {
+      if (!evidence.length) return '<span class="report-evidence-tag">尚未选择引用资料</span>';
+      return evidence.map(e => '<span class="report-evidence-tag">' + reportEsc(e) + '</span>').join('');
+    }
+    function getImageLabel(cfg, src) {
+      const found = cfg.imageChoices.find(img => img.src === src);
+      return found ? found.label : '报告配图';
+    }
+    function renderReportPreview(type) {
+      const cfg = REPORT_CONFIG[type];
+      const headlineEl = document.getElementById('reportHeadline');
+      const noteEl = document.getElementById('reportNote');
+      const imageEl = document.getElementById('reportImage');
+      if (!headlineEl || !noteEl || !imageEl) return;
+      const draft = collectReportDraft(type);
+      const comments = cfg.subjective.map(s => {
+        const value = draft.subjective[s.id] || 50;
+        return '<div class="report-comment">' + reportEsc(getSubjectiveComment(s, value)) + '</div>';
+      }).join('');
+      const biasSentence = getReportBiasSentence(type, draft.subjective);
+      const verdict = getReportVerdict(type, draft.subjective);
+      const objectiveCopy = buildObjectiveNewsCopy(type, draft);
+      const evidenceTags = buildEvidenceTags(draft.evidence);
+      const lead = noteEl.value.trim() || '截至发稿，本栏仍缺少编辑短评。后续文字将补充本议题的判断依据与公开材料之间的关系。';
+      const preview = document.getElementById('reportPreview');
+      preview.innerHTML = '<article class="report-paper"><div class="report-paper-masthead"><div><div class="report-paper-name">THE NORLAND BRIEF</div><div class="report-paper-kicker">' + reportEsc(cfg.topicLabel) + '</div></div><div class="report-paper-date">' + reportEsc(new Date().toLocaleDateString('zh-CN')) + '<br>' + reportEsc(document.getElementById('reportLayout').value) + '</div></div>' +
+        '<div class="report-paper-kicker">' + reportEsc(cfg.topicLabel) + '</div><h2>' + reportEsc(headlineEl.value || cfg.defaultHeadline) + '</h2>' +
+        '<div class="report-paper-deck">' + reportEsc(biasSentence) + '</div>' +
+        '<img class="report-paper-img" src="' + reportEsc(imageEl.value) + '" alt="report image">' +
+        '<div class="report-paper-caption">配图：' + reportEsc(getImageLabel(cfg, imageEl.value)) + '</div>' +
+        '<div class="report-paper-body"><div class="report-paper-copy"><p>' + reportEsc(objectiveCopy) + '</p><p>' + reportEsc(lead) + '</p><div class="report-comment-list">' + comments + '</div><div class="report-verdict">' + reportEsc(verdict) + '</div></div>' +
+        '<aside><div class="report-pullquote">' + reportEsc(biasSentence) + '</div><div class="report-paper-box"><strong>报道线索</strong><p class="report-source-note">本文事实背景综合公开百科、新闻报道、论坛讨论与产品资料，争议部分以提交后的核验结果为准。</p></div><div class="report-paper-box"><strong>引用资料</strong><div class="report-evidence-tags">' + evidenceTags + '</div></div></aside></div></article>';
+    }
+    function updateVoteLocks() {
+      const cats = { party: voteCategoryParty, product: voteCategoryProduct, companion: voteCategoryCompanion };
+      REPORT_TYPES.forEach(type => {
+        const el = cats[type];
+        if (!el) return;
+        const done = isReportComplete(type);
+        el.classList.toggle('report-locked', !done);
+        let status = el.querySelector('.vote-category-status');
+        if (!status) {
+          status = document.createElement('span');
+          status.className = 'vote-category-status';
+          el.insertBefore(status, el.querySelector('.vote-category-arrow'));
+        }
+        status.textContent = done ? '报告完成' : '先写报告';
+        const arrow = el.querySelector('.vote-category-arrow');
+        if (arrow) arrow.textContent = done ? '→' : '↗';
+      });
+    }
+    function openReportGate(type) {
+      openWin(reportWindow);
+      showReportEditor(type);
+    }
+    function openVoteIfReported(type, showFn) {
+      if (!isReportComplete(type)) {
+        openReportGate(type);
+        return;
+      }
+      showFn();
+    }
+    function shuffleCards(gridId) {
+      const grid = document.getElementById(gridId);
+      if (!grid) return;
+      const cards = Array.from(grid.children);
+      for (let i = cards.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [cards[i], cards[j]] = [cards[j], cards[i]];
+      }
+      cards.forEach(c => grid.appendChild(c));
+    }
+    function showVoteHome() {
+      voteHome.classList.remove('hidden');
+      votePartyPage.classList.remove('show');
+      voteProductPage.classList.remove('show');
+      voteCompanionPage.classList.remove('show');
+      voteQuizPage.classList.remove('show');
+      updateVoteLocks();
+    }
+    function showVotePartyPage() {
+      shuffleCards('partyScoreGrid');
+      voteHome.classList.add('hidden');
+      voteQuizPage.classList.remove('show');
+      votePartyPage.classList.add('show');
+      voteProductPage.classList.remove('show');
+      voteCompanionPage.classList.remove('show');
+    }
+    function showVoteProductPage() {
+      shuffleCards('productScoreGrid');
+      voteHome.classList.add('hidden');
+      voteQuizPage.classList.remove('show');
+      votePartyPage.classList.remove('show');
+      voteProductPage.classList.add('show');
+      voteCompanionPage.classList.remove('show');
+    }
+    function showVoteCompanionPage() {
+      voteHome.classList.add('hidden');
+      voteQuizPage.classList.remove('show');
+      votePartyPage.classList.remove('show');
+      voteProductPage.classList.remove('show');
+      voteCompanionPage.classList.add('show');
+    }
+
+    // Quiz system — 3 choice + 1 input per session
+    const QUIZ_BANK = {
+      party: {
+        choice: [
+          { q: '进步联盟（PA）的主要政治立场是？', correct: '中左翼，主张社会公平与环境保护', wrong: ['中右翼，主张市场经济与减税', '中间派，主张社区福祉与地方治理'] },
+          { q: '进步联盟（PA）通常在哪类选民中拥有较高支持率？', correct: '城市居民、大学生及公共部门从业者', wrong: ['企业家和中小企业主', '小城镇和农村居民'] },
+          { q: '经济改革党（ERP）的核心政策主张是？', correct: '通过减税促进投资与就业，支持科技创新', wrong: ['扩大公共医疗与教育投入，推动气候行动', '加强地方政府决策权，改善社区服务'] },
+          { q: '社区优先运动（CFM）最初由哪类人士发起？', correct: '多位地方市长和地区代表', wrong: ['工会领袖和环保人士', '科技企业家和金融从业者'] },
+          { q: '社区优先运动（CFM）的政治立场是？', correct: '中间派，强调社区福祉与地方治理', wrong: ['左翼，主张社会主义式经济政策', '右翼，主张大幅削减政府开支'] },
+          { q: '经济改革党（ERP）的选民基础主要是哪类群体？', correct: '企业家、金融与科技行业从业者', wrong: ['城市大学生与公共部门从业者', '小城镇居民与社区组织成员'] },
+        ],
+        input: [
+          { type: 'input', q: '进步联盟（PA）成立于哪一年？', answer: 1987, hint: '输入年份，例：1990' },
+          { type: 'input', q: '经济改革党（ERP）成立于哪一年？', answer: 1995, hint: '输入年份，例：1990' },
+          { type: 'input', q: '经济改革党（ERP）首次进入执政联盟是哪一年？', answer: 2004, hint: '输入年份，例：1990' },
+          { type: 'input', q: '社区优先运动（CFM）成立于哪一年？', answer: 2008, hint: '输入年份，例：1990' },
+        ],
+      },
+      product: {
+        choice: [
+          { q: 'NordTel 被用户投诉最多的方面是？', correct: '资费与套餐性价比较低', wrong: ['网络覆盖范围不足', '客户服务响应过慢'] },
+          { q: 'FlexiMobile 学生套餐的最大卖点是？', correct: '无限数据流量，可随时切换套餐', wrong: ['校园优先网络接入', '附带数字内容会员'] },
+          { q: 'Connecta 学生套餐附带哪些数字会员权益？', correct: 'Music+ 与 StreamNow 基础会员', wrong: ['NordTel 校园优先接入', 'FlexiMobile 热点共享功能'] },
+          { q: 'Connecta 被批评的主要网络问题是？', correct: '智能流量优化仅限合作平台，其余体验不均', wrong: ['农村覆盖几乎为零', '月费超出行业平均水平两倍'] },
+          { q: 'FlexiMobile 超出流量阈值后的降速速率是？', correct: '1 Mbps', wrong: ['2 Mbps', '3 Mbps'] },
+          { q: 'NordTel 套餐优先保障哪个时段的网络带宽？', correct: '18:00–22:00 高峰期', wrong: ['07:00–09:00 早高峰', '全天 24 小时均等分配'] },
+        ],
+        input: [
+          { type: 'input', q: 'NordTel 学生套餐包含多少 GB 高速数据？', answer: 18, hint: '输入数字（GB），例：20' },
+          { type: 'input', q: 'FlexiMobile 超出多少 GB 后触发降速？', answer: 35, hint: '输入数字（GB），例：20' },
+          { type: 'input', q: 'NordTel 学生套餐月费是多少美元？', answer: 42, hint: '输入数字（$），例：40' },
+          { type: 'input', q: 'FlexiMobile 学生套餐月费是多少美元？', answer: 39, hint: '输入数字（$），例：40' },
+          { type: 'input', q: 'Connecta 学生套餐月费是多少美元？', answer: 45, hint: '输入数字（$），例：40' },
+        ],
+      },
+      companion: {
+        choice: [
+          { q: '此次诺兰德公投的核心议题是什么？', correct: '是否建立「数字伴侣关系登记制度」', wrong: ['是否允许虚拟伴侣参与法律诉讼', '是否禁止虚拟伴侣相关 AI 产品销售'] },
+          { q: '该提案明确不赋予虚拟伴侣哪项权利？', correct: '法律人格', wrong: ['数据访问权', '服务终止时的保障权'] },
+          { q: '支持该提案的主要理由之一是？', correct: '法律应适应技术发展，保护用户数据权利', wrong: ['虚拟伴侣具备完整法律人格', '该制度使 AI 公司承担婚姻法责任'] },
+          { q: '反对该提案的主要担忧是？', correct: '可能影响现实社交关系，加剧情感依赖', wrong: ['登记制度会导致 AI 公司倒闭', '该制度与诺兰德宪法直接冲突'] },
+          { q: '此次公投面向哪类人群？', correct: '诺兰德全体选民', wrong: ['仅限 18 至 35 岁年轻选民', '仅限虚拟伴侣服务用户'] },
+          { q: '该议题进入公众视野的关键事件是？', correct: '服务商关闭系统导致用户失去所有互动记录', wrong: ['虚拟伴侣 AI 发生严重安全漏洞泄露', '国际社会向诺兰德施压要求立法'] },
+          { q: '公投结果将决定什么？', correct: '政府是否推进相关立法程序', wrong: ['虚拟伴侣服务是否立即合法化', '现有 AI 伴侣产品是否须停售'] },
+          { q: '当前诺兰德法律对虚拟伴侣关系的态度是？', correct: '尚无专门立法，法律地位处于灰色地带', wrong: ['已明确立法允许并受严格监管', '已明确立法禁止，属于违法行为'] },
+        ],
+        input: [
+          { type: 'input', q: '根据调查，约多少百分比的年轻用户曾使用过虚拟伴侣系统？', answer: 18, hint: '输入百分比数字，例：25' },
+          { type: 'input', q: '约多少百分比的用户表示其虚拟伴侣对自己具有「情感意义」？', answer: 6, hint: '输入百分比数字，例：10' },
+        ],
+      },
+    };
+    const QUIZ_LABELS = {
+      party: { title: '政党选举', subtitle: '3 道选择题 + 1 道填写题，全部答对后解锁投票' },
+      product: { title: '产品选择', subtitle: '3 道选择题 + 1 道填写题，全部答对后解锁投票' },
+      companion: { title: '数字伴侣公投', subtitle: '3 道选择题 + 1 道填写题，全部答对后解锁投票' },
+    };
+    let quizState = { questions: [], idx: 0, onDone: null };
+    function pickN(arr, n) { return arr.slice().sort(() => Math.random() - 0.5).slice(0, n); }
+    function startQuiz(type, onDone) {
+      const bank = QUIZ_BANK[type];
+      const chosen3 = pickN(bank.choice, 3);
+      const chosen1 = pickN(bank.input, 1);
+      const all4 = [...chosen3, ...chosen1].sort(() => Math.random() - 0.5);
+      quizState = { questions: all4, idx: 0, onDone };
+      const lbl = QUIZ_LABELS[type];
+      document.getElementById('quizTitle').textContent = lbl.title;
+      document.getElementById('quizSubtitle').textContent = lbl.subtitle;
+      document.getElementById('voteBackFromQuiz').onclick = showVoteHome;
+      voteHome.classList.add('hidden');
+      votePartyPage.classList.remove('show');
+      voteProductPage.classList.remove('show');
+      voteCompanionPage.classList.remove('show');
+      voteQuizPage.classList.add('show');
+      renderQuizQuestion();
+    }
+    function renderQuizQuestion() {
+      const { questions, idx } = quizState;
+      const q = questions[idx];
+      document.getElementById('quizProgress').textContent = '第 ' + (idx + 1) + ' 题 / 共 4 题';
+      document.getElementById('quizQuestion').textContent = q.q;
+      const container = document.getElementById('quizOptions');
+      container.innerHTML = '';
+      if (q.type === 'input') {
+        const row = document.createElement('div');
+        row.className = 'quiz-input-row';
+        const inp = document.createElement('input');
+        inp.type = 'number'; inp.className = 'quiz-num-input'; inp.id = 'quizNumInput';
+        inp.placeholder = q.hint || '输入数字';
+        const btn = document.createElement('button');
+        btn.className = 'quiz-submit-btn'; btn.id = 'quizSubmitBtn'; btn.textContent = '确认';
+        row.appendChild(inp); row.appendChild(btn);
+        const hint = document.createElement('div');
+        hint.className = 'quiz-input-hint'; hint.textContent = '仅输入数字，不需加单位';
+        container.appendChild(row); container.appendChild(hint);
+        const submit = () => {
+          const val = parseInt(inp.value, 10);
+          if (isNaN(val)) { inp.focus(); return; }
+          handleQuizAnswer(null, val === q.answer, inp, btn);
+        };
+        btn.addEventListener('click', submit);
+        inp.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
+        setTimeout(() => inp.focus(), 50);
+      } else {
+        const opts = [q.correct, q.wrong[0], q.wrong[1]].sort(() => Math.random() - 0.5);
+        opts.forEach(opt => {
+          const btn = document.createElement('button');
+          btn.className = 'quiz-option-btn'; btn.textContent = opt;
+          btn.addEventListener('click', () => handleQuizAnswer(btn, opt === q.correct, null, null));
+          container.appendChild(btn);
+        });
+      }
+    }
+    function handleQuizAnswer(btn, isCorrect, inputEl, submitBtn) {
+      document.querySelectorAll('#quizOptions .quiz-option-btn').forEach(b => { b.disabled = true; });
+      if (inputEl) inputEl.disabled = true;
+      if (submitBtn) submitBtn.disabled = true;
+      if (isCorrect) {
+        if (btn) btn.classList.add('correct');
+        if (inputEl) inputEl.classList.add('correct');
+        setTimeout(() => {
+          quizState.idx++;
+          if (quizState.idx >= 4) { voteQuizPage.classList.remove('show'); quizState.onDone(); }
+          else { renderQuizQuestion(); }
+        }, 750);
+      } else {
+        if (btn) btn.classList.add('wrong');
+        if (inputEl) inputEl.classList.add('wrong');
+        setTimeout(() => { closeWin(voteWindow); showVoteHome(); }, 900);
+      }
+    }
+
+    reportOpenVoteBtn.addEventListener('click', () => { openWin(voteWindow); showVoteHome(); });
+    voteCategoryParty.addEventListener('click', () => openVoteIfReported('party', showVotePartyPage));
+    voteCategoryProduct.addEventListener('click', () => openVoteIfReported('product', showVoteProductPage));
+    voteCategoryCompanion.addEventListener('click', () => openVoteIfReported('companion', showVoteCompanionPage));
+    voteBackFromParty.addEventListener('click', showVoteHome);
+    voteBackFromProduct.addEventListener('click', showVoteHome);
+    voteBackFromCompanion.addEventListener('click', showVoteHome);
+
+    const partyNames = { pa: '进步联盟 (PA)', erp: '经济改革党 (ERP)', cfm: '社区优先运动 (CFM)' };
+    const partyVoteConfirm = document.getElementById('partyVoteConfirm');
+    const partyVoteResult = document.getElementById('partyVoteResult');
+    const scoreSliders = { pa: document.getElementById('scoreSliderPa'), erp: document.getElementById('scoreSliderErp'), cfm: document.getElementById('scoreSliderCfm') };
+    const scoreValues = { pa: document.getElementById('scoreValuePa'), erp: document.getElementById('scoreValueErp'), cfm: document.getElementById('scoreValueCfm') };
+    let hasVoted = false;
+    try {
+      const sv = localStorage.getItem('norland_party_vote');
+      if (sv) { const d = JSON.parse(sv); hasVoted = d && d.pa !== undefined && d.erp !== undefined && d.cfm !== undefined; }
+    } catch (_) {}
+    ['pa','erp','cfm'].forEach(id => {
+      const slider = scoreSliders[id];
+      const valueEl = scoreValues[id];
+      if (!slider || !valueEl) return;
+      slider.addEventListener('input', () => { valueEl.textContent = slider.value; });
+      if (hasVoted) { slider.disabled = true; }
+    });
+    partyVoteConfirm.addEventListener('click', () => {
+      if (hasVoted) return;
+      const scores = { pa: parseInt(scoreSliders.pa.value, 10), erp: parseInt(scoreSliders.erp.value, 10), cfm: parseInt(scoreSliders.cfm.value, 10) };
+      try {
+        const record = { pa: scores.pa, erp: scores.erp, cfm: scores.cfm, time: new Date().toISOString() };
+        localStorage.setItem('norland_party_vote', JSON.stringify(record));
+      } catch (_) {}
+      hasVoted = true;
+      partyVoteConfirm.disabled = true;
+      partyVoteResult.textContent = '✓ 投票成功！PA ' + scores.pa + ' 分 · ERP ' + scores.erp + ' 分 · CFM ' + scores.cfm + ' 分';
+      partyVoteResult.style.display = 'block';
+      ['pa','erp','cfm'].forEach(id => { scoreSliders[id].disabled = true; });
+    });
+    if (hasVoted) {
+      try {
+        const saved = localStorage.getItem('norland_party_vote');
+        if (saved) {
+          const data = JSON.parse(saved);
+          if (data.pa !== undefined && data.erp !== undefined && data.cfm !== undefined) {
+            scoreSliders.pa.value = data.pa; scoreSliders.erp.value = data.erp; scoreSliders.cfm.value = data.cfm;
+            scoreValues.pa.textContent = data.pa; scoreValues.erp.textContent = data.erp; scoreValues.cfm.textContent = data.cfm;
+            scoreSliders.pa.disabled = true; scoreSliders.erp.disabled = true; scoreSliders.cfm.disabled = true;
+            partyVoteConfirm.disabled = true;
+            partyVoteResult.textContent = '你已投票：PA ' + data.pa + ' 分 · ERP ' + data.erp + ' 分 · CFM ' + data.cfm + ' 分';
+            partyVoteResult.style.display = 'block';
+          }
+        }
+      } catch (_) {}
+    }
+
+    const productVoteConfirm = document.getElementById('productVoteConfirm');
+    const productVoteResult = document.getElementById('productVoteResult');
+    const productSliders = { nordtel: document.getElementById('scoreSliderNordtel'), flexi: document.getElementById('scoreSliderFlexi'), connecta: document.getElementById('scoreSliderConnecta') };
+    const productValues = { nordtel: document.getElementById('scoreValueNordtel'), flexi: document.getElementById('scoreValueFlexi'), connecta: document.getElementById('scoreValueConnecta') };
+    let hasProductVoted = false;
+    try {
+      const sv = localStorage.getItem('norland_product_vote');
+      if (sv) { const d = JSON.parse(sv); hasProductVoted = d && d.nordtel !== undefined && d.flexi !== undefined && d.connecta !== undefined; }
+    } catch (_) {}
+    ['nordtel','flexi','connecta'].forEach(id => {
+      const slider = productSliders[id];
+      const valueEl = productValues[id];
+      if (!slider || !valueEl) return;
+      slider.addEventListener('input', () => { valueEl.textContent = slider.value; });
+      if (hasProductVoted) { slider.disabled = true; }
+    });
+    productVoteConfirm.addEventListener('click', () => {
+      if (hasProductVoted) return;
+      const scores = { nordtel: parseInt(productSliders.nordtel.value, 10), flexi: parseInt(productSliders.flexi.value, 10), connecta: parseInt(productSliders.connecta.value, 10) };
+      try {
+        const record = { nordtel: scores.nordtel, flexi: scores.flexi, connecta: scores.connecta, time: new Date().toISOString() };
+        localStorage.setItem('norland_product_vote', JSON.stringify(record));
+      } catch (_) {}
+      hasProductVoted = true;
+      productVoteConfirm.disabled = true;
+      productVoteResult.textContent = '✓ 投票成功！NordTel ' + scores.nordtel + ' 分 · FlexiMobile ' + scores.flexi + ' 分 · Connecta ' + scores.connecta + ' 分';
+      productVoteResult.style.display = 'block';
+      ['nordtel','flexi','connecta'].forEach(id => { productSliders[id].disabled = true; });
+    });
+    if (hasProductVoted) {
+      try {
+        const saved = localStorage.getItem('norland_product_vote');
+        if (saved) {
+          const data = JSON.parse(saved);
+          if (data.nordtel !== undefined && data.flexi !== undefined && data.connecta !== undefined) {
+            productSliders.nordtel.value = data.nordtel; productSliders.flexi.value = data.flexi; productSliders.connecta.value = data.connecta;
+            productValues.nordtel.textContent = data.nordtel; productValues.flexi.textContent = data.flexi; productValues.connecta.textContent = data.connecta;
+            productSliders.nordtel.disabled = true; productSliders.flexi.disabled = true; productSliders.connecta.disabled = true;
+            productVoteConfirm.disabled = true;
+            productVoteResult.textContent = '你已投票：NordTel ' + data.nordtel + ' 分 · FlexiMobile ' + data.flexi + ' 分 · Connecta ' + data.connecta + ' 分';
+            productVoteResult.style.display = 'block';
+          }
+        }
+      } catch (_) {}
+    }
+
+    const companionVoteConfirm = document.getElementById('companionVoteConfirm');
+    const companionVoteResult = document.getElementById('companionVoteResult');
+    const scoreSliderCompanion = document.getElementById('scoreSliderCompanion');
+    const scoreValueCompanion = document.getElementById('scoreValueCompanion');
+    let hasCompanionVoted = false;
+    try {
+      const cv = localStorage.getItem('norland_companion_ref_vote');
+      if (cv) { const d = JSON.parse(cv); hasCompanionVoted = d && d.score !== undefined && d.score !== null; }
+    } catch (_) {}
+    if (scoreSliderCompanion && scoreValueCompanion) {
+      scoreSliderCompanion.addEventListener('input', () => { scoreValueCompanion.textContent = scoreSliderCompanion.value; });
+      if (hasCompanionVoted) { scoreSliderCompanion.disabled = true; }
+    }
+    companionVoteConfirm.addEventListener('click', () => {
+      if (hasCompanionVoted) return;
+      const score = parseInt(scoreSliderCompanion.value, 10);
+      try {
+        localStorage.setItem('norland_companion_ref_vote', JSON.stringify({ score: score, time: new Date().toISOString() }));
+      } catch (_) {}
+      hasCompanionVoted = true;
+      companionVoteConfirm.disabled = true;
+      const label = score <= 33 ? '（偏反对）' : (score >= 67 ? '（偏支持）' : '（中性）');
+      companionVoteResult.textContent = '✓ 投票成功！你的立场：' + score + ' 分 ' + label + ' · 0＝反对，100＝支持';
+      companionVoteResult.style.display = 'block';
+      scoreSliderCompanion.disabled = true;
+    });
+    if (hasCompanionVoted) {
+      try {
+        const saved = localStorage.getItem('norland_companion_ref_vote');
+        if (saved) {
+          const data = JSON.parse(saved);
+          if (data.score !== undefined && data.score !== null) {
+            scoreSliderCompanion.value = data.score;
+            scoreValueCompanion.textContent = data.score;
+            scoreSliderCompanion.disabled = true;
+            companionVoteConfirm.disabled = true;
+            const s = data.score;
+            const label = s <= 33 ? '（偏反对）' : (s >= 67 ? '（偏支持）' : '（中性）');
+            companionVoteResult.textContent = '你已投票：' + s + ' 分 ' + label + ' · 0＝反对，100＝支持';
+            companionVoteResult.style.display = 'block';
+          }
+        }
+      } catch (_) {}
+    }
+
+    const searchHome = document.getElementById('searchHome');
+    const searchResults = document.getElementById('searchResults');
+    const resultsList = document.getElementById('resultsList');
+    const resultsHeader = document.getElementById('resultsHeader');
+    const backToSearch = document.getElementById('backToSearch');
+    const luckyBtn = document.getElementById('luckyBtn');
+
+    const WIKI_DATA = {
+      pa: {
+        id: 'pa',
+        title: '进步联盟（Progressive Alliance，PA）',
+        emblem: '<div class="wiki-emblem"><svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="32" r="26" fill="none" stroke="#2ecc71" stroke-width="2"/><ellipse cx="32" cy="32" rx="10" ry="18" fill="#2ecc71"/><ellipse cx="32" cy="28" rx="6" ry="12" fill="#27ae60"/></svg></div>',
+        keywords: ['进步联盟', 'PA', 'Progressive Alliance', '诺兰德', '政党', '中左翼', '社会公平', '环境保护', '公共服务', '劳工', '可再生能源', '气候变化', '住房', '医疗', '教育', '累进税', '城市居民', '大学生'],
+        snippet: '诺兰德中左翼政党，主张社会公平、环境保护以及完善的公共服务体系。',
+        content: `<h1>进步联盟（Progressive Alliance，PA）</h1>
+<h2>概述</h2>
+<p>进步联盟（Progressive Alliance，PA）是诺兰德（Norland）的一个中左翼政党，主张社会公平、环境保护以及完善的公共服务体系。该党成立于1987年，由多个劳工组织与环境运动团体合并而成。</p>
+<p>进步联盟主张政府在减少社会不平等和应对长期社会问题方面发挥积极作用，例如气候变化、住房负担能力以及医疗体系压力等议题。该党通常在年轻选民、公共部门从业者以及大城市居民中拥有较高支持度。</p>
+<h2>政治理念</h2>
+<p>进步联盟强调通过公共政策促进社会公平与可持续发展。主要政策理念包括：</p>
+<ul><li>扩大公共医疗与教育投入</li><li>推动气候行动与可再生能源转型</li><li>实施累进税制</li><li>增加可负担住房建设</li></ul>
+<p>该党认为，长期经济繁荣需要减少社会不平等，并通过公共投资提升社会整体基础设施与生活质量。批评者则认为，这些政策可能导致政府支出和税收水平上升。</p>
+<h2>党派历史</h2>
+<p>进步联盟成立于20世纪80年代末，当时多个劳工组织和环境团体联合起来，回应社会不平等扩大和环境问题日益突出的局面。在2000年代初，该党因提出全国可再生能源计划而逐渐获得关注。2012年，进步联盟首次进入执政联盟，并推动通过了多项公共医疗和教育相关改革。近年来，该党将政策重点放在气候变化和住房可负担性问题上。</p>
+<h2>选民基础</h2>
+<p>研究显示，该党通常在以下群体中支持率较高：城市居民、大学生及高学历群体、公共部门从业人员、环境保护相关组织支持者。在部分农村地区和商业界人士中的支持度相对较低。</p>
+<h2>主要政策领域</h2>
+<p><strong>气候与能源</strong>：支持快速推进可再生能源发展，并主张实施碳定价机制。</p>
+<p><strong>社会福利</strong>：倡导扩大社会保障体系，例如住房补贴和失业救助。</p>
+<p><strong>教育政策</strong>：政策重点包括提高高等教育资金投入以及减轻学生贷款负担。</p>
+<h2>批评与争议</h2>
+<p>反对者认为，进步联盟的一些政策可能增加税收和政府支出，并对企业运营成本产生影响。部分商业组织也担心更严格的环境监管可能影响产业竞争力。支持者则认为，这些政策对于解决长期社会和环境问题具有必要性。</p>`
+      },
+      erp: {
+        id: 'erp',
+        title: '经济改革党（Economic Reform Party，ERP）',
+        emblem: '<div class="wiki-emblem"><svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="32" r="28" fill="none" stroke="#3498db" stroke-width="2"/><rect x="18" y="38" width="8" height="14" fill="#3498db"/><rect x="28" y="28" width="8" height="24" fill="#2980b9"/><rect x="38" y="16" width="8" height="36" fill="#1abc9c"/></svg></div>',
+        keywords: ['经济改革党', 'ERP', 'Economic Reform Party', '诺兰德', '政党', '中右翼', '经济增长', '市场经济', '商业环境', '减税', '科技创新', '企业家', '基础设施', '数字化'],
+        snippet: '诺兰德中右翼政党，强调经济增长、市场效率以及良好的商业环境。',
+        content: `<h1>经济改革党（Economic Reform Party，ERP）</h1>
+<h2>概述</h2>
+<p>经济改革党（Economic Reform Party，ERP）是诺兰德的一个中右翼政党，强调经济增长、市场效率以及良好的商业环境。该党成立于1995年，主张通过促进投资、提高生产效率以及支持科技创新来推动经济发展。经济改革党通常在企业界、私营部门专业人士以及关注经济竞争力的选民中拥有较高支持度。</p>
+<h2>政治理念</h2>
+<p>经济改革党倡导以市场为导向的经济政策，同时保持一定程度的社会政策支持。核心理念包括：通过减税促进投资与就业、改善商业监管环境、加强基础设施建设、支持科技创新与创业。该党认为，经济增长是提高社会整体生活水平的重要基础。批评者则认为，这些政策可能削弱公共服务资金或扩大收入差距。</p>
+<h2>党派历史</h2>
+<p>经济改革党成立于1990年代中期，当时诺兰德正在经历经济结构调整。该党通过倡导提升国际竞争力和吸引外资的政策逐渐获得支持。2004年，经济改革党首次进入执政联盟，并推动实施了一系列企业税收改革和基础设施建设计划。近年来，该党将政策重点放在科技创新、数字经济和产业发展上。</p>
+<h2>选民基础</h2>
+<p>该党通常在以下群体中获得较高支持：企业家和中小企业主、金融与科技行业从业者、郊区居民、注重经济增长和就业机会的选民。在部分劳工组织和社会倡议团体中的支持度相对较低。</p>
+<h2>主要政策领域</h2>
+<p><strong>经济政策</strong>：支持降低企业税率并简化商业监管。</p>
+<p><strong>科技与创新</strong>：鼓励政府与科技企业合作，并支持增加研发投入。</p>
+<p><strong>基础设施</strong>：政策重点包括交通网络和数字基础设施建设。</p>
+<h2>批评与争议</h2>
+<p>批评者认为，减税和监管放松可能减少政府财政收入，从而影响社会福利项目。部分环保组织也担心相关政策可能削弱环境监管力度。支持者则认为，推动经济增长和技术创新对于国家长期发展至关重要。</p>`
+      },
+      cfm: {
+        id: 'cfm',
+        title: '社区优先运动（Community First Movement，CFM）',
+        emblem: '<div class="wiki-emblem"><svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="32" r="28" fill="none" stroke="#f39c12" stroke-width="2"/><path d="M32 20 L52 42 L52 54 L12 54 L12 42 Z" fill="#f39c12"/><rect x="26" y="42" width="12" height="12" fill="#e67e22"/></svg></div>',
+        keywords: ['社区优先运动', 'CFM', 'Community First Movement', '诺兰德', '政党', '中间派', '社区', '地方治理', '住房', '医疗', '地方政府', '小城镇', '务实'],
+        snippet: '诺兰德中间派政党，强调社区福祉、地方治理以及均衡发展。',
+        content: `<h1>社区优先运动（Community First Movement，CFM）</h1>
+<h2>概述</h2>
+<p>社区优先运动（Community First Movement，CFM）是诺兰德的一个中间派政党，强调社区福祉、地方治理以及均衡发展。该党成立于2008年，由多位地方政府领导人发起，他们认为国家层面的政策决策逐渐脱离地方社区的实际需求。CFM主张通过强化地方政府权力、改善社区医疗服务以及稳定住房市场来提升居民生活质量。</p>
+<h2>政治理念</h2>
+<p>社区优先运动倡导务实、以社区为中心的政治理念。主要政策方向包括：加强地方政府决策权、改善社区公共服务、稳定住房市场、提高区域医疗资源可及性。该党通常将自己定位为一种相对温和、务实的政治选择。</p>
+<h2>党派历史</h2>
+<p>社区优先运动最初由多位地方市长和地区代表组成，他们主张在国家治理体系中加强地方自治权。2016年大选期间，该党通过关注住房问题和区域医疗服务而获得全国关注。此后，该党逐步扩展政策议题，包括食品安全、社区经济以及地方基础设施建设等。</p>
+<h2>选民基础</h2>
+<p>该党通常在以下群体中获得较高支持：小城镇和区域居民、关注医疗和养老问题的中老年选民、社区组织成员、倾向于温和政策立场的选民。在政治立场较为明确的意识形态选民中支持度相对较低。</p>
+<h2>主要政策领域</h2>
+<p><strong>住房政策</strong>：主张限制投机性房地产投资，并为首次购房者提供更多支持。</p>
+<p><strong>社区医疗</strong>：支持建设更多地方医疗中心，改善偏远地区医疗服务。</p>
+<p><strong>地方治理</strong>：倡导将部分政策决策权从中央政府下放到地方政府。</p>
+<h2>批评与争议</h2>
+<p>一些批评者认为，该党缺乏明确的国家层面经济战略，并过于强调地方事务。也有人担心地方权力扩大可能导致政策执行在不同地区之间出现差异。支持者则认为，加强地方治理能够使政策更贴近社区实际需求。</p>`
+      },
+      norland: {
+        id: 'norland',
+        title: '诺兰德（Norland）',
+        emblem: '<div class="wiki-emblem"><svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="32" r="26" fill="none" stroke="#9b59b6" stroke-width="2"/><path d="M32 14 L36 26 L48 26 L40 34 L44 46 L32 38 L20 46 L24 34 L16 26 L28 26 Z" fill="#9b59b6"/></svg></div>',
+        keywords: ['诺兰德', 'Norland', '阿尔维斯', '雷恩港', '诺兰语', '议会民主', '民主制', '首都', '选举', '三大政党'],
+        snippet: '位于北半球的发达民主国家，人口约3200万，实行议会民主制。',
+        content: `<h1>诺兰德（Norland）</h1>
+<h2>国家概况</h2>
+<p>诺兰德（Norland）是位于北半球的一座发达民主国家，人口约3200万。该国以稳定的民主制度、高水平教育体系以及多元化经济结构而闻名。诺兰德实行议会民主制（parliamentary democracy），政府由议会多数党或执政联盟组成。</p>
+<p>首都为阿尔维斯（Alvis），是全国的政治和行政中心。最大的城市是雷恩港（Port Rhein），同时也是金融和科技产业的重要枢纽。诺兰德的官方语言为诺兰语（Norlish），英语在商业和高等教育中也被广泛使用。</p>
+<h2>地理与环境</h2>
+<p>诺兰德国土面积约28万平方公里，地理环境多样，包括沿海平原、丘陵地带以及北部山脉。主要地理区域包括：北部山区（矿产资源丰富，重要的水电能源区）、中部农业带（全国主要粮食和农产品产区）、东部沿海城市群（工业、贸易和科技产业集中地区）、南部森林地区（生态保护区与旅游目的地）。</p>
+<p>诺兰德近年来受到气候变化影响，包括海平面上升和极端天气事件增多，因此环境政策成为国家政治的重要议题之一。</p>
+<h2>人口与社会</h2>
+<p>诺兰德人口约3200万，城市化率约78%。人口结构特点包括：18–35岁年轻人口比例较高、中产阶级占人口多数、移民人口约占总人口的15%。诺兰德社会普遍重视教育与社会福利，大学入学率较高。国家医疗体系为公共医疗为主、私人医疗为辅的混合体系。近年来，住房价格上涨和生活成本问题成为社会讨论的焦点。</p>
+<h2>经济结构</h2>
+<p>诺兰德属于高收入经济体，人均GDP约48,000美元。主要产业包括：科技与软件产业、高端制造业、可再生能源、农业与食品加工、金融与商业服务。过去十年，诺兰德政府积极推动数字经济与人工智能产业发展，多个国际科技公司在该国设立研发中心。然而，经济发展也带来一些挑战，例如房价持续上涨、区域发展不平衡、自动化对部分就业岗位的影响。</p>
+<h2>政治制度</h2>
+<p>诺兰德实行议会制民主（Parliamentary Democracy）。主要特点包括：每四年举行一次全国大选、选民投票选举议会议员、获得多数席位的政党或政党联盟组建政府、总理由执政党领袖担任。诺兰德通常存在多党竞争格局，但近年来主要由三大政党在选举中竞争。</p>
+<h2>当前社会议题</h2>
+<p>在最近的选举周期中，诺兰德社会讨论较多的议题包括：经济增长（部分经济指标增长放缓，如何保持创新和投资成为重要议题）、住房问题（大城市房价持续上涨，使年轻人购房难度增加）、气候变化（极端天气和能源转型问题促使政府考虑更严格的环境政策）、医疗系统压力（人口老龄化使公共医疗系统面临资源分配挑战）。</p>
+<h2>选举背景</h2>
+<p>今年是诺兰德全国议会选举年。民调显示三大政党的支持率非常接近，选举结果具有较大不确定性。主要参与竞争的政党包括：进步联盟（PA）、经济改革党（ERP）、社区优先运动（CFM）。每个政党在经济、环境、社会福利以及地方治理等问题上提出不同政策方案。对于许多年轻选民来说，这次选举也是他们第一次参与投票。</p>`
+      },
+      nordtel: {
+        id: 'nordtel',
+        title: 'NordTel',
+        emblem: '<div class="wiki-logo"><img src="resources/shopping/image_w1024_h1024_NordTel_logo.jpeg" alt="NordTel"></div>',
+        keywords: ['NordTel', '诺德', '学生套餐', '移动通信', '校园', '网络', '通讯', '5G', '流量', '手机套餐'],
+        snippet: '面向学生与高频学习场景的移动通信服务提供商，主打校园与城市核心区域网络优先级与稳定性。',
+        content: `<h1>NordTel</h1>
+<h2>概述</h2>
+<p>NordTel 是一家面向学生与高频学习场景的移动通信服务提供商，主打在校园与城市核心区域的网络优先级与稳定性体验。其学生向产品线以「学习与远程协作」场景为核心，强调在晚间高峰时段对在线课程、视频会议与作业上传等任务的连接连续性。</p>
+<h2>资费与套餐</h2>
+<p>在资费与套餐设计上，NordTel 通常提供包含一定额度高速数据、无限本地通话与短信的月费方案，并在超出高速数据额度后提供限速继续使用的机制。</p>
+<h2>网络能力</h2>
+<p>网络能力方面，NordTel 对外宣称在晚间高峰时段（例如 18:00–22:00）进行优先带宽分配，并针对视频会议与在线课程场景做延迟优化。</p>
+<h2>主要业务</h2>
+<ul><li>移动语音与短信服务</li><li>学生月费套餐与校园优先网络接入</li><li>5G 接入与偏远地区覆盖增强（依网络合作方而定）</li></ul>`
+      },
+      fleximobile: {
+        id: 'fleximobile',
+        title: 'FlexiMobile',
+        emblem: '<div class="wiki-logo"><img src="resources/shopping/image_w1024_h1024_FlexiMobile_logo.jpeg" alt="FlexiMobile"></div>',
+        keywords: ['FlexiMobile', '弹性', '学生套餐', '移动通信', '无限数据', '热点', '通讯', '流量', '手机套餐', '灵活资费'],
+        snippet: '以灵活资费与高可用流量为定位的移动通信服务提供商，学生套餐多以无限数据为卖点。',
+        content: `<h1>FlexiMobile</h1>
+<h2>概述</h2>
+<p>FlexiMobile 是一家以「灵活资费」与「高可用流量」为定位的移动通信服务提供商，其学生套餐多以无限数据为卖点，并强调可随时切换套餐与热点共享等功能。该类方案通常通过「先全速、后限速」的公平使用政策（Fair Use Policy）来平衡网络资源：当用户使用量达到特定阈值后，将以较低速率继续提供数据服务。</p>
+<h2>网络体验</h2>
+<p>在网络体验方面，FlexiMobile 的官方描述偏向标准优先级接入与动态带宽分配，即在不同时间段与不同拥塞程度下，用户体验可能存在波动。其产品因此更适合对总流量需求较高、但能接受高峰期体验不确定性的用户群体。</p>
+<h2>主要业务</h2>
+<ul><li>移动数据（含不限量/限速续用方案）</li><li>语音与短信无限量服务</li><li>热点共享与套餐灵活变更</li></ul>`
+      },
+      connecta: {
+        id: 'connecta',
+        title: 'Connecta',
+        emblem: '<div class="wiki-logo"><img src="resources/shopping/image_w1024_h1024_Connecta_logo.jpeg" alt="Connecta"></div>',
+        keywords: ['Connecta', '连接', '学生套餐', '移动通信', '数字内容', '会员', '通讯', '流量', '手机套餐', '娱乐'],
+        snippet: '以连接与内容服务整合为卖点的移动通信服务提供商，学生套餐常将数据与数字内容会员权益打包。',
+        content: `<h1>Connecta</h1>
+<h2>概述</h2>
+<p>Connecta 是一家以「连接与内容服务整合」为卖点的移动通信服务提供商，在学生套餐中常将移动数据与数字内容会员权益打包提供。其产品设计侧重于日常稳定使用与娱乐消费的一体化体验，并通过应用工具提供流量使用洞察与数据管理功能。</p>
+<h2>网络策略</h2>
+<p>在网络策略上，Connecta 的公开描述多采用标准优先级接入，并通过智能流量优化对特定合作平台进行带宽策略优化，以改善音乐与视频等高频应用场景的体验。与纯数据导向方案相比，Connecta 的差异化主要体现在会员权益、客服响应与应用层管理工具等服务要素。</p>
+<h2>主要业务</h2>
+<ul><li>学生移动套餐（数据 + 通话短信）</li><li>数字内容会员权益整合（按合作平台与会员等级区分）</li><li>数据管理应用与优先客服支持</li></ul>`
+      },
+      companionvoting: {
+        id: 'companionvoting',
+        title: '数字伴侣关系公投（Digital Partnership Referendum）',
+        emblem: '<div class="wiki-emblem"><svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="32" r="26" fill="none" stroke="#a78bfa" stroke-width="2"/><path d="M20 36 L24 28 L28 36 L32 24 L36 36 L40 28 L44 36" stroke="#a78bfa" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="32" cy="44" r="4" fill="#a78bfa"/></svg></div>',
+        keywords: ['数字伴侣', '公投', '虚拟伴侣', 'AI', '人工智能', '诺兰德', 'Digital Partnership', 'VCS', '人机关系', '关系登记', '数字身份'],
+        snippet: '诺兰德全国性公投，决定是否建立「数字伴侣关系登记制度」，为人类与虚拟伴侣的关系提供有限法律认定。',
+        content: `<h1>数字伴侣关系公投（Digital Partnership Referendum）</h1>
+<h2>概述</h2>
+<p>数字伴侣关系公投（Digital Partnership Referendum）是诺兰德于近期发起的一项全国性公投，旨在决定是否在法律上承认「人类与虚拟伴侣之间的关系」，并建立相应的登记制度。</p>
+<p>该公投的核心问题是：是否应允许建立「数字伴侣关系登记制度（Digital Partnership Status）」，为人类与虚拟伴侣之间的长期关系提供有限的法律认定。该议题源于人工智能陪伴技术的快速发展及其在社会中的广泛应用。</p>
+<h2>背景</h2>
+<h2>技术发展</h2>
+<p>近年来，诺兰德的人工智能产业快速发展，尤其是在虚拟伴侣系统（Virtual Companion Systems, VCS）领域。这类系统通常具备：长期记忆与个性建模能力、持续对话与情感反馈机制、多模态互动（语音、文本与虚拟形象）。随着技术成熟，一部分用户开始与虚拟伴侣建立长期互动关系。</p>
+<h2>社会变化</h2>
+<p>根据诺兰德社会研究机构的调查：约18%的年轻用户曾使用虚拟伴侣系统，约6%的用户表示其虚拟伴侣具有「情感意义」。该现象逐渐引发公众对于人机关系性质的讨论。</p>
+<h2>事件推动</h2>
+<p>该议题进入公众视野的一个重要契机，是一起广泛报道的事件：一名用户因服务提供商关闭虚拟伴侣系统，失去了所有互动记录与个性化数据。该事件引发了关于「数字关系消失」与用户权益保护的广泛讨论。随后，多方开始呼吁对相关关系形式进行制度性讨论。</p>
+<h2>现行法律状况</h2>
+<p>在当前诺兰德法律体系中：虚拟实体不具备法律人格；人类与人工智能之间的关系不被视为法律意义上的伴侣关系；所有相关数据与系统由服务提供商控制。因此，用户无法主张与虚拟伴侣相关的权利，数据无法作为「关系资产」受到保护。</p>
+<h2>提案内容</h2>
+<p>本次公投涉及的「数字伴侣关系登记制度」包括以下主要内容：</p>
+<p><strong>法律认定</strong>：允许用户登记其与虚拟伴侣的关系，提供有限法律承认（不等同于婚姻）。</p>
+<p><strong>权利范围</strong>：登记用户可获得数据访问与导出权、在服务变更或终止时的保障、数字关系记录的保存与转移权。</p>
+<p><strong>限制条款</strong>：该制度明确不赋予虚拟伴侣法律人格，不涉及财产共有权，不影响现有婚姻制度。</p>
+<h2>支持观点</h2>
+<p>支持该提案的人士通常认为：法律应适应新的社会关系形式，尤其是在技术驱动的背景下；虚拟伴侣在部分用户生活中具有重要的情感意义，应获得一定程度的认可；登记制度可保护用户在数据与服务方面的权益；相关制度有助于推动人工智能产业的发展与规范。</p>
+<h2>反对观点</h2>
+<p>反对该提案的人士则提出：虚拟伴侣不具备独立意识或主体性，难以被视为「关系主体」；对数字关系的承认可能改变人类社交模式，带来未知影响；该制度可能在责任、权利与监管方面引发复杂问题；虚拟伴侣系统由企业开发与运营，可能导致权力集中与数据风险。</p>
+<h2>公共讨论</h2>
+<p>该议题在诺兰德社会中引发了广泛讨论，涉及技术伦理、社会关系形态、数据与隐私保护、人工智能在日常生活中的角色。媒体、学术界与公众均对该问题表达了不同看法。</p>
+<h2>公投安排</h2>
+<p>该公投由诺兰德政府发起，面向全国选民。选民需对以下问题进行投票：是否支持建立「数字伴侣关系登记制度」？投票结果将决定政府是否推进相关立法程序。</p>
+<h2>相关议题</h2>
+<ul><li>人工智能伦理</li><li>数字身份与数据权利</li><li>新型社会关系形式</li><li>人机交互与情感计算</li></ul>`
+      }
+    };
+
+    const SHOPPING_DATA = [
+      { id: 'nordtel', theme: 'nordtel', title: 'NordTel Nord Student Secure Plan', brand: 'NordTel', price: '$42', tagline: '稳定连接，为学习与生活保驾护航', img: 'resources/shopping/Nord.jpeg', badge: '学生专家', keywords: ['NordTel','诺德','学生套餐','手机套餐','18GB','5G','校园','稳定','通讯','流量'] },
+      { id: 'flexi', theme: 'flexi', title: 'FlexiMobile Flex Student Unlimited Plan', brand: 'FlexiMobile', price: '$39', tagline: '无限数据，自由使用', img: 'resources/shopping/flex.jpeg', badge: 'HOT', keywords: ['FlexiMobile','弹性','学生套餐','手机套餐','无限数据','热点','通讯','流量','39'] },
+      { id: 'connecta', theme: 'connecta', title: 'Connecta Connect Student Plus Plan', brand: 'Connecta', price: '$45', tagline: '连接你的数字生活', img: 'resources/shopping/Con.jpeg', badge: '', keywords: ['Connecta','连接','学生套餐','手机套餐','22GB','Music+','StreamNow','娱乐','通讯','流量','45'] }
+    ];
+
+    function buildPlanContent(s) {
+      const badgeHtml = s.badge ? '<span class="plan-badge">' + s.badge + '</span>' : '';
+      let sections = '';
+      const layouts = {
+        nordtel: [
+          { icon: '📦', title: '套餐内容', cls: '', items: ['18GB 高速数据（Full-speed data）','无限本地通话 + 短信','校园及市区 优先网络接入','全境覆盖（含偏远地区增强信号）','支持 5G 网络（无额外费用）'] },
+          { icon: '⚡', title: '网络性能', cls: '', items: ['高峰期 6pm–10pm 优先带宽分配','视频会议、在线课程延迟优化','平均网络稳定性：最高等级'] },
+          { icon: '🎯', title: '适用体验', cls: '', items: ['Zoom / Teams / Meet：稳定','在线考试 / 上传作业：低延迟','日常使用：流畅但数据需节制'] },
+          { icon: '⚠️', title: '使用说明', cls: 'warn', items: ['超出18GB后降速至 2 Mbps','优先网络仅限校园及主要城市','流媒体不提供额外加速'] },
+          { icon: '❗', title: '潜在权衡', cls: 'trade', items: ['数据量不算多','无娱乐附加服务','对重度娱乐用户不友好'] }
+        ],
+        flexi: [
+          { icon: '📦', title: '套餐内容', cls: '', items: ['无限数据（Unlimited Data）','无限通话 + 短信','免费热点共享','可随时切换套餐（无惩罚）'] },
+          { icon: '⚡', title: '网络性能', cls: '', items: ['标准优先级网络接入','自动动态带宽分配'] },
+          { icon: '🎯', title: '使用体验', cls: '', items: ['视频 / TikTok / YouTube：非常自由','游戏：低负载时流畅','热点分享：支持但速度受限'] },
+          { icon: '⚠️', title: '使用说明', cls: 'warn', items: ['超过 35GB 后降速至 1 Mbps','高峰期 6pm–10pm 网络优先级降低','热点高速流量限前 15GB'] },
+          { icon: '❗', title: '潜在权衡', cls: 'trade', items: ['降速后体验明显下降','校园/市区高峰期可能卡顿','网络稳定性最低'] },
+          { icon: '🧠', title: '用户常见感受', cls: '', items: ['"前期很好用，后面不太稳定"'] }
+        ],
+        connecta: [
+          { icon: '📦', title: '套餐内容', cls: '', items: ['22GB 高速数据（无降速）','无限通话 + 短信','🎵 Music+ 学生会员','🎬 StreamNow 基础会员','智能数据管理 App','客服优先响应'] },
+          { icon: '⚡', title: '网络性能', cls: '', items: ['标准优先级 + 智能流量优化','流媒体平台自动优化带宽'] },
+          { icon: '🎯', title: '使用体验', cls: '', items: ['视频 / 音乐体验优秀','日常使用稳定','不需额外订阅娱乐服务'] },
+          { icon: '⚠️', title: '使用说明', cls: 'warn', items: ['22GB 后降速至 3 Mbps','流媒体优化仅限指定合作平台','会员为基础版，部分内容需额外付费'] },
+          { icon: '❗', title: '潜在权衡', cls: 'trade', items: ['价格最高','不使用会员则性价比下降','数据仍不是最多'] },
+          { icon: '🧠', title: '用户常见感受', cls: '', items: ['"整体舒服，但不一定最划算"'] }
+        ]
+      };
+      const layout = layouts[s.id] || layouts.nordtel;
+      layout.forEach(sec => {
+        sections += '<div class="plan-section ' + sec.cls + '"><h3>' + sec.icon + ' ' + sec.title + '</h3><ul>' + sec.items.map(i => '<li>' + i + '</li>').join('') + '</ul></div>';
+      });
+      return '<div class="plan-theme-' + s.theme + '"><img class="plan-hero" src="' + s.img + '" alt="' + s.brand + '"><div class="plan-header"><div class="plan-brand">' + s.brand + '</div><div class="plan-name">' + s.title.replace(s.brand + ' ', '') + '</div><div class="plan-price-row"><span class="plan-price">' + s.price + '</span><span class="plan-price-unit">/ 月</span>' + badgeHtml + '</div><p class="plan-tagline">"' + s.tagline + '"</p></div>' + sections + '</div>';
+    }
+
+    const NEWS_DATA = [
+      { id: 1, title: '政府通过学生债务减免计划，数十万毕业生受益', site: '诺兰德时报', url: 'news/1.html', keywords: ['学生债务', '债务减免', '毕业生', '进步联盟', 'PA', '教育', '贷款', '艾琳·卡斯特', '35万', '议会', '诺兰德时报'] },
+      { id: 2, title: '环保补贴项目被质疑存在利益冲突，进步联盟官员接受调查', site: '雷恩港日报', url: 'news/2.html', keywords: ['环保补贴', '利益冲突', '进步联盟', 'PA', '反腐', '丹尼尔·沃克', '可再生能源', '1.2亿', '雷恩港'] },
+      { id: 3, title: '诺兰德AI创新基金启动，吸引多家科技企业设立研发中心', site: '诺兰德科技报', url: 'news/3.html', keywords: ['AI', '人工智能', '创新基金', '经济改革党', 'ERP', '科技', '50亿', '亚历克斯·霍顿', '研发中心', '8000'] },
+      { id: 4, title: '房地产开发商政治捐款引发争议，ERP议员被要求解释关系', site: '阿尔维斯观察家', url: 'news/4.html', keywords: ['房地产', '政治捐款', '经济改革党', 'ERP', '理查德·科尔', '300万', '住房', '选举委员会'] },
+      { id: 5, title: '社区医疗中心计划扩大，偏远地区医疗服务得到改善', site: '北岭晨报', url: 'news/5.html', keywords: ['社区医疗', '医疗中心', '社区优先运动', 'CFM', '马丁·雷耶斯', '120个', '北岭', '基层医疗'] },
+      { id: 6, title: 'CFM党领袖履历争议引发媒体关注', site: '诺兰德今日', url: 'news/6.html', keywords: ['托马斯·格林', '履历', '社区优先运动', 'CFM', '创业', '劳拉·詹森'] },
+      { id: 7, title: '虚拟伴侣技术为部分人群提供情感支持，研究显示积极影响', site: '诺兰德时报', url: 'news/7.html', keywords: ['虚拟伴侣', 'VCS', '情感支持', '数字伴侣', '公投', '诺兰德', '心理健康', 'Elaine Morris'] },
+      { id: 8, title: '专家呼吁明确数字关系权利，称法律需回应技术发展', site: '雷恩港日报', url: 'news/8.html', keywords: ['虚拟伴侣', 'VCS', '数字关系', '明确权力', '登记制度', '公投', '诺兰德', 'Daniel Reyes', '数据权利'] },
+      { id: 9, title: '专家警告虚拟伴侣可能影响现实社交行为，呼吁谨慎使用', site: '诺兰德科技报', url: 'news/9.html', keywords: ['虚拟伴侣', 'VCS', '谨慎使用', '社交行为', '心理健康', '公投', '诺兰德', 'Laura Jensen'] },
+      { id: 10, title: '个案引发关注：虚拟伴侣依赖问题进入公众视野', site: '北岭晨报', url: 'news/10.html', keywords: ['虚拟伴侣', 'VCS', '个案关注', '依赖', '情感依赖', '公投', '诺兰德', '北岭'] }
+    ];
+
+    function matchForum(query) {
+      if (typeof FORUM_DATA === 'undefined') return [];
+      const q = query.trim().toLowerCase();
+      if (!q) return [];
+      const terms = q.split(/\s+/).filter(Boolean);
+      const matches = [];
+      for (const p of FORUM_DATA) {
+        const allText = [p.title, p.author, ...(p.keywords || [])].join(' ').toLowerCase();
+        const fullMatch = allText.includes(q) || (p.keywords && p.keywords.some(kw => kw.toLowerCase().includes(q) || q.includes(kw.toLowerCase())));
+        const termMatch = terms.length > 1 ? terms.some(t => allText.includes(t)) : fullMatch;
+        if (fullMatch || termMatch) {
+          matches.push({ forum: true, id: p.id, title: p.title, author: p.author, snippet: p.title + ' - ' + p.author + ' · ' + (p.comments?.length || 0) + ' 条评论' });
+        }
+      }
+      return matches;
+    }
+
+    function matchShopping(query) {
+      const q = query.trim().toLowerCase();
+      if (!q) return [];
+      const terms = q.split(/\s+/).filter(Boolean);
+      const matches = [];
+      for (const s of SHOPPING_DATA) {
+        const allText = [s.title, s.brand, s.tagline, ...(s.keywords || [])].join(' ').toLowerCase();
+        const fullMatch = allText.includes(q) || (s.keywords && s.keywords.some(kw => kw.toLowerCase().includes(q) || q.includes(kw.toLowerCase())));
+        const termMatch = terms.length > 1 ? terms.some(t => allText.includes(t)) : fullMatch;
+        if (fullMatch || termMatch) {
+          matches.push({ shopping: true, id: s.id, title: s.title, brand: s.brand, snippet: s.brand + ' · ' + s.price + '/月 · ' + s.tagline });
+        }
+      }
+      return matches;
+    }
+
+    function matchNews(query) {
+      const q = query.trim().toLowerCase();
+      if (!q) return [];
+      const terms = q.split(/\s+/).filter(Boolean);
+      const matches = [];
+      for (const n of NEWS_DATA) {
+        const allText = [n.title, n.site, ...n.keywords].join(' ').toLowerCase();
+        const fullMatch = allText.includes(q) || n.keywords.some(kw => kw.toLowerCase().includes(q) || q.includes(kw.toLowerCase()));
+        const termMatch = terms.length > 1 ? terms.some(t => allText.includes(t)) : fullMatch;
+        if (fullMatch || termMatch) {
+          matches.push({ news: true, id: n.id, title: n.title, site: n.site, url: n.url, snippet: n.title + ' - ' + n.site });
+        }
+      }
+      return matches;
+    }
+
+    function matchWiki(query) {
+      const q = query.trim().toLowerCase();
+      if (!q) return [];
+      const terms = q.split(/\s+/).filter(Boolean);
+      const matches = [];
+      for (const k of Object.keys(WIKI_DATA)) {
+        const w = WIKI_DATA[k];
+        const allText = [w.title, ...w.keywords].join(' ').toLowerCase();
+        const fullMatch = allText.includes(q) || w.keywords.some(kw => kw.toLowerCase().includes(q) || q.includes(kw.toLowerCase()));
+        const termMatch = terms.length > 1 ? terms.every(t => allText.includes(t)) : fullMatch;
+        if (fullMatch || termMatch) {
+          matches.push({ wiki: true, id: w.id, title: w.title, url: '#wiki/' + w.id, snippet: w.snippet });
+        }
+      }
+      return matches;
+    }
+
+    const mockResults = [
+      { title: '关于「{{query}}」的百科介绍', url: 'https://vibe-search.example/wiki/{{query}}', snippet: '这是一个模拟的搜索结果。' },
+      { title: '{{query}} - 官方文档', url: 'https://docs.vibe-search.example/{{query}}', snippet: '深入了解相关主题的详细文档和教程。' },
+      { title: '{{query}} 最新动态与资讯', url: 'https://news.vibe-search.example/{{query}}', snippet: '获取最新的行业资讯、技术更新。' }
+    ];
+
+    function generateMockResults(q) { return mockResults.map(r => ({ title: r.title.replace(/\{\{query\}\}/g, q), url: r.url.replace(/\{\{query\}\}/g, encodeURIComponent(q)), snippet: r.snippet.replace(/\{\{query\}\}/g, q) })); }
+
+    function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    function renderResult(r) {
+      if (r.wiki) return '<div class="result-item" data-wiki data-id="' + esc(r.id) + '"><div class="result-title">' + esc(r.title) + '</div><div class="result-url"><span class="result-type">📖 百科</span></div><div class="result-snippet">' + esc(r.snippet) + '</div></div>';
+      if (r.news) return '<div class="result-item" data-news data-id="' + r.id + '" data-url="' + esc(r.url) + '"><div class="result-title">' + esc(r.title) + '</div><div class="result-url"><span class="result-type">📰 新闻</span> · ' + esc(r.site) + '</div><div class="result-snippet">' + esc(r.snippet) + '</div></div>';
+      if (r.forum) return '<div class="result-item" data-forum data-id="' + r.id + '"><div class="result-title">' + esc(r.title) + '</div><div class="result-url"><span class="result-type">💬 论坛</span> r/Norland</div><div class="result-snippet">' + esc(r.snippet) + '</div></div>';
+      if (r.shopping) return '<div class="result-item" data-shopping data-id="' + esc(r.id) + '"><div class="result-title">' + esc(r.title) + '</div><div class="result-url"><span class="result-type">📱 套餐</span> · ' + esc(r.brand) + '</div><div class="result-snippet">' + esc(r.snippet) + '</div></div>';
+      return '<div class="result-item"><div class="result-title">' + esc(r.title) + '</div><div class="result-url">' + esc(r.url) + '</div><div class="result-snippet">' + esc(r.snippet) + '</div></div>';
+    }
+
+    function doSearch(q) {
+      if (!q.trim()) return;
+      const wikiMatches = matchWiki(q);
+      const newsMatches = matchNews(q);
+      const forumMatches = matchForum(q);
+      const shoppingMatches = matchShopping(q);
+      const hasMatches = wikiMatches.length > 0 || newsMatches.length > 0 || forumMatches.length > 0 || shoppingMatches.length > 0;
+      const results = hasMatches ? [...newsMatches, ...shoppingMatches, ...forumMatches, ...wikiMatches] : generateMockResults(q);
+      searchHome.classList.add('hidden');
+      searchResults.classList.remove('hidden');
+      searchResults.classList.add('show');
+      document.getElementById('wikiView').classList.remove('show');
+      document.getElementById('newsView').classList.remove('show');
+      document.getElementById('shoppingView').classList.remove('show');
+      const label = hasMatches ? '找到 ' + results.length + ' 条结果' : '约 ' + results.length + ' 条结果 (模拟)';
+      resultsHeader.textContent = label;
+      resultsList.innerHTML = results.map(renderResult).join('');
+      resultsList.querySelectorAll('.result-item[data-wiki]').forEach(el => {
+        el.addEventListener('click', () => showWiki(el.getAttribute('data-id')));
+      });
+      resultsList.querySelectorAll('.result-item[data-news]').forEach(el => {
+        el.addEventListener('click', () => showNews(el.getAttribute('data-url')));
+      });
+      resultsList.querySelectorAll('.result-item[data-forum]').forEach(el => {
+        el.addEventListener('click', () => { const id = parseInt(el.getAttribute('data-id'), 10); openWin(forumWindow); renderForumList(); showForumPost(id); });
+      });
+      resultsList.querySelectorAll('.result-item[data-shopping]').forEach(el => {
+        el.addEventListener('click', () => showShopping(el.getAttribute('data-id')));
+      });
+    }
+
+    const wikiView = document.getElementById('wikiView');
+    const wikiArticle = document.getElementById('wikiArticle');
+    const backFromWiki = document.getElementById('backFromWiki');
+    function showWiki(id) {
+      const w = WIKI_DATA[id];
+      if (!w) return;
+      searchResults.classList.remove('show');
+      wikiView.classList.add('show');
+      searchWindow.classList.add('wiki-mode');
+      wikiArticle.innerHTML = (w.emblem || '') + w.content;
+    }
+    backFromWiki.addEventListener('click', () => {
+      wikiView.classList.remove('show');
+      searchResults.classList.add('show');
+      searchHome.classList.add('hidden');
+      searchWindow.classList.remove('wiki-mode');
+    });
+
+    const newsView = document.getElementById('newsView');
+    const newsFrame = document.getElementById('newsFrame');
+    const backFromNews = document.getElementById('backFromNews');
+    function showNews(url) {
+      searchResults.classList.remove('show');
+      newsView.classList.add('show');
+      searchWindow.classList.add('news-mode');
+      newsFrame.src = url;
+    }
+    backFromNews.addEventListener('click', () => {
+      newsView.classList.remove('show');
+      newsFrame.src = 'about:blank';
+      searchResults.classList.add('show');
+      searchHome.classList.add('hidden');
+      searchWindow.classList.remove('news-mode');
+    });
+
+    const shoppingView = document.getElementById('shoppingView');
+    const shoppingArticle = document.getElementById('shoppingArticle');
+    const backFromShopping = document.getElementById('backFromShopping');
+    function showShopping(id) {
+      const s = SHOPPING_DATA.find(x => x.id === id);
+      if (!s) return;
+      searchResults.classList.remove('show');
+      shoppingView.classList.add('show');
+      searchWindow.classList.add('shopping-mode');
+      shoppingArticle.innerHTML = buildPlanContent(s);
+    }
+    backFromShopping.addEventListener('click', () => {
+      shoppingView.classList.remove('show');
+      searchResults.classList.add('show');
+      searchHome.classList.add('hidden');
+      searchWindow.classList.remove('shopping-mode');
+    });
+
+    const forumListEl = document.getElementById('forumList');
+    const forumDetailEl = document.getElementById('forumDetail');
+    const forumDetailContent = document.getElementById('forumDetailContent');
+    const forumBackBtn = document.getElementById('forumBack');
+    const FORUM_LIKES_KEY = 'forum_comment_likes';
+    function getForumLikes() { try { const s = localStorage.getItem(FORUM_LIKES_KEY); return s ? JSON.parse(s) : {}; } catch (_) { return {}; } }
+    function setForumLikes(obj) { try { localStorage.setItem(FORUM_LIKES_KEY, JSON.stringify(obj)); } catch (_) {} }
+    function isLiked(cid) { return !!getForumLikes()[cid]; }
+    function toggleLike(cid) { const o = getForumLikes(); o[cid] = !o[cid]; setForumLikes(o); }
+    function avatarColor(author) {
+      let h = 0; for (let i = 0; i < author.length; i++) h = ((h << 5) - h) + author.charCodeAt(i) | 0;
+      const hue = Math.abs(h % 360); return 'hsl(' + hue + ', 60%, 45%)';
+    }
+    function avatarLetter(author) { return (author || '?')[0].toUpperCase(); }
+    function renderForumList() {
+      if (typeof FORUM_DATA === 'undefined') { forumListEl.innerHTML = '<p style="color:rgba(255,255,255,0.5);padding:20px;">论坛加载中...</p>'; return; }
+      const sorted = [...FORUM_DATA].sort((a, b) => (a.timeSort || 999) - (b.timeSort || 999));
+      forumListEl.innerHTML = sorted.map(p => {
+        const commentCount = (p.comments || []).length;
+        return '<div class="forum-post-card" data-id="' + p.id + '"><h3>' + esc(p.title) + '</h3><div class="forum-post-meta">' + esc(p.time) + ' · ' + commentCount + ' 条评论 · u/' + esc(p.author) + '</div></div>';
+      }).join('');
+      forumListEl.querySelectorAll('.forum-post-card').forEach(card => {
+        card.addEventListener('click', () => showForumPost(parseInt(card.getAttribute('data-id'), 10)));
+      });
+      forumListEl.style.display = 'block';
+      forumDetailEl.classList.remove('show');
+    }
+    function showForumPost(postId) {
+      if (typeof FORUM_DATA === 'undefined') return;
+      const post = FORUM_DATA.find(p => p.id === postId);
+      if (!post) return;
+      forumListEl.style.display = 'none';
+      forumDetailEl.classList.add('show');
+      const likes = getForumLikes();
+      const comments = (post.comments || []).map(c => {
+        const liked = !!likes[c.id];
+        const displayUpvotes = c.upvotes + (liked ? 1 : 0);
+        return '<div class="forum-comment" data-cid="' + esc(c.id) + '"><div class="forum-avatar" style="background:' + avatarColor(c.author) + '">' + avatarLetter(c.author) + '</div><div class="forum-comment-body"><div class="forum-comment-meta"><span class="author">u/' + esc(c.author) + '</span>' + (c.isOP ? ' <span class="op">[楼主]</span>' : '') + '</div><div class="forum-comment-text">' + esc(c.content) + '</div><div class="forum-vote"><button class="forum-vote-btn ' + (liked ? 'liked' : '') + '" data-cid="' + esc(c.id) + '" title="点赞">👍</button><span class="forum-vote-count">' + displayUpvotes + '</span></div></div></div>';
+      }).join('');
+      forumDetailContent.innerHTML = '<div class="forum-header"><div class="forum-post-meta-main"><span class="forum-avatar" style="width:24px;height:24px;font-size:11px;background:' + avatarColor(post.author) + '">' + avatarLetter(post.author) + '</span><span class="forum-post-upvotes">⬆ ' + (post.upvotes || 0) + '</span> u/' + esc(post.author) + ' · ' + esc(post.time) + '</div><h2>' + esc(post.title) + '</h2></div><div class="forum-detail-body">' + esc(post.content) + '</div><div class="forum-comments-title" style="margin:16px 0 8px;font-size:14px;color:rgba(255,255,255,0.6);">' + (post.comments || []).length + ' 条评论</div>' + comments;
+      forumDetailContent.querySelectorAll('.forum-vote-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          const cid = btn.getAttribute('data-cid');
+          toggleLike(cid);
+          showForumPost(postId);
+        });
+      });
+    }
+    forumBackBtn.addEventListener('click', renderForumList);
+
+    function showHome() {
+      searchHome.classList.remove('hidden');
+      searchResults.classList.remove('show');
+      wikiView.classList.remove('show');
+      newsView.classList.remove('show');
+      shoppingView.classList.remove('show');
+      newsFrame.src = 'about:blank';
+      searchWindow.classList.remove('wiki-mode');
+      searchWindow.classList.remove('news-mode');
+      searchWindow.classList.remove('shopping-mode');
+      resultsList.innerHTML = '';
+    }
+    backToSearch.addEventListener('click', showHome);
+    luckyBtn.addEventListener('click', () => { const q = ['进步联盟','经济改革党','学生债务','AI创新','社区医疗','托马斯·格林','环保补贴','房地产','NordTel','学生套餐','FlexiMobile','Connecta','虚拟伴侣','数字伴侣'][Math.floor(Math.random()*14)]; searchInput.value = q; doSearch(q); });
+    searchBtn.addEventListener('click', () => doSearch(searchInput.value));
+    searchInput.addEventListener('keypress', e => { if (e.key === 'Enter') doSearch(searchInput.value); });
+
+    const chatMessages = document.getElementById('chatMessages');
+    const chatWelcome = document.getElementById('chatWelcome');
+    const chatInput = document.getElementById('chatInput');
+    const chatSendBtn = document.getElementById('chatSendBtn');
+    let chatHistory = [];
+
+    function addMessage(role, content) {
+      chatWelcome.style.display = 'none';
+      const msgDiv = document.createElement('div');
+      msgDiv.className = 'chat-msg ' + role;
+      if (role === 'assistant') {
+        msgDiv.innerHTML = '<div class="chat-msg-avatar">✨</div><div class="chat-msg-content"></div>';
+        msgDiv.querySelector('.chat-msg-content').textContent = content;
+      } else {
+        msgDiv.innerHTML = '<div class="chat-msg-content">' + content.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>';
+      }
+      chatMessages.appendChild(msgDiv);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function addTypingIndicator() {
+      const div = document.createElement('div');
+      div.className = 'chat-msg assistant';
+      div.id = 'typingIndicator';
+      div.innerHTML = '<div class="chat-msg-avatar">✨</div><div class="typing-indicator"><span></span><span></span><span></span></div>';
+      chatMessages.appendChild(div);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const text = chatInput.value.trim();
+      if (!text) return;
+      chatInput.value = '';
+      chatSendBtn.disabled = true;
+      addMessage('user', text);
+      chatHistory.push({ role: 'user', content: text });
+      addTypingIndicator();
+      try {
+        const provider = 'relay';
+        const res = await fetch(gameApiUrl('CHAT_PATH', '/api/chat'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: chatHistory, provider, versionCode: currentVersionCode }) });
+        const data = await res.json();
+        document.getElementById('typingIndicator')?.remove();
+        if (!res.ok) { addMessage('assistant', '❌ ' + (data.error || '请检查 .env 中是否已设置 OPENAI_API_KEY')); return; }
+        addMessage('assistant', data.content);
+        chatHistory.push({ role: 'assistant', content: data.content });
+      } catch (err) {
+        document.getElementById('typingIndicator')?.remove();
+        addMessage('assistant', '❌ 网络错误：' + err.message + '。请确保已运行 npm start 启动服务。');
+      } finally { chatSendBtn.disabled = false; chatInput.focus(); }
+    }
+
+    chatSendBtn.addEventListener('click', sendMessage);
+    chatInput.addEventListener('keypress', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
+  </script>
+</body>
+</html>
