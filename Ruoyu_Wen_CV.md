@@ -10,9 +10,9 @@ Christchurch, New Zealand · ruoyu.wen.game@gmail.com
 
 ## Profile
 
-HCI researcher and game designer working at the intersection of **human–agent interaction**, **virtual reality**, **alternate reality games (ARGs)**, and **generative AI**. I combine rigorous mixed-methods research with hands-on game development to design playful, intelligent systems that foster meaningful connection and cross-cultural understanding. Author of **15+ peer-reviewed publications** at venues including CHI, IUI, CHI Play, DiGRA, OzCHI, and SIGGRAPH Asia, with international research experience across New Zealand, Germany, Korea, Sweden, and China.
+HCI researcher and game designer working on **human–agent interaction**, **virtual reality**, **alternate reality games**, and **generative AI**. Author of **15+ peer-reviewed publications** (CHI, IUI, CHI Play, DiGRA, SIGGRAPH Asia), with international research experience across New Zealand, Germany, Korea, Sweden, and China.
 
-**Research Interests:** Human–Agent Interaction · Virtual & Extended Reality · Alternate Reality Games · Player Psychology (Self-Determination Theory) · Conversational & Generative AI · Cross-cultural HCI
+**Research Interests:** Human–Agent Interaction · Virtual & Extended Reality · Alternate Reality Games · Player Psychology · Generative AI · Cross-cultural HCI
 
 **Languages:** Chinese (Native) · English (Fluent)
 
@@ -21,7 +21,7 @@ HCI researcher and game designer working at the intersection of **human–agent 
 ## Education
 
 **University of Canterbury** — Christchurch, New Zealand
-*PhD in Product Design, HIT Lab NZ* · 2023 – 2027 (expected Nov 2027)
+*PhD, School of Product Design* · 2023 – 2027 (expected Nov 2027)
 Human–agent interaction, VR, and player motivation in ARGs through Self-Determination Theory; mixed-methods experimental research.
 Advisors: [Assoc. Prof. Thammathip Piumsomboon](https://scholar.google.com/citations?user=GLQLx4YAAAAJ), [Assoc. Prof. Simon Hoermann](https://scholar.google.com/citations?user=y4AefNUAAAAJ), [Prof. Mark Billinghurst](https://scholar.google.com/citations?user=S-J_ItYAAAAJ).
 
@@ -66,7 +66,7 @@ National award recognising outstanding self-funded PhD students overseas (Univer
 *Jul 2025 – Oct 2025*
 - TA for *Computation for Games*; mentored undergraduates in game development, programming, and computational foundations.
 
-**PhD Researcher / Research Assistant** — University of Canterbury, HIT Lab NZ, Christchurch, New Zealand
+**PhD Researcher / Research Assistant** — University of Canterbury, School of Product Design, Christchurch, New Zealand
 *2023 – Present*
 - Designed and ran VR and human–agent interaction studies on conversational AI, including experiment design, data collection, and mixed-methods analysis.
 - First-author and co-author publications at CHI, OzCHI, DiGRA, and SIGGRAPH Asia.
