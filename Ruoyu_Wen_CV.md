@@ -31,7 +31,7 @@ Interactive narrative, player psychology, user experience, and game design theor
 Advisor: [Assoc. Prof. Sarah Lynne Bowen](https://scholar.google.com/citations?user=spdIdg4AAAAJ).
 
 **Huazhong University of Science and Technology** — Wuhan, China
-*Bachelor in Communication Studies* · 2016 – 2021
+*Double Bachelor's Degree — Communication Studies (first major) & Information Science (second major)* · 2016 – 2021
 Digital media, social media, human-computer interaction, and digital culture.
 Advisor: [Assoc. Prof. Shuo Xiong (熊硕)](http://faculty.hust.edu.cn/xiongshuo1/zh_CN/index.htm).
 
