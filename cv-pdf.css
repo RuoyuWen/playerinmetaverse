@@ -1,0 +1,54 @@
+@page {
+  margin: 1.8cm 1.6cm;
+}
+
+body {
+  font-family: "Segoe UI", Arial, sans-serif;
+  font-size: 10.5pt;
+  line-height: 1.45;
+  color: #1a1a1a;
+  max-width: 100%;
+}
+
+h1 {
+  font-size: 22pt;
+  margin: 0 0 0.2em;
+}
+
+h1 + p {
+  margin-top: 0.2em;
+  color: #444;
+}
+
+h2 {
+  font-size: 11pt;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 0.2em;
+  margin: 1.1em 0 0.5em;
+}
+
+p, li {
+  margin: 0.2em 0;
+}
+
+ul {
+  margin: 0.2em 0 0.4em 1.2em;
+  padding: 0;
+}
+
+strong {
+  font-weight: 600;
+}
+
+a {
+  color: #1a1a1a;
+  text-decoration: none;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid #ddd;
+  margin: 0.8em 0;
+}

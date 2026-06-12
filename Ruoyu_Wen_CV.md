@@ -30,9 +30,13 @@ I bridge theoretical research and practical game development across cultures, wi
 
 ## 💼 Experience
 
-**Game Designer** | *MICROFEEL (Mobile Gaming)* | Remote
-*Oct 2024 – Feb 2026*
-* Designed game experiences for mobile applications, combining HCI research insights with practical game design to create innovative mobile entertainment.
+**Visiting PhD Student** | *[University of Augsburg](https://www.uni-augsburg.de/en/fakultaet/fai/informatik/prof/hcm/), Chair for Human-Centered Artificial Intelligence* | Augsburg, DE
+*Apr 2026 – Present*
+* Conducting collaborative research on human-centered AI, intelligent user interfaces, and human-agent interaction.
+
+**Lead AI Game Designer** | *[MICROFEEL](https://www.3dmicrofeel.com/)* | Remote
+*Oct 2024 – Present*
+* Led team development, implementing end-to-end generation from natural language input to game stories, gameplay mechanics, and NPCs.
 
 **Visiting PhD Student** | *KAIST (Korea Advanced Institute of Science and Technology)* | Daejeon, KR
 *Oct 2025*
