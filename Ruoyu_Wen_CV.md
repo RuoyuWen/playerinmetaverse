@@ -37,6 +37,16 @@ Advisor: [Assoc. Prof. Shuo Xiong (熊硕)](http://faculty.hust.edu.cn/xiongshuo
 
 ---
 
+## Honors & Grants
+
+**Research Grants in Germany** — DAAD (Deutscher Akademischer Austauschdienst) · 2026
+Competitive research grant supporting a research stay at the University of Augsburg, Chair for Human-Centered AI.
+
+**Chinese Government Award for Outstanding Self-Financed Students Abroad** — China Scholarship Council (CSC) · 2025
+National award recognising outstanding self-funded PhD students overseas (University of Canterbury, New Zealand).
+
+---
+
 ## Research & Professional Experience
 
 **Visiting PhD Student** — University of Augsburg, Chair for Human-Centered AI (Prof. Elisabeth André), Augsburg, Germany
