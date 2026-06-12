@@ -3,387 +3,187 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Research - Ruoyu Wen | Academic Publications</title>
-    <meta name="description" content="Explore Ruoyu Wen's research publications and academic projects in game design and HCI">
+    <title>Research — Ruoyu Wen | Publications</title>
+    <meta name="description" content="Full list of Ruoyu Wen's research publications in HCI, games, VR, and human-agent interaction.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..600;1,9..144,400..560&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body>
-    <!-- Navigation -->
+<body class="page-transition">
     <nav class="navbar">
         <div class="nav-container">
-            <div class="nav-logo">
-                <a href="index.html">Ruoyu Wen</a>
-            </div>
+            <div class="nav-logo"><a href="index.html">Ruoyu&nbsp;Wen</a></div>
             <div class="nav-menu" id="nav-menu">
                 <a href="index.html" class="nav-link">Home</a>
-                <a href="about.html" class="nav-link">About</a>
-                <a href="education.html" class="nav-link">Education</a>
                 <a href="research.html" class="nav-link active">Research</a>
+                <a href="education.html" class="nav-link">Education</a>
                 <a href="experience.html" class="nav-link">Experience</a>
+                <a href="about.html" class="nav-link">About</a>
             </div>
-            <div class="nav-toggle" id="nav-toggle">
-                <span class="bar"></span>
-                <span class="bar"></span>
-                <span class="bar"></span>
-            </div>
+            <div class="nav-toggle" id="nav-toggle"><span class="bar"></span><span class="bar"></span><span class="bar"></span></div>
         </div>
     </nav>
 
-    <!-- Page Header -->
     <section class="page-header">
         <div class="container">
             <h1 class="page-title">Research</h1>
-            <p class="page-subtitle">Academic publications and ongoing research projects</p>
+            <p class="page-subtitle">My work sits at the intersection of human–agent interaction, immersive technology, games, and generative AI — published across CHI, CHI Play, OzCHI, DiGRA, SIGGRAPH Asia, ISMAR, and beyond.</p>
         </div>
     </section>
 
-    <!-- Research Overview -->
-    <section class="about">
+    <section class="section">
         <div class="container">
-            <h2 class="section-title">Research Focus</h2>
-            <div class="about-content">
-                <div class="about-text">
-                    <p>
-                        My research spans <span class="text-highlight">Human-Agent Interaction</span>, <span class="text-accent">Virtual Reality</span>, <span class="text-special">Alternate Reality Games</span>, and game design. I explore how AI, embodied agents, and immersive technologies shape human experience—from museum chatbots and VR collaboration to sustainability games and emergent narrative.
-                    </p>
-                    <p>
-                        Published in CHI, CHI Play, OzCHI, DiGRA, SIGGRAPH Asia, IJRP, and JMIR. Research interests: Human-Agent Interaction, VR/XR, ARGs, conversational AI, and player psychology.
-                    </p>
+            <div class="section-head">
+                <div>
+                    <span class="eyebrow">Full List</span>
+                    <h2>Publications</h2>
+                    <p class="lede">Filter by theme. Titles link to the paper or its Google Scholar entry.</p>
                 </div>
-                <div class="about-image">
-                    <div class="image-placeholder">
-                        <i class="fas fa-microscope"></i>
+            </div>
+
+            <div class="chips" id="pub-filters">
+                <button class="chip active" data-filter="all">All <span class="count"></span></button>
+                <button class="chip" data-filter="hai">Human–Agent</button>
+                <button class="chip" data-filter="vr">VR / XR</button>
+                <button class="chip" data-filter="games">Games &amp; Play</button>
+                <button class="chip" data-filter="llm">LLM / GenAI</button>
+            </div>
+
+            <div class="pub-list" id="pub-list">
+                <article class="pub reveal-item" data-themes="hai llm games">
+                    <div class="pub-meta"><span class="pub-venue">CHI '25</span><span class="pub-year">2025 · Full Paper</span></div>
+                    <div class="pub-body">
+                        <a class="pub-title" href="https://scholar.google.com/citations?user=TssKzFIAAAAJ&hl=en" target="_blank" rel="noopener">Can AI Prompt Humans? Multimodal Agents Prompt Players' Game Actions and Show Consequences to Raise Sustainability Awareness</a>
+                        <p class="pub-note">ACM CHI Conference on Human Factors in Computing Systems</p>
+                        <div class="pub-tags"><span class="tag">Human–Agent</span><span class="tag">Sustainability</span><span class="tag">Serious Games</span></div>
                     </div>
-                </div>
+                </article>
+
+                <article class="pub reveal-item" data-themes="hai llm">
+                    <div class="pub-meta"><span class="pub-venue">CHI '25</span><span class="pub-year">2025 · EA</span></div>
+                    <div class="pub-body">
+                        <a class="pub-title" href="https://scholar.google.com/citations?user=TssKzFIAAAAJ&hl=en" target="_blank" rel="noopener">Exploring User Preferences for Museum Guides: The Role of Chatbots in Shaping Interactive Experiences</a>
+                        <p class="pub-note">CHI Extended Abstracts</p>
+                        <div class="pub-tags"><span class="tag">Chatbots</span><span class="tag">Cultural Heritage</span><span class="tag">User Preferences</span></div>
+                    </div>
+                </article>
+
+                <article class="pub reveal-item" data-themes="vr llm">
+                    <div class="pub-meta"><span class="pub-venue">ISMAR '25</span><span class="pub-year">2025 · Adjunct</span></div>
+                    <div class="pub-body">
+                        <a class="pub-title" href="https://scholar.google.com/citations?user=TssKzFIAAAAJ&hl=en" target="_blank" rel="noopener">GenLinguaScape: Enabling User-Defined VR Scenarios for Communicative Language Practice</a>
+                        <p class="pub-note">IEEE International Symposium on Mixed and Augmented Reality (Adjunct)</p>
+                        <div class="pub-tags"><span class="tag">VR</span><span class="tag">Language Learning</span><span class="tag">GenAI</span></div>
+                    </div>
+                </article>
+
+                <article class="pub reveal-item" data-themes="llm">
+                    <div class="pub-meta"><span class="pub-venue">OzCHI '24</span><span class="pub-year">2024</span></div>
+                    <div class="pub-body">
+                        <a class="pub-title" href="https://dl.acm.org/doi/10.1145/3706598" target="_blank" rel="noopener">Large Language Models for Automatic Detection of Sensitive Topics</a>
+                        <p class="pub-note">Australian Conference on Human-Computer Interaction</p>
+                        <div class="pub-tags"><span class="tag">LLM</span><span class="tag">Responsible AI</span><span class="tag">Content Moderation</span></div>
+                    </div>
+                </article>
+
+                <article class="pub reveal-item" data-themes="llm games">
+                    <div class="pub-meta"><span class="pub-venue">CHI Play '24</span><span class="pub-year">2024</span></div>
+                    <div class="pub-body">
+                        <a class="pub-title" href="https://dl.acm.org/doi/10.1145/3677102" target="_blank" rel="noopener">Sketchar: Supporting Character Design and Illustration Prototyping Using Generative AI</a>
+                        <p class="pub-note">Proceedings of the ACM on Human-Computer Interaction (CHI Play)</p>
+                        <div class="pub-tags"><span class="tag">GenAI</span><span class="tag">Creative Tools</span><span class="tag">Character Design</span></div>
+                    </div>
+                </article>
+
+                <article class="pub reveal-item" data-themes="games">
+                    <div class="pub-meta"><span class="pub-venue">DiGRA '24</span><span class="pub-year">2024</span></div>
+                    <div class="pub-body">
+                        <a class="pub-title" href="https://dl.digra.org/index.php/dl/article/view/2228" target="_blank" rel="noopener">Motivational Landscapes of ARG Players: A Self-Determination Theory Perspective</a>
+                        <p class="pub-note">Digital Games Research Association Conference</p>
+                        <div class="pub-tags"><span class="tag">ARG</span><span class="tag">Player Motivation</span><span class="tag">SDT</span></div>
+                    </div>
+                </article>
+
+                <article class="pub reveal-item" data-themes="vr hai">
+                    <div class="pub-meta"><span class="pub-venue">CHI '24</span><span class="pub-year">2024 · EA</span></div>
+                    <div class="pub-body">
+                        <a class="pub-title" href="https://dl.acm.org/doi/10.1145/3613905.3648143" target="_blank" rel="noopener">Virtual Triplets: Mixed-Modal Synchronous and Asynchronous Collaboration with Human-Agent Interaction in VR</a>
+                        <p class="pub-note">CHI Extended Abstracts</p>
+                        <div class="pub-tags"><span class="tag">VR</span><span class="tag">Human–Agent</span><span class="tag">Collaboration</span></div>
+                    </div>
+                </article>
+
+                <article class="pub reveal-item" data-themes="llm games">
+                    <div class="pub-meta"><span class="pub-venue">SIGGRAPH Asia '24</span><span class="pub-year">2024 · Art</span></div>
+                    <div class="pub-body">
+                        <a class="pub-title" href="https://dl.acm.org/doi/full/10.1145/3680530.3695446" target="_blank" rel="noopener">I Light U Up: Exploring a New Emergent Narrative Paradigm through Light and Generative AI</a>
+                        <p class="pub-note">SIGGRAPH Asia Art Papers</p>
+                        <div class="pub-tags"><span class="tag">Emergent Narrative</span><span class="tag">Light Interface</span><span class="tag">GenAI</span></div>
+                    </div>
+                </article>
+
+                <article class="pub reveal-item" data-themes="games">
+                    <div class="pub-meta"><span class="pub-venue">CHI '24</span><span class="pub-year">2024 · EA</span></div>
+                    <div class="pub-body">
+                        <a class="pub-title" href="https://dl.acm.org/doi/full/10.1145/3613905.3648109" target="_blank" rel="noopener">Listen to the Sword: Using Breathing and Spatial Audio for Wuxia Games</a>
+                        <p class="pub-note">CHI Extended Abstracts</p>
+                        <div class="pub-tags"><span class="tag">Spatial Audio</span><span class="tag">Wuxia</span><span class="tag">Embodiment</span></div>
+                    </div>
+                </article>
+
+                <article class="pub reveal-item" data-themes="vr llm">
+                    <div class="pub-meta"><span class="pub-venue">OzCHI '24</span><span class="pub-year">2024</span></div>
+                    <div class="pub-body">
+                        <a class="pub-title" href="https://scholar.google.com/citations?user=TssKzFIAAAAJ&hl=en" target="_blank" rel="noopener">An Exploratory Study on AI-driven Visualisation Techniques for Decision Making in Extended Reality</a>
+                        <p class="pub-note">Australian Conference on Human-Computer Interaction</p>
+                        <div class="pub-tags"><span class="tag">XR</span><span class="tag">AI Visualisation</span><span class="tag">Decision Making</span></div>
+                    </div>
+                </article>
+
+                <article class="pub reveal-item" data-themes="games">
+                    <div class="pub-meta"><span class="pub-venue">HCII '24</span><span class="pub-year">2024</span></div>
+                    <div class="pub-body">
+                        <a class="pub-title" href="https://scholar.google.com/citations?user=TssKzFIAAAAJ&hl=en" target="_blank" rel="noopener">The Impact of Alternate Reality Games on Environmental Cognition for University Freshmen</a>
+                        <p class="pub-note">HCI International</p>
+                        <div class="pub-tags"><span class="tag">ARG</span><span class="tag">Environmental Awareness</span><span class="tag">Education</span></div>
+                    </div>
+                </article>
+
+                <article class="pub reveal-item" data-themes="games">
+                    <div class="pub-meta"><span class="pub-venue">IJRP</span><span class="pub-year">2023 · Journal</span></div>
+                    <div class="pub-body">
+                        <a class="pub-title" href="https://scholar.google.com/citations?user=TssKzFIAAAAJ&hl=en" target="_blank" rel="noopener">Player Category Research on Murder Mystery Games</a>
+                        <p class="pub-note">International Journal of Role-Playing</p>
+                        <div class="pub-tags"><span class="tag">Murder Mystery</span><span class="tag">Player Research</span><span class="tag">Role-Playing</span></div>
+                    </div>
+                </article>
+
+                <article class="pub reveal-item" data-themes="games">
+                    <div class="pub-meta"><span class="pub-venue">Knutpunkt</span><span class="pub-year">2022 · Magazine</span></div>
+                    <div class="pub-body">
+                        <a class="pub-title" href="https://scholar.google.com/citations?user=TssKzFIAAAAJ&hl=en" target="_blank" rel="noopener">The Chinese Hotpot of Larp</a>
+                        <p class="pub-note">Knutpunkt Conference Magazine</p>
+                        <div class="pub-tags"><span class="tag">Larp</span><span class="tag">Cultural Gaming</span><span class="tag">Role-Playing</span></div>
+                    </div>
+                </article>
             </div>
         </div>
     </section>
 
-    <!-- Publications -->
-    <section class="projects">
-        <div class="container">
-            <h2 class="section-title">Publications</h2>
-            <div class="projects-grid">
-                <!-- Paper 1 -->
-                <div class="project-card reveal-item">
-                    <div class="project-image">
-                        <div class="project-placeholder">
-                            <i class="fas fa-file-alt"></i>
-                        </div>
-                    </div>
-                    <div class="project-content">
-                        <h3>
-                            <a href="https://dl.digra.org/index.php/dl/article/view/2228" target="_blank" class="research-title">
-                                Motivational Landscapes of ARG Players: A Self-Determination Theory Perspective
-                            </a>
-                        </h3>
-                        <h4 class="company-name">DiGRA 2024</h4>
-                        <p>This paper explores the <span class="text-highlight">motivational patterns of Alternate Reality Game (ARG) players</span> through the lens of <span class="text-accent">Self-Determination Theory</span>. The study reveals how different <span class="text-special">motivational factors influence player engagement</span> and long-term participation in ARG communities.</p>
-                        <div class="project-tags">
-                            <span class="tag">ARG</span>
-                            <span class="tag">Player Motivation</span>
-                            <span class="tag">Self-Determination Theory</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Paper 2 -->
-                <div class="project-card reveal-item">
-                    <div class="project-image">
-                        <div class="project-placeholder">
-                            <i class="fas fa-palette"></i>
-                        </div>
-                    </div>
-                    <div class="project-content">
-                        <h3>
-                            <a href="https://dl.acm.org/doi/10.1145/3677102" target="_blank" class="research-title">
-                                Sketchar: Supporting Character Design and Illustration Prototyping Using Generative AI
-                            </a>
-                        </h3>
-                        <h4 class="company-name">CHI Play 2024</h4>
-                        <p>An innovative tool that leverages <span class="text-highlight">generative AI</span> to support <span class="text-accent">character design and illustration prototyping</span>, bridging the gap between <span class="text-special">creative vision and technical implementation</span> in game and media production. Published in Proc. ACM Hum. Comput. Interact.</p>
-                        <div class="project-tags">
-                            <span class="tag">CHI Play</span>
-                            <span class="tag">Generative AI</span>
-                            <span class="tag">Character Design</span>
-                            <span class="tag">Creative Tools</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Paper 3 -->
-                <div class="project-card reveal-item">
-                    <div class="project-image">
-                        <div class="project-placeholder">
-                            <i class="fas fa-robot"></i>
-                        </div>
-                    </div>
-                    <div class="project-content">
-                        <h3>
-                            <a href="https://scholar.google.com/citations?user=TssKzFIAAAAJ&hl=en" target="_blank">
-                                Can AI Prompt Humans? Multimodal Agents Prompt Players' Game Actions and Show Consequences to Raise Sustainability Awareness
-                            </a>
-                        </h3>
-                        <h4 class="company-name">CHI 2025</h4>
-                        <p>Explores how AI agents can prompt human players' game actions and reveal consequences to raise <span class="text-highlight">sustainability awareness</span>, combining <span class="text-accent">multimodal interaction</span> with game design for social impact.</p>
-                        <div class="project-tags">
-                            <span class="tag">Human-Agent Interaction</span>
-                            <span class="tag">Sustainability</span>
-                            <span class="tag">Serious Games</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Paper 3b -->
-                <div class="project-card reveal-item">
-                    <div class="project-image">
-                        <div class="project-placeholder">
-                            <i class="fas fa-robot"></i>
-                        </div>
-                    </div>
-                    <div class="project-content">
-                        <h3>
-                            <a href="https://dl.acm.org/doi/10.1145/3613905.3648143" target="_blank">
-                                Virtual Triplets: Mixed Modal Synchronous and Asynchronous Collaboration with Human-Agent Interaction in VR
-                            </a>
-                        </h3>
-                        <h4 class="company-name">CHI 2024 Extended Abstracts</h4>
-                        <p>Research on <span class="text-highlight">mixed-modal collaboration</span> in Virtual Reality, combining synchronous and asynchronous interaction with <span class="text-accent">human-agent collaboration</span>.</p>
-                        <div class="project-tags">
-                            <span class="tag">Virtual Reality</span>
-                            <span class="tag">Human-Agent Interaction</span>
-                            <span class="tag">Collaboration</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Paper 3c -->
-                <div class="project-card reveal-item">
-                    <div class="project-image">
-                        <div class="project-placeholder">
-                            <i class="fas fa-comments"></i>
-                        </div>
-                    </div>
-                    <div class="project-content">
-                        <h3>
-                            <a href="https://scholar.google.com/citations?user=TssKzFIAAAAJ" target="_blank">
-                                Exploring User Preferences for Museum Guides: The Role of Chatbots in Shaping Interactive Experiences
-                            </a>
-                        </h3>
-                        <h4 class="company-name">CHI 2025 Extended Abstracts</h4>
-                        <p>Investigates how <span class="text-highlight">chatbots</span> shape museum visitor experiences and user preferences for interactive guides in cultural institutions.</p>
-                        <div class="project-tags">
-                            <span class="tag">Chatbots</span>
-                            <span class="tag">Cultural Heritage</span>
-                            <span class="tag">User Preferences</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Paper 4 - LLM -->
-                <div class="project-card reveal-item">
-                    <div class="project-image">
-                        <div class="project-placeholder">
-                            <i class="fas fa-shield-alt"></i>
-                        </div>
-                    </div>
-                    <div class="project-content">
-                        <h3>
-                            <a href="https://dl.acm.org/doi/10.1145/3706598" target="_blank">
-                                Large Language Models for Automatic Detection of Sensitive Topics
-                            </a>
-                        </h3>
-                        <h4 class="company-name">OzCHI 2024</h4>
-                        <p>Applying <span class="text-highlight">LLMs</span> to automatically detect sensitive topics in conversational data, supporting safer and more responsible AI systems.</p>
-                        <div class="project-tags">
-                            <span class="tag">LLM</span>
-                            <span class="tag">Sensitive Content</span>
-                            <span class="tag">HCI</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Paper 4b - Player category -->
-                <div class="project-card reveal-item">
-                    <div class="project-image">
-                        <div class="project-placeholder">
-                            <i class="fas fa-users"></i>
-                        </div>
-                    </div>
-                    <div class="project-content">
-                        <h3>
-                            <a href="https://ijrp.subcultures.nl/" target="_blank">
-                                Player Category Research on Murder Mystery Games
-                            </a>
-                        </h3>
-                        <h4 class="company-name">International Journal of Role-Playing 2023</h4>
-                        <p>Research on <span class="text-highlight">player categories</span> and engagement patterns in <span class="text-accent">Murder Mystery (Jubenshika)</span> games, contributing to understanding immersive entertainment formats.</p>
-                        <div class="project-tags">
-                            <span class="tag">Murder Mystery</span>
-                            <span class="tag">Player Research</span>
-                            <span class="tag">Role-Playing</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Paper 4c - Chinese hotpot -->
-                <div class="project-card reveal-item">
-                    <div class="project-image">
-                        <div class="project-placeholder">
-                            <i class="fas fa-globe-asia"></i>
-                        </div>
-                    </div>
-                    <div class="project-content">
-                        <h3>
-                            <a href="https://scholar.google.com/citations?user=TssKzFIAAAAJ" target="_blank">
-                                The Chinese Hotpot of Larp
-                            </a>
-                        </h3>
-                        <h4 class="company-name">Knutpunkt 2022 Magazine</h4>
-                        <p>Cultural perspectives on <span class="text-highlight">live-action role-playing (larp)</span> in Chinese contexts, exploring cross-cultural design and player experiences.</p>
-                        <div class="project-tags">
-                            <span class="tag">Larp</span>
-                            <span class="tag">Cultural Gaming</span>
-                            <span class="tag">Role-Playing</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Paper 4d - ARG environmental -->
-                <div class="project-card reveal-item">
-                    <div class="project-image">
-                        <div class="project-placeholder">
-                            <i class="fas fa-leaf"></i>
-                        </div>
-                    </div>
-                    <div class="project-content">
-                        <h3>
-                            <a href="https://scholar.google.com/citations?user=TssKzFIAAAAJ" target="_blank">
-                                The Impact of Alternate Reality Games on Environmental Cognition for University Freshmen
-                            </a>
-                        </h3>
-                        <h4 class="company-name">HCI International 2024</h4>
-                        <p>Investigates how <span class="text-highlight">ARGs</span> can influence <span class="text-accent">environmental awareness</span> and cognition among university students through immersive, narrative-driven experiences.</p>
-                        <div class="project-tags">
-                            <span class="tag">ARG</span>
-                            <span class="tag">Environmental Awareness</span>
-                            <span class="tag">Education</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Paper 4e - AI XR -->
-                <div class="project-card reveal-item">
-                    <div class="project-image">
-                        <div class="project-placeholder">
-                            <i class="fas fa-vr-cardboard"></i>
-                        </div>
-                    </div>
-                    <div class="project-content">
-                        <h3>
-                            <a href="https://scholar.google.com/citations?user=TssKzFIAAAAJ" target="_blank">
-                                An Exploratory Study on AI-driven Visualisation Techniques for Decision Making in Extended Reality
-                            </a>
-                        </h3>
-                        <h4 class="company-name">OzCHI 2024</h4>
-                        <p>Explores how <span class="text-highlight">AI-driven visualisation</span> in XR supports decision-making, at the intersection of HCI and immersive technologies.</p>
-                        <div class="project-tags">
-                            <span class="tag">XR</span>
-                            <span class="tag">AI Visualisation</span>
-                            <span class="tag">Decision Making</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Paper 4f - GenLinguaScape -->
-                <div class="project-card reveal-item">
-                    <div class="project-image">
-                        <div class="project-placeholder">
-                            <i class="fas fa-language"></i>
-                        </div>
-                    </div>
-                    <div class="project-content">
-                        <h3>
-                            <a href="https://scholar.google.com/citations?user=TssKzFIAAAAJ" target="_blank">
-                                GenLinguaScape: Enabling User-Defined VR Scenarios for Communicative Language Practice
-                            </a>
-                        </h3>
-                        <h4 class="company-name">ISMAR 2025 Adjunct</h4>
-                        <p><span class="text-highlight">VR-based language learning</span> platform enabling users to define scenarios for <span class="text-accent">communicative practice</span>, combining generative AI with immersive education.</p>
-                        <div class="project-tags">
-                            <span class="tag">VR</span>
-                            <span class="tag">Language Learning</span>
-                            <span class="tag">Generative AI</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Paper 5 -->
-                <div class="project-card reveal-item">
-                    <div class="project-image">
-                        <div class="project-placeholder">
-                            <i class="fas fa-headphones"></i>
-                        </div>
-                    </div>
-                    <div class="project-content">
-                        <h3>
-                            <a href="https://dl.acm.org/doi/full/10.1145/3613905.3648109" target="_blank">
-                                Listen to the Sword: Using Breathing and Spatial Audio for Wuxia Games
-                            </a>
-                        </h3>
-                        <h4 class="company-name">CHI 2024 Extended Abstracts</h4>
-                        <p>Innovative research exploring the use of <span class="text-highlight">breathing patterns</span> and <span class="text-accent">spatial audio design</span> in Wuxia (Chinese martial arts) games, creating more immersive and culturally authentic gaming experiences.</p>
-                        <div class="project-tags">
-                            <span class="tag">Spatial Audio</span>
-                            <span class="tag">Wuxia Games</span>
-                            <span class="tag">Cultural Gaming</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Paper 6 -->
-                <div class="project-card reveal-item">
-                    <div class="project-image">
-                        <div class="project-placeholder">
-                            <i class="fas fa-lightbulb"></i>
-                        </div>
-                    </div>
-                    <div class="project-content">
-                        <h3>
-                            <a href="https://dl.acm.org/doi/full/10.1145/3680530.3695446" target="_blank">
-                                I Light U Up: Exploring a New Emergent Narrative Paradigm through Light and Generative AI
-                            </a>
-                        </h3>
-                        <h4 class="company-name">SIGGRAPH Asia 2024 Art Papers</h4>
-                        <p>Experimental research on <span class="text-highlight">light-based interfaces</span> combined with generative AI for <span class="text-accent">emergent narrative</span> through physical data participation, pushing the boundaries of interactive storytelling.</p>
-                        <div class="project-tags">
-                            <span class="tag">Emergent Narrative</span>
-                            <span class="tag">Light Interface</span>
-                            <span class="tag">Generative AI</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
     <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <p>&copy; 2025 Ruoyu Wen · PhD Candidate in Product Design · University of Canterbury</p>
-                <div class="social-links">
-                    <a href="mailto:ruoyu.wen.game@gmail.com" target="_blank" title="Email"><i class="fas fa-envelope"></i></a>
-                    <a href="https://scholar.google.com/citations?hl=en&user=TssKzFIAAAAJ" target="_blank" title="Google Scholar"><i class="fas fa-graduation-cap"></i></a>
-                    <a href="https://www.linkedin.com/in/ruoyu-wen-53344419a/" target="_blank" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
-                    <a href="https://wrychristian.itch.io/" target="_blank" title="Portfolio"><i class="fas fa-gamepad"></i></a>
-                </div>
+        <div class="footer-content">
+            <p>&copy; 2026 Ruoyu Wen · PhD Candidate in Product Design · University of Canterbury</p>
+            <div class="social-links">
+                <a href="mailto:ruoyu.wen.game@gmail.com" title="Email"><i class="fas fa-envelope"></i></a>
+                <a href="https://scholar.google.com/citations?hl=en&user=TssKzFIAAAAJ" target="_blank" rel="noopener" title="Google Scholar"><i class="fas fa-graduation-cap"></i></a>
+                <a href="https://www.linkedin.com/in/ruoyu-wen-53344419a/" target="_blank" rel="noopener" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                <a href="https://wrychristian.itch.io/" target="_blank" rel="noopener" title="Portfolio"><i class="fas fa-gamepad"></i></a>
             </div>
         </div>
     </footer>
 
     <script src="script.js"></script>
 </body>
-</html> 
+</html>

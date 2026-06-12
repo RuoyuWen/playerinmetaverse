@@ -1,78 +1,98 @@
 @page {
-  margin: 2cm 2.2cm;
+  margin: 1.7cm 1.9cm;
   size: A4;
 }
 
 body {
-  font-family: "Times New Roman", Times, Georgia, serif;
-  font-size: 10.5pt;
-  line-height: 1.35;
-  color: #000;
+  font-family: "Georgia", "Times New Roman", Times, serif;
+  font-size: 10.3pt;
+  line-height: 1.4;
+  color: #1a1a1a;
   max-width: 100%;
 }
 
+/* Name */
 h1 {
-  font-size: 20pt;
+  font-size: 22pt;
   font-weight: 700;
-  letter-spacing: 0.02em;
-  margin: 0 0 0.35em;
+  letter-spacing: 0.01em;
+  margin: 0 0 0.25em;
   text-align: center;
+  color: #111;
 }
 
+/* Title + subtitle + contact lines directly after the name */
 h1 + p,
-h1 + p + p {
+h1 + p + p,
+h1 + p + p + p {
   text-align: center;
-  margin: 0.15em 0;
-  font-size: 10pt;
+  margin: 0.12em 0;
+  font-size: 9.6pt;
+  color: #333;
 }
 
-h1 + p strong {
-  font-weight: 700;
-}
+h1 + p strong { font-weight: 700; color: #111; }
 
+/* Section headings */
 h2 {
   font-size: 10.5pt;
   font-variant: small-caps;
   font-weight: 700;
-  letter-spacing: 0.06em;
-  border-bottom: 0.75pt solid #000;
-  padding-bottom: 0.15em;
-  margin: 1em 0 0.45em;
+  letter-spacing: 0.08em;
+  color: #1a3a8f;
+  border-bottom: 0.9pt solid #1a3a8f;
+  padding-bottom: 0.12em;
+  margin: 0.95em 0 0.45em;
+}
+
+/* Entry headlines (job/degree titles) */
+h3 {
+  font-size: 10.3pt;
+  font-weight: 700;
+  margin: 0.5em 0 0.05em;
+  color: #111;
 }
 
 p {
-  margin: 0.18em 0;
-  text-align: justify;
+  margin: 0.16em 0;
+  text-align: left;
 }
 
+/* The italic date / institution line under each role */
+p em { color: #444; font-style: italic; }
+
 ul {
-  margin: 0.15em 0 0.35em 1.1em;
+  margin: 0.2em 0 0.4em 1.05em;
   padding: 0;
 }
 
 li {
-  margin: 0.12em 0;
-  text-align: justify;
+  margin: 0.1em 0;
+  text-align: left;
 }
 
-strong {
-  font-weight: 700;
-}
-
-em {
-  font-style: italic;
-}
+strong { font-weight: 700; }
+em { font-style: italic; }
 
 a {
-  color: #000;
+  color: #1a3a8f;
   text-decoration: none;
 }
 
 hr {
+  border: none;
+  border-top: 0.5pt solid #ccc;
+  margin: 0.5em 0;
   display: none;
 }
 
 h2 + p,
-h2 + ul {
-  margin-top: 0.35em;
+h2 + ul,
+h2 + ol { margin-top: 0.3em; }
+
+/* Numbered publication list */
+ol {
+  margin: 0.2em 0 0.3em 1.3em;
+  padding: 0;
 }
+ol li { margin: 0.16em 0; }

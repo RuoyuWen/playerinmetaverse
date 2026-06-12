@@ -3,103 +3,282 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ruoyu Wen | PhD Candidate in Product Design & HCI</title>
-    <meta name="description" content="PhD Candidate in Product Design at University of Canterbury. Research in Human-Agent Interaction, VR, Alternate Reality Games, and game design.">
+    <title>Ruoyu Wen — HCI Researcher · Games · Human–Agent Interaction</title>
+    <meta name="description" content="Ruoyu Wen is a PhD candidate in Product Design at the University of Canterbury, researching Human-Agent Interaction, VR/XR, Alternate Reality Games, and LLM-driven play.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..600;1,9..144,400..560&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body class="page-transition">
     <!-- Navigation -->
     <nav class="navbar">
         <div class="nav-container">
-            <div class="nav-logo">
-                <a href="index.html">Ruoyu Wen</a>
-            </div>
+            <div class="nav-logo"><a href="index.html">Ruoyu&nbsp;Wen</a></div>
             <div class="nav-menu" id="nav-menu">
                 <a href="index.html" class="nav-link active">Home</a>
-                <a href="about.html" class="nav-link">About</a>
-                <a href="education.html" class="nav-link">Education</a>
                 <a href="research.html" class="nav-link">Research</a>
+                <a href="education.html" class="nav-link">Education</a>
                 <a href="experience.html" class="nav-link">Experience</a>
+                <a href="about.html" class="nav-link">About</a>
             </div>
             <div class="nav-toggle" id="nav-toggle">
-                <span class="bar"></span>
-                <span class="bar"></span>
-                <span class="bar"></span>
+                <span class="bar"></span><span class="bar"></span><span class="bar"></span>
             </div>
         </div>
     </nav>
 
-    <!-- Hero Section -->
-    <section class="hero">
+    <!-- Hero -->
+    <section class="hero" id="hero">
         <div class="hero-container">
             <div class="hero-content">
-                <h1 class="hero-title">
-                    Hello, I'm <span class="highlight">Ruoyu Wen</span>
-                </h1>
-                <p class="hero-subtitle">
-                    <span class="text-xl">PhD Candidate</span> in Product Design at University of Canterbury. Research in <span class="text-highlight">Human-Agent Interaction</span>, <span class="text-accent">Virtual Reality</span>, <span class="text-special">Alternate Reality Games</span>, and game design.
+                <span class="eyebrow">PhD Candidate · HCI &amp; Game Design</span>
+                <h1 class="hero-title">Ruoyu <span class="highlight">Wen</span></h1>
+
+                <!-- LLM-style streaming self-introduction -->
+                <div class="stream-box" aria-hidden="true">
+                    <div class="stream-row stream-q">
+                        <span><span class="tok">user&nbsp;›</span> who is ruoyu wen?</span>
+                    </div>
+                    <span class="stream-a"><span class="label">ruoyu</span><span id="stream-out"></span><span class="caret"></span></span>
+                </div>
+
+                <p class="hero-lede">
+                    I design and study interactive systems where people and intelligent agents play together —
+                    across <span class="text-highlight">Human–Agent Interaction</span>,
+                    <span class="text-accent">VR / XR</span>,
+                    <span class="text-special">Alternate Reality Games</span>, and
+                    <span class="text-highlight">LLM-driven experiences</span>.
                 </p>
-                <div class="hero-buttons">
-                    <a href="research.html" class="btn btn-primary">
-                        <i class="fas fa-rocket"></i>
-                        Explore My Research
-                    </a>
-                    <a href="about.html" class="btn btn-secondary">
-                        <i class="fas fa-star"></i>
-                        Get to Know Me
-                    </a>
+
+                <div class="hero-actions">
+                    <a href="#publications" class="btn btn-primary"><i class="fas fa-book-open"></i> Selected Publications</a>
+                    <a href="Ruoyu_Wen_CV.pdf" target="_blank" class="btn btn-secondary"><i class="fas fa-file-arrow-down"></i> Download CV</a>
+                    <a href="mailto:ruoyu.wen.game@gmail.com" class="btn btn-ghost"><i class="fas fa-envelope"></i> Email</a>
                 </div>
             </div>
             <div class="hero-image">
-                <div class="profile-photo">
+                <div class="portrait-frame">
                     <img src="images/profile.jpg" alt="Ruoyu Wen" class="profile-img">
+                    <div class="portrait-caption">Christchurch · Augsburg · Daejeon</div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Navigation Cards -->
-    <section class="about">
+    <!-- Research Themes -->
+    <section class="section section--soft" id="themes">
         <div class="container">
-            <h2 class="section-title">Explore</h2>
-            <div class="nav-cards">
-                <a href="about.html" class="nav-card reveal-item">
-                    <i class="fas fa-user"></i>
-                    <h3>About</h3>
-                    <p>Background, research focus, and what drives my work in HCI and game design.</p>
-                </a>
-                <a href="education.html" class="nav-card reveal-item">
-                    <i class="fas fa-graduation-cap"></i>
-                    <h3>Education</h3>
-                    <p>Academic journey across China, Sweden, and New Zealand.</p>
-                </a>
-                <a href="research.html" class="nav-card reveal-item">
-                    <i class="fas fa-microscope"></i>
-                    <h3>Research</h3>
-                    <p>Human-Agent Interaction, VR, ARGs, and AI-driven interactive experiences.</p>
-                </a>
-                <a href="experience.html" class="nav-card reveal-item">
-                    <i class="fas fa-briefcase"></i>
-                    <h3>Experience</h3>
-                    <p>Professional path through game design, research, and innovation.</p>
-                </a>
+            <div class="section-head">
+                <div>
+                    <span class="eyebrow">Research</span>
+                    <h2>Four threads, one question</h2>
+                    <p class="lede">How do we design playful, intelligent systems that people genuinely connect with?</p>
+                </div>
+            </div>
+            <div class="theme-grid">
+                <div class="theme-card reveal-item">
+                    <div class="t-icon"><i class="fas fa-robot"></i></div>
+                    <h3>Human–Agent Interaction</h3>
+                    <p>How AI agents can prompt, accompany, and collaborate with people — and what that means for agency and trust.</p>
+                </div>
+                <div class="theme-card reveal-item">
+                    <div class="t-icon"><i class="fas fa-vr-cardboard"></i></div>
+                    <h3>VR &amp; Extended Reality</h3>
+                    <p>Immersive collaboration, spatial interfaces, and embodied experiences that blend the virtual and the real.</p>
+                </div>
+                <div class="theme-card reveal-item">
+                    <div class="t-icon"><i class="fas fa-dice-d20"></i></div>
+                    <h3>Games &amp; Play</h3>
+                    <p>Alternate reality games, player motivation through Self-Determination Theory, and narrative across cultures.</p>
+                </div>
+                <div class="theme-card reveal-item">
+                    <div class="t-icon"><i class="fas fa-wand-magic-sparkles"></i></div>
+                    <h3>LLMs &amp; Generative AI</h3>
+                    <p>Generative systems that turn language into worlds, characters, and emergent interactive experiences.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Publications (interactive, filterable) -->
+    <section class="section" id="publications">
+        <div class="container">
+            <div class="section-head">
+                <div>
+                    <span class="eyebrow">Selected Publications</span>
+                    <h2>Things I've written</h2>
+                    <p class="lede">CHI · CHI Play · OzCHI · DiGRA · SIGGRAPH Asia · ISMAR · IJRP. Filter by theme below.</p>
+                </div>
+            </div>
+
+            <div class="chips" id="pub-filters">
+                <button class="chip active" data-filter="all">All <span class="count"></span></button>
+                <button class="chip" data-filter="hai">Human–Agent</button>
+                <button class="chip" data-filter="vr">VR / XR</button>
+                <button class="chip" data-filter="games">Games &amp; Play</button>
+                <button class="chip" data-filter="llm">LLM / GenAI</button>
+            </div>
+
+            <div class="pub-list" id="pub-list">
+                <article class="pub reveal-item" data-themes="hai llm games">
+                    <div class="pub-meta"><span class="pub-venue">CHI '25</span><span class="pub-year">2025 · Full Paper</span></div>
+                    <div class="pub-body">
+                        <a class="pub-title" href="https://scholar.google.com/citations?user=TssKzFIAAAAJ&hl=en" target="_blank" rel="noopener">Can AI Prompt Humans? Multimodal Agents Prompt Players' Game Actions and Show Consequences to Raise Sustainability Awareness</a>
+                        <p class="pub-note">ACM CHI Conference on Human Factors in Computing Systems</p>
+                        <div class="pub-tags"><span class="tag">Human–Agent</span><span class="tag">Sustainability</span><span class="tag">Serious Games</span></div>
+                    </div>
+                </article>
+
+                <article class="pub reveal-item" data-themes="hai llm">
+                    <div class="pub-meta"><span class="pub-venue">CHI '25</span><span class="pub-year">2025 · EA</span></div>
+                    <div class="pub-body">
+                        <a class="pub-title" href="https://scholar.google.com/citations?user=TssKzFIAAAAJ&hl=en" target="_blank" rel="noopener">Exploring User Preferences for Museum Guides: The Role of Chatbots in Shaping Interactive Experiences</a>
+                        <p class="pub-note">CHI Extended Abstracts</p>
+                        <div class="pub-tags"><span class="tag">Chatbots</span><span class="tag">Cultural Heritage</span></div>
+                    </div>
+                </article>
+
+                <article class="pub reveal-item" data-themes="vr llm">
+                    <div class="pub-meta"><span class="pub-venue">ISMAR '25</span><span class="pub-year">2025 · Adjunct</span></div>
+                    <div class="pub-body">
+                        <a class="pub-title" href="https://scholar.google.com/citations?user=TssKzFIAAAAJ&hl=en" target="_blank" rel="noopener">GenLinguaScape: Enabling User-Defined VR Scenarios for Communicative Language Practice</a>
+                        <p class="pub-note">IEEE ISMAR Adjunct</p>
+                        <div class="pub-tags"><span class="tag">VR</span><span class="tag">Language Learning</span><span class="tag">GenAI</span></div>
+                    </div>
+                </article>
+
+                <article class="pub reveal-item" data-themes="llm">
+                    <div class="pub-meta"><span class="pub-venue">OzCHI '24</span><span class="pub-year">2024</span></div>
+                    <div class="pub-body">
+                        <a class="pub-title" href="https://dl.acm.org/doi/10.1145/3706598" target="_blank" rel="noopener">Large Language Models for Automatic Detection of Sensitive Topics</a>
+                        <p class="pub-note">Australian Conference on Human-Computer Interaction</p>
+                        <div class="pub-tags"><span class="tag">LLM</span><span class="tag">Responsible AI</span></div>
+                    </div>
+                </article>
+
+                <article class="pub reveal-item" data-themes="llm games">
+                    <div class="pub-meta"><span class="pub-venue">CHI Play '24</span><span class="pub-year">2024</span></div>
+                    <div class="pub-body">
+                        <a class="pub-title" href="https://dl.acm.org/doi/10.1145/3677102" target="_blank" rel="noopener">Sketchar: Supporting Character Design and Illustration Prototyping Using Generative AI</a>
+                        <p class="pub-note">Proc. ACM Hum.-Comput. Interact. (CHI Play)</p>
+                        <div class="pub-tags"><span class="tag">GenAI</span><span class="tag">Creative Tools</span><span class="tag">Character Design</span></div>
+                    </div>
+                </article>
+
+                <article class="pub reveal-item" data-themes="games">
+                    <div class="pub-meta"><span class="pub-venue">DiGRA '24</span><span class="pub-year">2024</span></div>
+                    <div class="pub-body">
+                        <a class="pub-title" href="https://dl.digra.org/index.php/dl/article/view/2228" target="_blank" rel="noopener">Motivational Landscapes of ARG Players: A Self-Determination Theory Perspective</a>
+                        <p class="pub-note">Digital Games Research Association</p>
+                        <div class="pub-tags"><span class="tag">ARG</span><span class="tag">Player Motivation</span><span class="tag">SDT</span></div>
+                    </div>
+                </article>
+
+                <article class="pub reveal-item" data-themes="vr hai">
+                    <div class="pub-meta"><span class="pub-venue">CHI '24</span><span class="pub-year">2024 · EA</span></div>
+                    <div class="pub-body">
+                        <a class="pub-title" href="https://dl.acm.org/doi/10.1145/3613905.3648143" target="_blank" rel="noopener">Virtual Triplets: Mixed-Modal Synchronous and Asynchronous Collaboration with Human-Agent Interaction in VR</a>
+                        <p class="pub-note">CHI Extended Abstracts</p>
+                        <div class="pub-tags"><span class="tag">VR</span><span class="tag">Human–Agent</span><span class="tag">Collaboration</span></div>
+                    </div>
+                </article>
+
+                <article class="pub reveal-item" data-themes="llm games">
+                    <div class="pub-meta"><span class="pub-venue">SIGGRAPH Asia '24</span><span class="pub-year">2024 · Art</span></div>
+                    <div class="pub-body">
+                        <a class="pub-title" href="https://dl.acm.org/doi/full/10.1145/3680530.3695446" target="_blank" rel="noopener">I Light U Up: Exploring a New Emergent Narrative Paradigm through Light and Generative AI</a>
+                        <p class="pub-note">SIGGRAPH Asia Art Papers</p>
+                        <div class="pub-tags"><span class="tag">Emergent Narrative</span><span class="tag">GenAI</span></div>
+                    </div>
+                </article>
+
+                <article class="pub reveal-item" data-themes="games">
+                    <div class="pub-meta"><span class="pub-venue">CHI '24</span><span class="pub-year">2024 · EA</span></div>
+                    <div class="pub-body">
+                        <a class="pub-title" href="https://dl.acm.org/doi/full/10.1145/3613905.3648109" target="_blank" rel="noopener">Listen to the Sword: Using Breathing and Spatial Audio for Wuxia Games</a>
+                        <p class="pub-note">CHI Extended Abstracts</p>
+                        <div class="pub-tags"><span class="tag">Spatial Audio</span><span class="tag">Wuxia</span><span class="tag">Embodiment</span></div>
+                    </div>
+                </article>
+
+                <article class="pub reveal-item" data-themes="vr llm">
+                    <div class="pub-meta"><span class="pub-venue">OzCHI '24</span><span class="pub-year">2024</span></div>
+                    <div class="pub-body">
+                        <a class="pub-title" href="https://scholar.google.com/citations?user=TssKzFIAAAAJ&hl=en" target="_blank" rel="noopener">An Exploratory Study on AI-driven Visualisation Techniques for Decision Making in Extended Reality</a>
+                        <p class="pub-note">Australian Conference on Human-Computer Interaction</p>
+                        <div class="pub-tags"><span class="tag">XR</span><span class="tag">AI Visualisation</span></div>
+                    </div>
+                </article>
+
+                <article class="pub reveal-item" data-themes="games">
+                    <div class="pub-meta"><span class="pub-venue">IJRP</span><span class="pub-year">2023 · Journal</span></div>
+                    <div class="pub-body">
+                        <a class="pub-title" href="https://scholar.google.com/citations?user=TssKzFIAAAAJ&hl=en" target="_blank" rel="noopener">Player Category Research on Murder Mystery Games</a>
+                        <p class="pub-note">International Journal of Role-Playing</p>
+                        <div class="pub-tags"><span class="tag">Murder Mystery</span><span class="tag">Player Research</span></div>
+                    </div>
+                </article>
+            </div>
+
+            <div class="list-foot">
+                <a href="research.html" class="btn btn-secondary"><i class="fas fa-arrow-right"></i> See the full list &amp; project details</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Experience (compact) -->
+    <section class="section section--soft" id="experience">
+        <div class="container">
+            <div class="section-head">
+                <div>
+                    <span class="eyebrow">Trajectory</span>
+                    <h2>Where I've worked</h2>
+                    <p class="lede">Research and game design across New Zealand, Germany, Korea, Sweden, and China.</p>
+                </div>
+            </div>
+            <div class="experience-timeline">
+                <div class="experience-item reveal-item">
+                    <div class="experience-date"><span>Apr 2026 — Present</span></div>
+                    <div class="experience-content">
+                        <h3>Visiting PhD Student</h3>
+                        <h4>University of Augsburg · Chair for Human-Centered AI (Prof. Elisabeth André) · Germany</h4>
+                        <p>Collaborating on human-centered AI, intelligent user interfaces, and human–agent interaction.</p>
+                    </div>
+                </div>
+                <div class="experience-item reveal-item">
+                    <div class="experience-date"><span>Oct 2024 — Present</span></div>
+                    <div class="experience-content">
+                        <h3>Lead AI Game Designer</h3>
+                        <h4>MICROFEEL · Remote</h4>
+                        <p>Led a team building systems that generate game stories, mechanics, and NPCs end-to-end from natural-language input.</p>
+                    </div>
+                </div>
+                <div class="experience-item reveal-item">
+                    <div class="experience-date"><span>2023 — Present</span></div>
+                    <div class="experience-content">
+                        <h3>PhD Researcher</h3>
+                        <h4>University of Canterbury · HIT Lab NZ · New Zealand</h4>
+                        <p>Research on VR, human–agent interaction, and conversational AI. Publications at CHI, OzCHI, DiGRA, and SIGGRAPH Asia.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="list-foot">
+                <a href="experience.html" class="btn btn-secondary"><i class="fas fa-arrow-right"></i> Full experience &amp; education</a>
             </div>
         </div>
     </section>
 
     <!-- Footer -->
     <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <p>&copy; 2025 Ruoyu Wen · PhD Candidate in Product Design · University of Canterbury</p>
-                <div class="social-links">
-                    <a href="mailto:ruoyu.wen.game@gmail.com" target="_blank" title="Email"><i class="fas fa-envelope"></i></a>
-                    <a href="https://scholar.google.com/citations?hl=en&user=TssKzFIAAAAJ&view_op=list_works&gmla=AH8HC4wssodHVoe9Ljll41vco9U7EA7ci1rWTxxfNSe7ZuuxjEwwNOrata7GzhiOgbnk-d_iRrOM-ILMs3B2445j" target="_blank" title="Google Scholar"><i class="fas fa-graduation-cap"></i></a>
-                    <a href="https://www.linkedin.com/in/ruoyu-wen-53344419a/?locale=en_US" target="_blank" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
-                    <a href="https://wrychristian.itch.io/" target="_blank" title="Portfolio"><i class="fas fa-gamepad"></i></a>
-                </div>
+        <div class="footer-content">
+            <p>&copy; 2026 Ruoyu Wen · PhD Candidate in Product Design · University of Canterbury</p>
+            <div class="social-links">
+                <a href="mailto:ruoyu.wen.game@gmail.com" title="Email"><i class="fas fa-envelope"></i></a>
+                <a href="https://scholar.google.com/citations?hl=en&user=TssKzFIAAAAJ" target="_blank" rel="noopener" title="Google Scholar"><i class="fas fa-graduation-cap"></i></a>
+                <a href="https://www.linkedin.com/in/ruoyu-wen-53344419a/?locale=en_US" target="_blank" rel="noopener" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                <a href="https://wrychristian.itch.io/" target="_blank" rel="noopener" title="Portfolio"><i class="fas fa-gamepad"></i></a>
             </div>
         </div>
     </footer>
@@ -107,4 +286,3 @@
     <script src="script.js"></script>
 </body>
 </html>
-<!-- Multi-page website structure --> 
