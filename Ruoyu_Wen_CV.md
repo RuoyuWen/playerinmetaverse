@@ -10,7 +10,7 @@ Christchurch, New Zealand · ruoyu.wen.game@gmail.com
 
 ## Profile
 
-HCI researcher and game designer working at the intersection of **human–agent interaction**, **virtual reality**, **alternate reality games (ARGs)**, and **generative AI**. I combine rigorous mixed-methods research with hands-on game development to design playful, intelligent systems that foster meaningful connection and cross-cultural understanding. Author of **13+ peer-reviewed publications** at venues including CHI, CHI Play, DiGRA, OzCHI, and SIGGRAPH Asia, with international research experience across New Zealand, Germany, Korea, Sweden, and China.
+HCI researcher and game designer working at the intersection of **human–agent interaction**, **virtual reality**, **alternate reality games (ARGs)**, and **generative AI**. I combine rigorous mixed-methods research with hands-on game development to design playful, intelligent systems that foster meaningful connection and cross-cultural understanding. Author of **15+ peer-reviewed publications** at venues including CHI, IUI, CHI Play, DiGRA, OzCHI, and SIGGRAPH Asia, with international research experience across New Zealand, Germany, Korea, Sweden, and China.
 
 **Research Interests:** Human–Agent Interaction · Virtual & Extended Reality · Alternate Reality Games · Player Psychology (Self-Determination Theory) · Conversational & Generative AI · Cross-cultural HCI
 
@@ -76,16 +76,18 @@ Digital media, social media, human-computer interaction, and digital culture.
 
 For the complete list, see [Google Scholar](https://scholar.google.com/citations?hl=en&user=TssKzFIAAAAJ).
 
-1. **Can AI Prompt Humans? Multimodal Agents Prompt Players' Game Actions and Show Consequences to Raise Sustainability Awareness.** *ACM CHI*, 2025.
-2. **Exploring User Preferences for Museum Guides: The Role of Chatbots in Shaping Interactive Experiences.** *CHI Extended Abstracts*, 2025.
-3. **GenLinguaScape: Enabling User-Defined VR Scenarios for Communicative Language Practice.** *IEEE ISMAR Adjunct*, 2025.
-4. **Large Language Models for Automatic Detection of Sensitive Topics.** *OzCHI*, 2024.
-5. **An Exploratory Study on AI-driven Visualisation Techniques for Decision Making in Extended Reality.** *OzCHI*, 2024.
-6. **Sketchar: Supporting Character Design and Illustration Prototyping Using Generative AI.** *Proc. ACM HCI (CHI Play)*, 2024.
-7. **Motivational Landscapes of ARG Players: A Self-Determination Theory Perspective.** *DiGRA*, 2024.
-8. **Virtual Triplets: Mixed-Modal Synchronous and Asynchronous Collaboration with Human-Agent Interaction in VR.** *CHI Extended Abstracts*, 2024.
-9. **I Light U Up: Exploring a New Emergent Narrative Paradigm through Light and Generative AI.** *SIGGRAPH Asia Art Papers*, 2024.
-10. **Listen to the Sword: Using Breathing and Spatial Audio for Wuxia Games.** *CHI Extended Abstracts*, 2024.
-11. **The Impact of Alternate Reality Games on Environmental Cognition for University Freshmen.** *HCI International*, 2024.
-12. **Player Category Research on Murder Mystery Games.** *International Journal of Role-Playing*, 2023.
-13. **The Chinese Hotpot of Larp.** *Knutpunkt Magazine*, 2022.
+1. **AI of Oz: Enhancing Wizard of Oz Studies in HCI with AI Assistance for Human Moderation.** *ACM CHI*, 2026.
+2. **From Prompt to Presence: Co-Creating Personalised Emotional Sanctuaries in VR with Generative AI.** *ACM IUI*, 2026.
+3. **Can AI Prompt Humans? Multimodal Agents Prompt Players' Game Actions and Show Consequences to Raise Sustainability Awareness.** *ACM CHI*, 2025.
+4. **Exploring User Preferences for Museum Guides: The Role of Chatbots in Shaping Interactive Experiences.** *CHI Extended Abstracts*, 2025.
+5. **GenLinguaScape: Enabling User-Defined VR Scenarios for Communicative Language Practice.** *IEEE ISMAR Adjunct*, 2025.
+6. **Large Language Models for Automatic Detection of Sensitive Topics.** *OzCHI*, 2024.
+7. **An Exploratory Study on AI-driven Visualisation Techniques for Decision Making in Extended Reality.** *OzCHI*, 2024.
+8. **Sketchar: Supporting Character Design and Illustration Prototyping Using Generative AI.** *Proc. ACM HCI (CHI Play)*, 2024.
+9. **Motivational Landscapes of ARG Players: A Self-Determination Theory Perspective.** *DiGRA*, 2024.
+10. **Virtual Triplets: Mixed-Modal Synchronous and Asynchronous Collaboration with Human-Agent Interaction in VR.** *CHI Extended Abstracts*, 2024.
+11. **I Light U Up: Exploring a New Emergent Narrative Paradigm through Light and Generative AI.** *SIGGRAPH Asia Art Papers*, 2024.
+12. **Listen to the Sword: Using Breathing and Spatial Audio for Wuxia Games.** *CHI Extended Abstracts*, 2024.
+13. **The Impact of Alternate Reality Games on Environmental Cognition for University Freshmen.** *HCI International*, 2024.
+14. **Player Category Research on Murder Mystery Games.** *International Journal of Role-Playing*, 2023.
+15. **The Chinese Hotpot of Larp.** *Knutpunkt Magazine*, 2022.
