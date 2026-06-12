@@ -4,7 +4,7 @@
 Human–Agent Interaction · Game Design · Virtual Reality · Generative AI
 
 Christchurch, New Zealand · ruoyu.wen.game@gmail.com
-[Google Scholar](https://scholar.google.com/citations?hl=en&user=TssKzFIAAAAJ) · [LinkedIn](https://www.linkedin.com/in/ruoyu-wen-53344419a/) · [Portfolio](https://wrychristian.itch.io/)
+[Google Scholar](https://scholar.google.com/citations?hl=en&user=TssKzFIAAAAJ) · [LinkedIn](https://www.linkedin.com/in/ruoyu-wen-53344419a/) · [Portfolio](https://playerinmetaverse.tech/)
 
 ---
 
@@ -40,7 +40,7 @@ Digital media, social media, human-computer interaction, and digital culture.
 *Apr 2026 – Present*
 - Collaborating on human-centered AI, intelligent user interfaces, and human–agent interaction.
 
-**Lead AI Game Designer** — MICROFEEL, Remote
+**Lead AI Game Designer** — [MICROFEEL](https://www.3dmicrofeel.com/), Remote
 *Oct 2024 – Present*
 - Led a cross-functional team building an end-to-end system that generates game stories, mechanics, and NPCs from natural-language input.
 - Translated generative-AI research into shipping product features.
