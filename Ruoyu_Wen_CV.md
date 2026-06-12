@@ -21,16 +21,19 @@ HCI researcher and game designer working at the intersection of **human–agent 
 ## Education
 
 **University of Canterbury** — Christchurch, New Zealand
-*PhD in Product Design, HIT Lab NZ* · 2023 – 2026 (expected)
+*PhD in Product Design, HIT Lab NZ* · 2023 – 2027 (expected Nov 2027)
 Human–agent interaction, VR, and player motivation in ARGs through Self-Determination Theory; mixed-methods experimental research.
+Advisors: [Assoc. Prof. Thammathip Piumsomboon](https://scholar.google.com/citations?user=GLQLx4YAAAAJ), [Assoc. Prof. Simon Hoermann](https://scholar.google.com/citations?user=y4AefNUAAAAJ), [Prof. Mark Billinghurst](https://scholar.google.com/citations?user=S-J_ItYAAAAJ).
 
 **Uppsala University** — Uppsala, Sweden
 *Master of Arts in Game Design* · 2021 – 2023
 Interactive narrative, player psychology, user experience, and game design theory.
+Advisor: [Assoc. Prof. Sarah Lynne Bowen](https://scholar.google.com/citations?user=spdIdg4AAAAJ).
 
 **Huazhong University of Science and Technology** — Wuhan, China
 *Bachelor in Communication Studies* · 2016 – 2021
 Digital media, social media, human-computer interaction, and digital culture.
+Advisor: [Assoc. Prof. Shuo Xiong (熊硕)](http://faculty.hust.edu.cn/xiongshuo1/zh_CN/index.htm).
 
 ---
 

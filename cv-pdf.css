@@ -56,6 +56,8 @@ h3 {
 p {
   margin: 0.16em 0;
   text-align: left;
+  /* Preserve single line breaks within a paragraph (entry = institution / role / dates / advisors on separate lines) */
+  white-space: pre-line;
 }
 
 /* The italic date / institution line under each role */

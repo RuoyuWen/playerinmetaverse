@@ -602,6 +602,24 @@ a.pub-title:hover { color: var(--accent); background-size: 100% 1.5px; }
 .experience-content p { font-size: 0.96rem; margin-bottom: 0.5rem; }
 .experience-content ul { margin: 0.5rem 0 0 1.1rem; }
 .experience-content li { font-size: 0.92rem; color: var(--ink-soft); margin-bottom: 0.3rem; }
+.advisors {
+    margin: 0.9rem 0 0;
+    padding-top: 0.8rem;
+    border-top: 1px dashed var(--line);
+    font-size: 0.88rem;
+    color: var(--muted);
+    line-height: 1.6;
+}
+.advisors a { color: var(--accent); border-bottom: 1px solid var(--accent-line); }
+.advisors a:hover { border-bottom-color: var(--accent); }
+.advisors-label {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-right: 0.5rem;
+}
 
 /* ============================================================
    Footer
