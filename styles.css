@@ -204,7 +204,7 @@ section { position: relative; z-index: 1; }
     border-radius: 2px;
 }
 
-.nav-toggle { display: none; flex-direction: column; gap: 5px; cursor: pointer; padding: 8px; }
+.nav-toggle { display: none; flex-direction: column; gap: 5px; cursor: pointer; padding: 10px; background: none; border: 0; min-width: 44px; min-height: 44px; justify-content: center; }
 .bar { width: 22px; height: 2px; background: var(--ink); border-radius: 2px; transition: var(--normal) var(--ease); }
 
 /* ============================================================
@@ -650,13 +650,23 @@ a.pub-title:hover { color: var(--accent); background-size: 100% 1.5px; }
 /* ============================================================
    Reveal / transitions
    ============================================================ */
-.page-transition { opacity: 0; }
+.page-transition { opacity: 1; }
 .page-transition.ready { opacity: 1; transition: opacity var(--slow) var(--ease); }
-.reveal-item { opacity: 0; transform: translateY(18px); transition: opacity var(--slow) var(--ease), transform var(--slow) var(--ease); }
-.reveal-item.revealed { opacity: 1; transform: none; }
+.reveal-item { opacity: 1; transform: none; transition: opacity var(--slow) var(--ease), transform var(--slow) var(--ease); }
+.motion-ready .reveal-item { opacity: 0; transform: translateY(18px); }
+.motion-ready .reveal-item.revealed { opacity: 1; transform: none; }
 .reveal-item:nth-child(2) { transition-delay: 60ms; }
 .reveal-item:nth-child(3) { transition-delay: 120ms; }
 .reveal-item:nth-child(4) { transition-delay: 180ms; }
+
+.filter-status { font-size: .875rem; color: var(--muted); margin: -1rem 0 1.4rem; }
+[hidden] { display: none !important; }
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .page-transition.ready, .reveal-item { transition: none; }
+    .motion-ready .reveal-item { opacity: 1; transform: none; }
+    .caret { animation: none; }
+}
 
 ::-webkit-scrollbar { width: 11px; }
 ::-webkit-scrollbar-track { background: var(--bg-soft); }

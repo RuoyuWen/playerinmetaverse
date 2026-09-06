@@ -11,15 +11,39 @@ const navToggle = document.getElementById('nav-toggle');
 const navMenu = document.getElementById('nav-menu');
 
 if (navToggle && navMenu) {
-    navToggle.addEventListener('click', () => {
-        const open = navMenu.classList.toggle('active');
+    const setNavigation = (open) => {
+        navMenu.classList.toggle('active', open);
+        navToggle.setAttribute('aria-expanded', String(open));
+        navToggle.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
         const bars = navToggle.querySelectorAll('.bar');
         if (bars.length === 3) {
             bars[0].style.transform = open ? 'rotate(45deg) translate(5px, 5px)' : 'none';
             bars[1].style.opacity = open ? '0' : '1';
             bars[2].style.transform = open ? 'rotate(-45deg) translate(6px, -6px)' : 'none';
         }
+        // On narrow screens, closed navigation must also leave the tab order.
+        navMenu.inert = window.matchMedia('(max-width: 720px)').matches && !open;
+    };
+    navToggle.addEventListener('click', () => setNavigation(!navMenu.classList.contains('active')));
+    if (navToggle.tagName !== 'BUTTON') {
+        navToggle.setAttribute('role', 'button');
+        navToggle.tabIndex = 0;
+        navToggle.addEventListener('keydown', event => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                setNavigation(!navMenu.classList.contains('active'));
+            }
+        });
+    }
+    navMenu.querySelectorAll('a').forEach(link => link.addEventListener('click', () => setNavigation(false)));
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && navMenu.classList.contains('active')) {
+            setNavigation(false);
+            navToggle.focus();
+        }
     });
+    window.matchMedia('(max-width: 720px)').addEventListener('change', () => setNavigation(false));
+    setNavigation(false);
 }
 
 document.querySelectorAll('.nav-link').forEach(link => {
@@ -41,10 +65,13 @@ window.addEventListener('scroll', () => {
 }, { passive: true });
 
 // ---------- Progressive reveal ----------
-const revealObserver = new IntersectionObserver((entries) => {
-    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('revealed'); revealObserver.unobserve(e.target); } });
-}, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
-document.querySelectorAll('.reveal-item').forEach(el => revealObserver.observe(el));
+if ('IntersectionObserver' in window && !reduceMotion) {
+    const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('revealed'); revealObserver.unobserve(e.target); } });
+    }, { threshold: 0.08 });
+    document.querySelectorAll('.reveal-item').forEach(el => revealObserver.observe(el));
+    document.body.classList.add('motion-ready');
+}
 
 // ---------- Active nav link by page ----------
 (function setActiveNav() {
@@ -52,9 +79,12 @@ document.querySelectorAll('.reveal-item').forEach(el => revealObserver.observe(e
     document.querySelectorAll('.nav-link').forEach(link => {
         const href = (link.getAttribute('href') || '').toLowerCase();
         if (href.startsWith('#')) return;
+        if (href.includes('#') || href.includes('?')) return;
         const linkPage = href.split('/').pop();
         const active = linkPage === page || (href === 'index.html' && (page === '' || page === 'index.html'));
         link.classList.toggle('active', active);
+        if (active) link.setAttribute('aria-current', 'page');
+        else link.removeAttribute('aria-current');
     });
 })();
 
@@ -103,18 +133,43 @@ const filters = document.getElementById('pub-filters');
 const pubList = document.getElementById('pub-list');
 if (filters && pubList) {
     const pubs = Array.from(pubList.querySelectorAll('.pub'));
-    const allCount = filters.querySelector('[data-filter="all"] .count');
-    if (allCount) allCount.textContent = pubs.length;
-
+    const chips = Array.from(filters.querySelectorAll('.chip'));
+    const status = document.createElement('p');
+    status.className = 'filter-status';
+    status.setAttribute('role', 'status');
+    filters.after(status);
+    const matches = (pub, theme) => theme === 'all' || (pub.dataset.themes || '').split(' ').includes(theme);
+    chips.forEach(chip => {
+        let count = chip.querySelector('.count');
+        if (!count) {
+            count = document.createElement('span');
+            count.className = 'count';
+            chip.append(count);
+        }
+        count.textContent = pubs.filter(pub => matches(pub, chip.dataset.filter)).length;
+        chip.setAttribute('aria-controls', 'pub-list');
+        chip.type = 'button';
+    });
+    function applyFilter(theme) {
+        const selected = chips.find(chip => chip.dataset.filter === theme) || chips[0];
+        const f = selected.dataset.filter;
+        chips.forEach(chip => {
+            const active = chip === selected;
+            chip.classList.toggle('active', active);
+            chip.setAttribute('aria-pressed', String(active));
+        });
+        pubs.forEach(p => {
+            const show = matches(p, f);
+            p.classList.toggle('hide', !show);
+            p.hidden = !show;
+        });
+        const label = selected.childNodes[0].textContent.trim();
+        const count = pubs.filter(pub => matches(pub, f)).length;
+        status.textContent = `${count} ${count === 1 ? 'publication' : 'publications'} · ${label}`;
+    }
     filters.addEventListener('click', (e) => {
         const btn = e.target.closest('.chip');
-        if (!btn) return;
-        filters.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-        btn.classList.add('active');
-        const f = btn.dataset.filter;
-        pubs.forEach(p => {
-            const show = f === 'all' || (p.dataset.themes || '').split(' ').includes(f);
-            p.classList.toggle('hide', !show);
-        });
+        if (btn && filters.contains(btn)) applyFilter(btn.dataset.filter);
     });
+    applyFilter(new URLSearchParams(window.location.search).get('theme') || 'all');
 }
