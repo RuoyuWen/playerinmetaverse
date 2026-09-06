@@ -49,6 +49,10 @@
     const field = document.getElementById('field-content');
     const welcome = field.innerHTML;
     const next = document.getElementById('next-place');
+    const colourArt = document.getElementById('island-colour');
+    const sketchArt = map.querySelector('.island-art');
+    const sketchDescription = sketchArt.alt;
+    let colourReady = colourArt.complete && colourArt.naturalWidth > 0;
     const keys = new Set();
     let position = { x: 50, y: 52 }, target = null, active = null, frame = null, previousTime = 0, toastTimer;
     let visited = new Set();
@@ -63,12 +67,29 @@
         player.style.left = `${position.x}%`;
         player.style.top = `${position.y}%`;
     }
+    function updateReward() {
+        const unlocked = visited.size === order.length && colourReady;
+        map.classList.toggle('is-complete', unlocked);
+        document.getElementById('colour-reward-note').hidden = !unlocked;
+        document.getElementById('completion-title').textContent = unlocked ? 'Colour unlocked.' : 'All four places explored.';
+        sketchArt.alt = unlocked ? 'The explored island is now in colour, with softly coloured buildings, green trees, and pale blue water.' : sketchDescription;
+    }
+    colourArt.addEventListener('load', () => {
+        colourReady = true;
+        updateReward();
+        if (visited.size === order.length) status.textContent = 'All four places explored. The island is now in colour.';
+    });
+    colourArt.addEventListener('error', () => {
+        colourReady = false;
+        updateReward(); // Keep the original map usable if the colour asset cannot load.
+    });
     function updateProgress() {
         const count = visited.size;
         document.getElementById('visited-count').textContent = `${count} / 4`;
         document.querySelector('.journey-progress').setAttribute('aria-valuenow', String(count));
         document.getElementById('journey-progress-fill').style.width = `${count * 25}%`;
         document.getElementById('journey-complete').hidden = count !== 4;
+        updateReward();
         document.querySelectorAll('[data-visit]').forEach(button => {
             const key = button.dataset.visit;
             button.classList.toggle('collected', visited.has(key));
@@ -111,12 +132,13 @@
             else station.removeAttribute('aria-current');
         });
         updateProgress();
-        status.textContent = `${place.name}. ${place.title} ${firstVisit ? 'New exploration stamp collected.' : ''} ${visited.size} of 4 places explored. Read the related work in Your Field Notes.`;
+        const rewardUnlocked = firstVisit && visited.size === order.length && colourReady;
+        status.textContent = `${place.name}. ${place.title} ${firstVisit ? 'New exploration stamp collected.' : ''} ${visited.size} of 4 places explored. ${rewardUnlocked ? 'Colour unlocked. The island is now in colour.' : 'Read the related work in Your Field Notes.'}`;
         if (firstVisit) {
             const toast = document.getElementById('arrival-toast');
-            toast.textContent = `✦ ${place.name} discovered`;
+            toast.textContent = rewardUnlocked ? '✦ All four places explored — colour unlocked' : `✦ ${place.name} discovered`;
             toast.classList.add('visible'); clearTimeout(toastTimer);
-            toastTimer = setTimeout(() => toast.classList.remove('visible'), 2400);
+            toastTimer = setTimeout(() => toast.classList.remove('visible'), rewardUnlocked ? 6000 : 2400);
         }
     }
     function detectPlace() {
