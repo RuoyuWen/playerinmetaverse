@@ -7,7 +7,7 @@
     const storageKey = 'ruoyu-portfolio-exploration-v1';
     const places = {
         games: {
-            x: 31, y: 34, name: 'Game Arcade', kicker: 'Games & play',
+            x: 31, y: 35, name: 'Game Arcade', kicker: 'Games & play',
             title: 'Play is a way of knowing.',
             description: 'What makes people curious enough to keep playing? My work explores player motivation, alternate reality games, and embodied ways to interact.',
             works: [
@@ -16,7 +16,7 @@
             ], more: 'More games research', href: 'research.html?theme=games'
         },
         ai: {
-            x: 68, y: 35, name: 'AI Lab', kicker: 'Generative AI',
+            x: 69, y: 35, name: 'AI Lab', kicker: 'Generative AI',
             title: 'From a prompt to a possibility.',
             description: 'I explore how generative AI can help people create personal worlds, characters, and stories, with people participating in the creative process.',
             works: [
@@ -25,7 +25,7 @@
             ], more: 'More AI research', href: 'research.html?theme=llm'
         },
         interaction: {
-            x: 24, y: 80, name: 'Interaction Studio', kicker: 'Human–agent interaction',
+            x: 24, y: 81, name: 'Interaction Studio', kicker: 'Human–agent interaction',
             title: 'An agent. A person. A connection.',
             description: 'How do people and intelligent agents work together? I investigate human–agent interaction, AI-assisted research, and collaboration in virtual reality.',
             works: [
@@ -34,7 +34,7 @@
             ], more: 'More interaction research', href: 'research.html?theme=hai'
         },
         journey: {
-            x: 74, y: 82, name: 'Story House', kicker: 'About me',
+            x: 75, y: 83, name: 'Story House', kicker: 'About me',
             title: 'Game designer. Researcher. Always a player.',
             description: 'I’m Ruoyu Wen, a PhD candidate at the University of Canterbury. My path connects game design, human–agent interaction, and research across cultures.',
             works: [
