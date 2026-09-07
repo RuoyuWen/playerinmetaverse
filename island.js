@@ -67,6 +67,9 @@
         player.style.left = `${position.x}%`;
         player.style.top = `${position.y}%`;
     }
+    function faceMovement(dx) {
+        if (Math.abs(dx) > .01) player.dataset.facing = dx < 0 ? 'left' : 'right';
+    }
     function updateReward() {
         const unlocked = visited.size === order.length && colourReady;
         map.classList.toggle('is-complete', unlocked);
@@ -157,12 +160,14 @@
         if (keys.has('left')) dx--; if (keys.has('right')) dx++;
         if (keys.has('up')) dy--; if (keys.has('down')) dy++;
         if (dx || dy) {
+            faceMovement(dx);
             target = null;
             const length = Math.hypot(dx, dy);
             position.x += dx / length * 24 * dt;
             position.y += dy / length * 36 * dt;
         } else if (target) {
             const deltaX = target.x - position.x, deltaY = (target.y - position.y) / 1.5;
+            faceMovement(deltaX);
             const distance = Math.hypot(deltaX, deltaY), step = 36 * dt;
             if (distance <= step || reduced.matches) {
                 position = { x: target.x, y: target.y };
@@ -223,6 +228,7 @@
     document.getElementById('restart-journey').addEventListener('click', () => {
         keys.clear(); target = null; active = null; visited.clear(); stopFrame();
         position = { x: 50, y: 52 }; field.innerHTML = welcome;
+        player.dataset.facing = 'right';
         document.querySelector('.field-notes').removeAttribute('data-place');
         document.querySelectorAll('[data-station]').forEach(station => { station.classList.remove('current'); station.removeAttribute('aria-current'); });
         clearTimeout(toastTimer); document.getElementById('arrival-toast').classList.remove('visible');

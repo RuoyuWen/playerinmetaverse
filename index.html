@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..600;1,9..144,400..560&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="island.css?v=lake-1">
+    <link rel="stylesheet" href="island.css?v=traveller-1">
 </head>
 <body class="page-transition portfolio-home">
     <a class="skip-link" href="#main">Skip to content</a>
@@ -49,7 +49,7 @@
                         <a class="map-station station-ai" data-station="ai" href="research.html?theme=llm" aria-label="Visit the AI Lab"><span class="station-symbol"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i></span><span class="station-name">AI Lab</span><span class="station-state">Generative worlds</span></a>
                         <a class="map-station station-interaction" data-station="interaction" href="research.html?theme=hai" aria-label="Visit the Interaction Studio"><span class="station-symbol"><i class="fas fa-comments" aria-hidden="true"></i></span><span class="station-name">Interaction Studio</span><span class="station-state">People &amp; agents</span></a>
                         <a class="map-station station-journey" data-station="journey" href="about.html" aria-label="Visit the Story House"><span class="station-symbol"><i class="fas fa-book-open" aria-hidden="true"></i></span><span class="station-name">Story House</span><span class="station-state">The person behind it</span></a>
-                        <div class="player-token" id="player-token" aria-hidden="true"><span class="player-you">You</span><span class="player-piece"><i class="fas fa-person-walking"></i></span><span class="player-shadow"></span></div>
+                        <div class="player-token" id="player-token" data-facing="right" aria-hidden="true"><span class="player-you">You</span><span class="player-piece"><img class="player-art" src="images/island-traveller.png" alt="" width="1024" height="1536" draggable="false"></span><span class="player-shadow"></span></div>
                         <div class="arrival-toast" id="arrival-toast" aria-hidden="true"></div>
                     </div>
                     <div class="world-controls"><p id="movement-help">Click the map, then <kbd>W A S D</kbd> / <kbd>↑ ↓ ← →</kbd> to walk. Or tap a place.</p><button type="button" id="restart-journey">Start over ↺</button></div>
@@ -366,6 +366,6 @@
     </footer>
 
     <script src="script.js"></script>
-    <script src="island.js?v=handdrawn-1"></script>
+    <script src="island.js?v=traveller-1"></script>
 </body>
 </html>
