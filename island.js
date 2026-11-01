@@ -11,6 +11,7 @@
             title: 'Play is a way of knowing.',
             description: 'What makes people curious enough to keep playing? My work explores player motivation, alternate reality games, and embodied ways to interact.',
             works: [
+                ['PLAY IN YOUR BROWSER · EN / 中文', 'Chicken Frontier', 'Draw a path, tune your defenses, and play your own tower defense level.', 'games/chicken-frontier/'],
                 ['CHI 2024 · Extended Abstract', 'Listen to the Sword', 'Breathing and spatial audio as interactions for Wuxia games.', 'https://dl.acm.org/doi/full/10.1145/3613905.3648109'],
                 ['DiGRA 2024', 'Motivational Landscapes of ARG Players', 'Understanding player motivation through Self-Determination Theory.', 'https://dl.digra.org/index.php/dl/article/view/2228']
             ], more: 'More games research', href: 'research.html?theme=games'
