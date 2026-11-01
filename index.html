@@ -7,10 +7,10 @@
     <meta name="description" content="Ruoyu Wen is a PhD candidate in Product Design at the University of Canterbury, researching Human-Agent Interaction, VR/XR, Alternate Reality Games, and LLM-driven play.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..600;1,9..144,400..560&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="island.css?v=traveller-1">
+    <link rel="stylesheet" href="playground.css?v=1">
 </head>
 <body class="page-transition portfolio-home">
     <a class="skip-link" href="#main">Skip to content</a>
@@ -34,52 +34,45 @@
     </nav>
 
     <main id="main">
-    <section class="exploration" id="hero" aria-labelledby="world-heading">
-        <div class="container">
-            <div class="world-heading-row">
-                <div><p class="world-introduction">HCI researcher and game designer</p><h1 id="world-heading">A player in the metaverse.</h1><p>Explore my work in games, human–agent interaction, and generative AI.</p></div>
-                <a class="reading-shortcut" href="#projects">Just here to read? <span>View the portfolio ↓</span></a>
-            </div>
-            <div class="exploration-shell">
-                <div class="world-column">
-                    <div class="world-toolbar"><span><i class="fas fa-compass" aria-hidden="true"></i> Research island</span><button type="button" id="guide-button">Take a guided route</button></div>
-                    <div class="world-map" id="world-map" tabindex="0" role="group" aria-label="Explorable portfolio map" aria-describedby="movement-help">
-                        <img class="island-art island-monochrome" src="images/research-island-ink-terrain.png" alt="A monochrome hand-drawn island with flowing shorelines, quiet lake ripples, sparse trees and winding earth paths linking a wooden game pavilion, observatory, workshop and library" width="1536" height="1024" fetchpriority="high">
-                        <img class="island-art island-colour" id="island-colour" src="images/research-island-ink-terrain.png" alt="" aria-hidden="true" width="1536" height="1024" decoding="async" fetchpriority="low">
-                        <a class="map-station station-games" data-station="games" href="research.html?theme=games" aria-label="Visit the Game Arcade"><span class="station-symbol"><i class="fas fa-gamepad" aria-hidden="true"></i></span><span class="station-name">Game Arcade</span><span class="station-state">Games &amp; play</span></a>
-                        <a class="map-station station-ai" data-station="ai" href="research.html?theme=llm" aria-label="Visit the AI Lab"><span class="station-symbol"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i></span><span class="station-name">AI Lab</span><span class="station-state">Generative worlds</span></a>
-                        <a class="map-station station-interaction" data-station="interaction" href="research.html?theme=hai" aria-label="Visit the Interaction Studio"><span class="station-symbol"><i class="fas fa-comments" aria-hidden="true"></i></span><span class="station-name">Interaction Studio</span><span class="station-state">People &amp; agents</span></a>
-                        <a class="map-station station-journey" data-station="journey" href="about.html" aria-label="Visit the Story House"><span class="station-symbol"><i class="fas fa-book-open" aria-hidden="true"></i></span><span class="station-name">Story House</span><span class="station-state">The person behind it</span></a>
-                        <div class="player-token" id="player-token" data-facing="right" aria-hidden="true"><span class="player-you">You</span><span class="player-piece"><img class="player-art" src="images/island-traveller.png" alt="" width="1024" height="1536" draggable="false"></span><span class="player-shadow"></span></div>
-                        <div class="arrival-toast" id="arrival-toast" aria-hidden="true"></div>
-                    </div>
-                    <div class="world-controls"><p id="movement-help">Click the map, then <kbd>W A S D</kbd> / <kbd>↑ ↓ ← →</kbd> to walk. Or tap a place.</p><button type="button" id="restart-journey">Start over ↺</button></div>
-                    <div class="touch-controls" role="group" aria-label="Move around the map"><button type="button" data-move="left" aria-label="Walk left">←</button><button type="button" data-move="up" aria-label="Walk up">↑</button><button type="button" data-move="down" aria-label="Walk down">↓</button><button type="button" data-move="right" aria-label="Walk right">→</button></div>
-                    <a class="mobile-field-link" href="#field-notes">Read your discoveries ↓</a>
+    <section class="playground" id="hero" aria-labelledby="world-heading">
+        <div class="playground-intro">
+            <p class="intro-line"><span class="presence-dot"></span> HCI researcher & game designer</p>
+            <h1 id="world-heading">Ruoyu<br> Wen<span class="name-period">.</span></h1>
+            <p class="intro-description">I study how people <strong>play</strong>, <strong>create</strong>, and <strong>connect</strong> with intelligent systems.</p>
+            <p class="intro-affiliation">PhD candidate · University of Canterbury</p>
+            <div class="intro-actions"><button class="enter-playground" id="begin-exploring" type="button">Follow your curiosity <span aria-hidden="true">↗</span></button><a href="#projects">Or, go straight to the work ↓</a></div>
+            <div class="exploration-passport">
+                <div class="passport-top"><span>Your discoveries</span><span id="discovery-count">0 / 4</span></div>
+                <div class="discovery-slots" aria-label="Research experiences">
+                    <button type="button" data-open="play" aria-label="Explore Games and play"><span class="slot-symbol">✳</span><span>Play</span></button>
+                    <button type="button" data-open="create" aria-label="Explore Generative worlds"><span class="slot-symbol">◌</span><span>Create</span></button>
+                    <button type="button" data-open="connect" aria-label="Explore Human–agent interaction"><span class="slot-symbol">∞</span><span>Connect</span></button>
+                    <button type="button" data-open="meet" aria-label="Explore My journey"><span class="slot-symbol">↗</span><span>Meet</span></button>
                 </div>
-                <aside class="field-notes" id="field-notes" aria-labelledby="field-title" tabindex="0">
-                    <div class="journal-label"><span>Field notes</span><span id="visited-count">0 / 4</span></div>
-                    <div class="journey-progress" role="progressbar" aria-label="Places explored" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0"><span id="journey-progress-fill"></span></div>
-                    <div id="field-content">
-                        <div class="host-intro"><img src="images/profile.jpg" alt="Ruoyu Wen" width="64" height="64"><span>Your host<br><strong>Ruoyu Wen</strong></span></div>
-                        <span class="field-kicker" id="field-kicker">Welcome to my portfolio</span>
-                        <h2 id="field-title">Hi, fellow explorer.</h2>
-                        <p id="field-description">I study how people play, create, and connect with intelligent agents. Walk into a place on the map to discover a different part of my work.</p>
-                        <div id="field-works"><p class="welcome-affiliation">PhD Candidate · University of Canterbury<br>Visiting researcher · University of Augsburg</p></div>
-                        <a class="field-more" id="field-more" href="about.html">A little more about me ↗</a>
-                    </div>
-                    <button type="button" class="next-place" id="next-place">Let's start with games →</button>
-                    <div class="passport" aria-label="Your exploration stamps"><button type="button" data-visit="games" aria-label="Visit Games"><i class="fas fa-gamepad" aria-hidden="true"></i><span>PLAY</span></button><button type="button" data-visit="ai" aria-label="Visit AI"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i><span>CREATE</span></button><button type="button" data-visit="interaction" aria-label="Visit Interaction"><i class="fas fa-comments" aria-hidden="true"></i><span>CONNECT</span></button><button type="button" data-visit="journey" aria-label="Visit the personal journey"><i class="fas fa-book-open" aria-hidden="true"></i><span>MEET</span></button></div>
-                    <div class="journey-complete" id="journey-complete" hidden><strong id="completion-title">All four places explored.</strong><p id="colour-reward-note" hidden>The island is now in colour. Thanks for exploring all four places.</p><p>Get in touch if you'd like to discuss my research or work together.</p><a href="mailto:ruoyu.wen.game@gmail.com">Email me</a><a href="Ruoyu_Wen_CV.pdf" target="_blank" rel="noopener">Read my CV</a></div>
-                    <p class="journal-footnote">No right order. No time limit. Just curiosity.</p>
-                    <a class="mobile-map-link" href="#world-map">Back to the island ↑</a>
-                </aside>
+                <p id="passport-note">Four small experiments. Take your own route.</p>
+                <div class="completion-actions" id="completion-actions" hidden><button type="button" id="save-art">Save your exploration ↗</button><button type="button" id="reset-exploration">Play again</button></div>
             </div>
-            <p class="sr-only" id="exploration-status" role="status" aria-live="polite"></p>
-            <noscript><p>The map's places link directly to my work. You can also browse the full portfolio below.</p></noscript>
-            <div class="world-bottom"><span>INTERACTION <b>×</b> GAMES <b>×</b> AI</span><a href="Ruoyu_Wen_CV.pdf" target="_blank" rel="noopener">CV ↗</a><a href="mailto:ruoyu.wen.game@gmail.com">Get in touch ↗</a></div>
         </div>
+        <div class="playground-stage" id="playground-stage">
+            <div class="stage-caption"><span><span class="live-dot"></span> A small space for experimentation</span><button type="button" id="motion-toggle" aria-pressed="false">Pause motion</button></div>
+            <canvas id="research-canvas" aria-hidden="true"></canvas>
+            <div class="stage-center" aria-hidden="true"><span>Move to influence.</span><span>Choose to discover.</span></div>
+            <a class="research-node node-play" href="research.html?theme=games" data-open="play"><span class="node-glyph" aria-hidden="true">✳</span><span class="node-copy"><strong>Games & play</strong><small>Find what draws you in</small></span><span class="node-arrow" aria-hidden="true">↗</span></a>
+            <a class="research-node node-create" href="research.html?theme=llm" data-open="create"><span class="node-glyph" aria-hidden="true">◌</span><span class="node-copy"><strong>Generative worlds</strong><small>A little room for possibility</small></span><span class="node-arrow" aria-hidden="true">↗</span></a>
+            <a class="research-node node-connect" href="research.html?theme=hai" data-open="connect"><span class="node-glyph" aria-hidden="true">∞</span><span class="node-copy"><strong>People & agents</strong><small>Find a shared rhythm</small></span><span class="node-arrow" aria-hidden="true">↗</span></a>
+            <a class="research-node node-meet" href="about.html" data-open="meet"><span class="node-glyph" aria-hidden="true">↗</span><span class="node-copy"><strong>The person behind it</strong><small>A journey through play</small></span><span class="node-arrow" aria-hidden="true">↗</span></a>
+            <div class="stage-bottom"><span>Curiosity is the controller.</span><span>Click a subject to begin <span aria-hidden="true">↗</span></span></div>
+            <p class="canvas-fallback" hidden>The interactive sculpture is unavailable. You can still explore every subject.</p>
+        </div>
+        <p class="sr-only" id="exploration-status" role="status" aria-live="polite"></p>
+        <noscript><p>Follow any subject to explore my research, or browse the selected work below.</p></noscript>
     </section>
+    <dialog class="experiment-dialog" id="experiment-dialog" aria-labelledby="experiment-title">
+        <div class="experiment-layout">
+            <div class="experiment-lab"><div class="lab-top"><span id="lab-category">Play</span><button type="button" id="close-experiment" aria-label="Close experience">✕</button></div><div id="experiment-surface"></div><p class="experiment-feedback" id="experiment-feedback" role="status"></p></div>
+            <div class="experiment-notes"><p class="notes-label">Behind the interaction</p><h2 id="experiment-title"></h2><p id="experiment-description"></p><div id="experiment-works"></div><div class="experiment-links"><a id="experiment-more" href="research.html">Explore the research ↗</a><button type="button" id="next-experiment">Next discovery →</button></div></div>
+        </div>
+    </dialog>
 
     <section class="section project-section" id="projects" aria-labelledby="projects-heading">
         <div class="container">
@@ -371,6 +364,6 @@
     </footer>
 
     <script src="script.js"></script>
-    <script src="island.js?v=chicken-frontier-1"></script>
+    <script src="playground.js?v=1"></script>
 </body>
 </html>
