@@ -159,6 +159,9 @@
 .cosmic-home .tuning-label { gap:10px;font-size:.69rem; }
 .tuning-label > span { color:var(--topic-color);text-align:right; }
 .interest-star:hover,.intention-word:hover,.range-stop:hover { color:#fff; }
+.related-research { margin:12px 0 0;font-size:.73rem; }
+.related-research summary { color:#b7c8e6;cursor:pointer;padding:10px 0; }
+.related-research .experiment-work strong { font-size:.76rem;line-height:1.6; }
 @media (min-width:801px) { .cosmic-home #experiment-surface { padding:10px 0; } .cosmic-home .galaxy-preview { margin-bottom:10px; } .galaxy-preview canvas { max-height:140px;object-fit:contain; } }
 @media (prefers-reduced-motion:reduce) { .interest-star::before,.depth-plane { transition:none; } }
 @media (max-width:480px) { .interest-star strong { font-size:.66rem; } .interest-star small { font-size:.57rem; } .intention-word strong { font-size:.67rem; } .intention-word small { font-size:.55rem; } .intention-composer { gap:3px; } .range-stop { font-size:.6rem; } }

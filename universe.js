@@ -54,6 +54,16 @@
         ]
     };
     const questions={play:'What draws you to play?',create:'What would you like to create?',connect:'How should people and AI interact?',space:'What would you explore in VR?'};
+    // Additional reading follows the same interests without changing their visual motifs.
+    // Publication details checked against Scholar, publisher records and arXiv, 3 Nov 2026.
+    const additionalResearch={
+        agency:{title:'I Made the Choice, Did I? Exploring the Influence of Goal-Directed AI on Human Decision-Making',venue:'IJHCI · 2026 · Journal',href:'https://www.tandfonline.com/doi/abs/10.1080/10447318.2026.2719171'},
+        mediation:{title:'Exploring Mediation by an Embodied Virtual Agent in Immersive Triadic Collaborative Decision-Making',venue:'IEEE TVCG · 2026 · Journal',href:'https://doi.org/10.1109/TVCG.2026.3679103'},
+        digital:{title:'Digital Humans for Depression Assessment and Intervention Support: Scoping Review',venue:'JMIR Mental Health · 2026 · Review',href:'https://mental.jmir.org/2026/1/e79954/'},
+        fiero:{title:'FIERO: Empowering Creative Writing Through Collaborative Game Play',venue:'arXiv · 2026 · Author preprint',href:'https://arxiv.org/abs/2607.11837'},
+        peer:{title:'Investigating AI in Peer Support via Multi-Module System-Driven Embodied Conversational Agents',venue:'arXiv · 2025 · Preprint',href:'https://arxiv.org/abs/2511.22269'}
+    };
+    const relatedInterests={play:{light:['fiero']},create:{light:['fiero']},connect:{oz:['agency'],triplets:['mediation'],prompt:['agency']},space:{presence:['digital','peer'],triplets:['mediation']}};
     const order = Object.keys(topics);
     let discovered = new Set(), active = null, returnFocus = null;
     const selectedWorks = Object.fromEntries(order.map(key=>[key,null]));
@@ -157,6 +167,15 @@
             link.append(element('small','',work.venue),element('strong','',work.scholar?'Find this work on Google Scholar ↗':'Read this paper ↗'));
             const match=element('div','recommendation-reason');match.append(element('strong','','Why this work'),element('p','',interest.reason));
             details.append(match,link);
+            const related=relatedInterests[key]?.[selectedWorks[key]]||[];
+            if(related.length){
+                const more=element('details','related-research');
+                more.append(element('summary','',`More on this interest (${related.length})`));
+                related.forEach(id=>{
+                    const paper=additionalResearch[id],entry=element('a','experiment-work');entry.href=paper.href;entry.target='_blank';entry.rel='noopener';
+                    entry.append(element('small','',paper.venue),element('strong','',paper.title+' ↗'));more.append(entry);
+                });details.append(more);
+            }
         } else details.append(element('p','project-visual-note','Your interest connects to a work in this galaxy. Try another choice to discover a different project.'));
     }
     function applyAppearance(key) {
