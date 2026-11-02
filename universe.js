@@ -229,19 +229,51 @@
     };
     for(const key of order)galaxyData[key].texture=galaxyTexture(galaxyData[key].seed,galaxyData[key].rgb,galaxyData[key].arms);
     const randomStar=random(2526);
-    const stars=Array.from({length:780},()=>({x:randomStar(),y:randomStar(),r:.25+Math.pow(randomStar(),5)*1.2,a:.12+randomStar()*.65,phase:randomStar()*Math.PI*2}));
+    const stars=Array.from({length:2600},()=>({x:randomStar(),y:randomStar(),r:.35+Math.pow(randomStar(),4)*1.6,a:.24+randomStar()*.66,phase:randomStar()*Math.PI*2,depth:.2+randomStar()*.8,color:['#d7e1f6','#a8caff','#f6dbc0'][Math.floor(randomStar()*3)]}));
+    const galaxyClocks=Object.fromEntries(order.map(key=>[key,0]));
+    const galaxyLinks=[...document.querySelectorAll('.research-node')];
+    const meteorRandom=random(828), meteors=[];
+    let nextMeteor=1.2;
+    function advanceUniverse(delta){
+        // Hold a targeted galaxy still so pointer and keyboard users can select it easily.
+        for(const key of order)if(key!==hovered&&key!==active)galaxyClocks[key]+=delta;
+        for(let i=meteors.length-1;i>=0;i--){meteors[i].age+=delta;if(meteors[i].age>=meteors[i].life)meteors.splice(i,1);}
+        if(time>=nextMeteor){
+            meteors.push({x:.2+meteorRandom()*.65,y:.08+meteorRandom()*.4,age:0,life:1.4+meteorRandom()*.6,angle:.43+meteorRandom()*.2,speed:300+meteorRandom()*170});
+            nextMeteor=time+4.5+meteorRandom()*5;
+        }
+    }
     function galaxyPosition(key){
         const mobile=width<=800;
         const positions=mobile?{play:[.26,.41],create:[.73,.54],connect:[.28,.66],space:[.72,.76]}:{play:[.24,.54],create:[.68,.34],connect:[.80,.68],space:[.48,.76]};
         const [x,y]=positions[key];
-        return{x:x*width,y:y*height,r:mobile?Math.min(132,width*.28):Math.min(width*.125,185)};
+        const phase=order.indexOf(key)*1.7,t=galaxyClocks[key];
+        const driftX=(Math.sin(t*.09+phase)-Math.sin(phase))*(mobile?5:17);
+        const driftY=(Math.cos(t*.07+phase)-Math.cos(phase))*(mobile?3:11);
+        return{x:x*width+driftX+influence.x*7,y:y*height+driftY+influence.y*5,r:mobile?Math.min(132,width*.28):Math.min(width*.125,185)};
     }
     function placeLabels(){
-        document.querySelectorAll('.research-node').forEach(el=>{
+        galaxyLinks.forEach(el=>{
             const pos=galaxyPosition(el.dataset.open);
             el.style.left=pos.x+'px';el.style.top=(pos.y+pos.r*.42)+'px';
             el.style.setProperty('--hit-size',pos.r*1.75+'px');
         });
+    }
+    function drawMeteors(){
+        // Decorative only: short, tapered trails, with no hit targets or flashing bursts.
+        if(motion.matches)return;
+        for(const meteor of meteors){
+            const progress=meteor.age/meteor.life,fade=Math.sin(progress*Math.PI)*.8;
+            const distance=meteor.age*meteor.speed*(width<=800?.65:1);
+            const dx=Math.cos(meteor.angle),dy=Math.sin(meteor.angle);
+            const x=meteor.x*width+distance*dx,y=meteor.y*height+distance*dy;
+            const length=Math.min(distance, width<=800?100:190),tx=x-dx*length,ty=y-dy*length;
+            const trail=ctx.createLinearGradient(tx,ty,x,y);
+            trail.addColorStop(0,'#8cbdff00');trail.addColorStop(.7,'#9fcaff55');trail.addColorStop(1,'#e8f3ff');
+            ctx.globalAlpha=fade;ctx.strokeStyle=trail;ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(tx,ty);ctx.lineTo(x,y);ctx.stroke();
+            ctx.fillStyle='#eaf5ff';ctx.beginPath();ctx.arc(x,y,1.5,0,Math.PI*2);ctx.fill();
+        }
+        ctx.globalAlpha=1;
     }
     function draw(){
         if(!ctx)return;
@@ -251,14 +283,17 @@
         ctx.fillStyle='#050913';ctx.fillRect(0,0,width,height);
         const ambient=ctx.createRadialGradient(width*.63,height*.52,0,width*.63,height*.52,width*.65);
         ambient.addColorStop(0,'#13203955');ambient.addColorStop(.5,'#0e132c44');ambient.addColorStop(1,'#05091300');ctx.fillStyle=ambient;ctx.fillRect(0,0,width,height);
-        // Stars gently shift with the pointer; there is no scrolling or flashing backdrop.
-        for(let i=0;i<stars.length;i++){
-            const s=stars[i],x=s.x*width+influence.x*(4+s.r*9),y=s.y*height+influence.y*(3+s.r*7);
-            const twinkle=i%9===0&&!paused? .82+Math.sin(time*.45+s.phase)*.18:1;
-            ctx.globalAlpha=s.a*twinkle;ctx.fillStyle=i%7===0?'#91b5ed':'#d7e1f6';ctx.fillRect(x,y,s.r,s.r);
-            if(s.r>1.2&&i%3===0){ctx.globalAlpha=s.a*.16;ctx.fillRect(x-3,y+.3,7,.5);ctx.fillRect(x+.3,y-3,.5,7);}
+        // Depth layers drift at different speeds. Density scales with the visible area.
+        const starCount=Math.min(stars.length,Math.max(700,Math.round(width*height/570)));
+        for(let i=0;i<starCount;i++){
+            const s=stars[i],x=((s.x*width+time*s.depth*.7+influence.x*(4+s.depth*17))%width+width)%width,y=((s.y*height+time*s.depth*.18+influence.y*(3+s.depth*12))%height+height)%height;
+            const twinkle=.83+Math.sin(time*(.3+s.depth*.2)+s.phase)*.17;
+            ctx.globalAlpha=s.a*twinkle;ctx.fillStyle=s.color;ctx.fillRect(x,y,s.r,s.r);
+            if(s.r>1.6){ctx.globalAlpha=s.a*twinkle*.22;ctx.fillRect(x-4,y+s.r/2,9,.6);ctx.fillRect(x+s.r/2,y-4,.6,9);}
         }
         ctx.globalAlpha=1;
+        drawMeteors();
+        placeLabels();
         ctx.save();ctx.translate(width*.5,height*.5);ctx.scale(camera.zoom,camera.zoom);ctx.translate(-camera.x*width,-camera.y*height);
         const visited=[...discovered];
         if(visited.length>1){
@@ -268,7 +303,7 @@
         }
         for(const key of order){
             const p=galaxyPosition(key),g=galaxyData[key],selectedKey=active===key||hovered===key;
-            ctx.save();ctx.translate(p.x+influence.x*7,p.y+influence.y*5);ctx.rotate(g.angle+time*.004);
+            ctx.save();ctx.translate(p.x,p.y);ctx.rotate(g.angle+Math.sin(galaxyClocks[key]*(.035+order.indexOf(key)*.008))*.24);
             ctx.globalCompositeOperation='lighter';
             ctx.globalAlpha=active&&active!==key?.35:selectedKey?1:.85;
             if(g.texture)ctx.drawImage(g.texture,-p.r*1.27,-p.r*1.27,p.r*2.54,p.r*2.54);
@@ -287,11 +322,11 @@
     }
     function tick(stamp) {
         frame=0; if(paused || !visible || document.hidden) { lastTime=0; return; }
-        // 30 fps is sufficient for this quiet sculpture, including high-DPI mobile screens.
+        // Cap decorative motion at 30 fps, including high-DPI mobile screens.
         if(stamp-lastTime>=32) {
             const delta=lastTime?Math.min((stamp-lastTime)/1000,.06):.033;lastTime=stamp;time+=delta;
             influence.x+=(pointer.x-influence.x)*.12;influence.y+=(pointer.y-influence.y)*.12;
-            burst=Math.max(0,burst-delta*.7);draw();
+            burst=Math.max(0,burst-delta*.7);advanceUniverse(delta);draw();
         }
         frame=requestAnimationFrame(tick);
     }
