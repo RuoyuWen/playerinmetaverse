@@ -124,3 +124,11 @@
 .project-visual-note { font-size:.75rem;line-height:1.8;color:#a6b7d2; }
 .cosmic-home .experiment-notes h2 { overflow-wrap:anywhere; }
 .cosmic-home .galaxy-preview { margin-bottom:16px; }
+/* Visitor interests lead to a related work, with an explicit reason for the match. */
+.project-choices { grid-template-columns:repeat(3,minmax(0,1fr));gap:8px; }
+.project-choice { align-items:center;justify-content:center;text-align:center;border-radius:14px;min-height:84px;padding:10px 8px; }
+.project-choice small { line-height:1.5; }
+.recommendation-reason { margin-bottom:20px;padding-left:14px;border-left:2px solid var(--topic-color); }
+.recommendation-reason > strong { font-size:.72rem;font-weight:500;color:var(--topic-color); }
+.recommendation-reason p { font-size:.77rem;line-height:1.75;color:#b4c3dc;margin-top:6px; }
+@media (max-width:480px) { .project-choice strong { font-size:.69rem; } .project-choice small { font-size:.57rem; } }

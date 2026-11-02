@@ -9,7 +9,7 @@
     const feedback = document.getElementById('experiment-feedback');
     const motion = matchMedia('(prefers-reduced-motion: reduce)');
     const storageKey = 'ruoyu-research-universe-v1';
-    const appearanceKey = 'ruoyu-universe-projects-v1';
+    const appearanceKey = 'ruoyu-universe-interests-v1';
     // Titles, venues, and links come from the portfolio's publication list.
     // The visual descriptions below are interpretations for this map, not research findings.
     const projects = {
@@ -29,6 +29,30 @@
         connect: {color:'#83cdc9',label:'People & agents',title:'Explore human–agent interaction.',description:'Human moderation, collaboration, and the relationship between prompts and actions.',href:'research.html?theme=hai',works:['oz','triplets','prompt']},
         space: {color:'#8aaff6',label:'VR & extended reality',title:'Explore immersive experiences.',description:'Emotional sanctuaries, collaboration, and language practice in virtual environments.',href:'research.html?theme=vr',works:['presence','triplets','lingua']}
     };
+    // Explicit editorial matches: every visitor-facing interest has a research basis.
+    const interests = {
+        play: [
+            {project:'sword',label:'Embodied play',hint:'Body, breath & sound',reason:'You chose embodied play. This project uses breathing and spatial audio as ways to interact with a Wuxia game.'},
+            {project:'arg',label:'Player motivation',hint:'Why we keep playing',reason:'You chose player motivation. This study examines ARG players through autonomy, competence, and relatedness.'},
+            {project:'light',label:'Interactive stories',hint:'Narratives that emerge',reason:'You chose interactive stories. This work explores emergent narrative through light and generative AI.'}
+        ],
+        create: [
+            {project:'presence',label:'Personal worlds',hint:'Spaces that feel like you',reason:'You chose personal worlds. This project explores co-creating personalised emotional sanctuaries in VR with generative AI.'},
+            {project:'sketchar',label:'Character design',hint:'From idea to illustration',reason:'You chose character design. Sketchar supports character design and illustration prototyping with generative AI.'},
+            {project:'light',label:'Story creation',hint:'Light, AI & narrative',reason:'You chose story creation. This work connects light-based interaction with generative AI and emergent narrative.'}
+        ],
+        connect: [
+            {project:'oz',label:'Human control',hint:'AI that supports people',reason:'You chose human control. AI of Oz investigates AI assistance for the human moderator in Wizard of Oz studies.'},
+            {project:'triplets',label:'Working together',hint:'People & agents in VR',reason:'You chose working together. Virtual Triplets explores synchronous and asynchronous collaboration with human–agent interaction in VR.'},
+            {project:'prompt',label:'AI guidance',hint:'Prompts, actions & effects',reason:'You chose AI guidance. This work studies agents prompting game actions and showing consequences to raise sustainability awareness.'}
+        ],
+        space: [
+            {project:'presence',label:'Wellbeing',hint:'A personal sanctuary',reason:'You chose wellbeing. This project focuses on co-creating personalised emotional sanctuaries in VR.'},
+            {project:'triplets',label:'Collaboration',hint:'Sharing a virtual space',reason:'You chose collaboration. Virtual Triplets explores mixed-modal collaboration and human–agent interaction in VR.'},
+            {project:'lingua',label:'Language practice',hint:'Learning through scenarios',reason:'You chose language practice. GenLinguaScape enables user-defined VR scenarios for communicative language practice.'}
+        ]
+    };
+    const questions={play:'What draws you to play?',create:'What would you like to create?',connect:'How should people and AI interact?',space:'What would you explore in VR?'};
     const order = Object.keys(topics);
     let discovered = new Set(), active = null, returnFocus = null;
     const selectedWorks = Object.fromEntries(order.map(key=>[key,null]));
@@ -85,9 +109,10 @@
         surface.append(element('p', 'experiment-prompt', title), element('p', 'experiment-hint', hint));
     }
     function selectedProject(key){return projects[selectedWorks[key]]||null;}
+    function selectedInterest(key){return interests[key].find(option=>option.project===selectedWorks[key])||null;}
     function appearanceSummary(key) {
         const work=selectedProject(key);
-        return work ? work.visual : 'Choose a work below to shape this galaxy.';
+        return work ? work.visual : 'Choose an interest to discover a related work.';
     }
     function saveAppearance() {
         const value=JSON.stringify(selectedWorks);
@@ -96,20 +121,22 @@
         try { localStorage.setItem(appearanceKey,value);appearancePersistence='Saved in this browser.'; } catch { /* Session fallback. */ }
     }
     function updateProjectDetails(key){
-        const work=selectedProject(key),topic=topics[key];
+        const work=selectedProject(key),topic=topics[key],interest=selectedInterest(key);
+        dialog.querySelector('.notes-label').textContent=work?'Recommended for you':'Find your next discovery';
         document.getElementById('experiment-title').textContent=work?work.title:topic.title;
-        document.getElementById('experiment-description').textContent=work?work.description:topic.description+' Select a project to read about it and add its visual motif to your universe.';
+        document.getElementById('experiment-description').textContent=work?work.description:topic.description+' Choose what interests you on the left to find a related project.';
         const details=document.getElementById('experiment-works');details.replaceChildren();
         if(work){
             const link=element('a','experiment-work');link.href=work.href;link.target='_blank';link.rel='noopener';
             link.append(element('small','',work.venue),element('strong','',work.scholar?'Find this work on Google Scholar ↗':'Read this paper ↗'));
-            details.append(link,element('p','project-visual-note','In this map: '+work.visual));
-        } else details.append(element('p','project-visual-note','Each option is a published work. The galaxy motifs are visual interpretations of its themes.'));
+            const match=element('div','recommendation-reason');match.append(element('strong','','Why this work'),element('p','',interest.reason));
+            details.append(match,link);
+        } else details.append(element('p','project-visual-note','Your interest connects to a work in this galaxy. Try another choice to discover a different project.'));
     }
     function applyAppearance(key) {
         saveAppearance();
         const work=selectedProject(key);
-        feedback.textContent=(work?work.title+' now shapes this galaxy. ':'Project selection cleared. ')+appearancePersistence;
+        feedback.textContent=(work?'Recommended: '+work.title+'. ':'Interest cleared. ')+appearancePersistence;
         const caption=surface.querySelector('.galaxy-preview-caption');if(caption)caption.textContent=appearanceSummary(key);
         updateProjectDetails(key);updateAppearanceColors();draw();drawPreview();
     }
@@ -129,13 +156,13 @@
         actions.append(back,reset);figure.append(actions);surface.append(figure);
     }
     function renderTopic(key){
-        intro('Choose a work to explore.', 'Each project leaves its own mark on your universe.');
+        intro(questions[key], 'Choose an interest. Discover a related work and reshape your galaxy.');
         addGalaxyPreview(key);
-        const choices=element('div','project-choices');choices.setAttribute('role','group');choices.setAttribute('aria-label','Works in '+topics[key].label);
-        for(const id of topics[key].works){
-            const work=projects[id],btn=element('button','project-choice');btn.type='button';btn.dataset.project=id;
+        const choices=element('div','project-choices');choices.setAttribute('role','group');choices.setAttribute('aria-label','Your interests in '+topics[key].label);
+        for(const option of interests[key]){
+            const id=option.project,btn=element('button','project-choice');btn.type='button';btn.dataset.project=id;
             btn.setAttribute('aria-pressed',String(selectedWorks[key]===id));btn.setAttribute('aria-controls','experiment-title experiment-description experiment-works');
-            btn.append(element('strong','',work.title),element('small','',work.venue));
+            btn.append(element('strong','',option.label),element('small','',option.hint));
             btn.addEventListener('click',()=>{
                 selectedWorks[key]=id;
                 choices.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b===btn)));
@@ -155,7 +182,7 @@
         document.getElementById('experiment-description').textContent = topic.description;
         document.getElementById('experiment-more').href = topic.href;
         document.getElementById('experiment-more').textContent = 'All research in this galaxy ↗';
-        surface.replaceChildren(); feedback.textContent = 'Choose a project to discover the research behind this galaxy.';
+        surface.replaceChildren(); feedback.textContent = 'Your interests guide the recommendations. Try a different choice to explore more.';
         renderTopic(key);
         clearTimeout(pendingEntry);
         stage.classList.add('is-travelling');
@@ -164,7 +191,7 @@
         const reveal=()=>{
             pendingEntry=0;
             if(!dialog.open){dialog.showModal();document.body.style.overflow='hidden';}
-            complete(key,'Choose a project to discover the research behind this galaxy.');
+            complete(key,selectedProject(key)?'Recommended: '+selectedProject(key).title+'.':'Your interests guide the recommendations. Try a different choice to explore more.');
             stage.removeAttribute('aria-busy');dialog.scrollTop=0;document.getElementById('close-experiment').focus();draw();drawPreview();
         };
         if(dialog.open || paused || motion.matches || !ctx)reveal();else pendingEntry=setTimeout(reveal,550);
