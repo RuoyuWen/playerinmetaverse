@@ -132,3 +132,33 @@
 .recommendation-reason > strong { font-size:.72rem;font-weight:500;color:var(--topic-color); }
 .recommendation-reason p { font-size:.77rem;line-height:1.75;color:#b4c3dc;margin-top:6px; }
 @media (max-width:480px) { .project-choice strong { font-size:.69rem; } .project-choice small { font-size:.57rem; } }
+/* Four gestures, one stable visual identity for each galaxy. */
+.interest-constellation { position:relative;display:flex;justify-content:space-between;gap:10px;min-height:123px;padding:14px 0 0; }
+.interest-constellation::before { content:'';position:absolute;left:16%;right:16%;top:35px;height:1px;background:linear-gradient(90deg,transparent,#e1b47d44,transparent);pointer-events:none; }
+.interest-star { position:relative;display:flex;flex:1;flex-direction:column;align-items:center;gap:6px;padding:0 3px;border:0;background:none;color:#a5b2c9;cursor:pointer;font:inherit; }
+.interest-star::before { content:'✧';display:grid;place-items:center;width:40px;height:40px;font-size:30px;color:#ae8e65;transition:color .2s,text-shadow .2s; }
+.interest-star[aria-pressed="true"]::before { content:'✦';color:#ffe0ac;text-shadow:0 0 20px #e1b47d99; }
+.interest-star[aria-pressed="true"] strong { color:#ffe0ac; }
+.interest-star strong { font-size:.73rem;font-weight:500;line-height:1.5; }
+.interest-star small { font-size:.6rem;line-height:1.5;color:#8d9fbd; }
+.intention-composer { display:flex;flex-wrap:wrap;justify-content:center;gap:8px;padding:14px 0 6px; }
+.intention-prefix { flex-basis:100%;text-align:center;color:#b7a6dc;font-size:.9rem;margin-bottom:8px; }
+.intention-word { display:flex;flex-direction:column;gap:4px;background:transparent;border:0;border-bottom:1px solid #bba1f744;border-radius:0;padding:10px 7px;color:#b4bdd1;cursor:pointer;font:inherit; }
+.intention-word strong { font-size:.75rem;font-weight:500; }
+.intention-word small { font-size:.58rem;color:#8b9dbb; }
+.intention-word[aria-pressed="true"] { color:#e4d4ff;border-color:#bba1f7;background:#bba1f70a; }
+.signal-interaction,.spatial-interaction { padding:0 3px; }
+.galaxy-range { display:block;width:100%;height:28px;margin:8px 0;accent-color:var(--topic-color);cursor:ew-resize; }
+.range-stops { display:flex;justify-content:space-between;gap:6px; }
+.range-stop { flex:1;background:none;border:0;border-top:1px solid #8599be33;padding:8px 2px;min-height:44px;font: .65rem/1.5 var(--font-body);color:#8d9fbd;cursor:pointer; }
+.range-stop[aria-pressed="true"] { color:var(--topic-color);border-color:var(--topic-color); }
+.cosmic-home .signal-interaction .wave-view { height:52px;margin:0 0 10px; }
+.cosmic-home .spatial-interaction .depth-scene { height:100px;margin:0 0 10px; }
+.spatial-interaction .depth-world { width:120px;height:66px;top:16px; }
+.spatial-interaction .depth-plane { font-size:.6rem; }
+.cosmic-home .tuning-label { gap:10px;font-size:.69rem; }
+.tuning-label > span { color:var(--topic-color);text-align:right; }
+.interest-star:hover,.intention-word:hover,.range-stop:hover { color:#fff; }
+@media (min-width:801px) { .cosmic-home #experiment-surface { padding:10px 0; } .cosmic-home .galaxy-preview { margin-bottom:10px; } .galaxy-preview canvas { max-height:140px;object-fit:contain; } }
+@media (prefers-reduced-motion:reduce) { .interest-star::before,.depth-plane { transition:none; } }
+@media (max-width:480px) { .interest-star strong { font-size:.66rem; } .interest-star small { font-size:.57rem; } .intention-word strong { font-size:.67rem; } .intention-word small { font-size:.55rem; } .intention-composer { gap:3px; } .range-stop { font-size:.6rem; } }

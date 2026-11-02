@@ -10,6 +10,7 @@
     const motion = matchMedia('(prefers-reduced-motion: reduce)');
     const storageKey = 'ruoyu-research-universe-v1';
     const appearanceKey = 'ruoyu-universe-interests-v1';
+    const detailKey = 'ruoyu-universe-details-v1';
     // Titles, venues, and links come from the portfolio's publication list.
     // The visual descriptions below are interpretations for this map, not research findings.
     const projects = {
@@ -64,6 +65,24 @@
         const saved=JSON.parse(stored||'null');
         if(saved&&typeof saved==='object')for(const key of order)if(topics[key].works.includes(saved[key]))selectedWorks[key]=saved[key];
     } catch { /* A fresh map is usable even without saved choices. */ }
+    const collected = new Set(selectedWorks.play ? [selectedWorks.play] : []);
+    const positionFor = key => Math.max(0, topics[key].works.indexOf(selectedWorks[key])) * 50;
+    let rhythm = positionFor('connect'), depth = positionFor('space');
+    try {
+        let stored;
+        try { stored=localStorage.getItem(detailKey); } catch { /* Session fallback. */ }
+        if(!stored)stored=sessionStorage.getItem(detailKey);
+        const saved=JSON.parse(stored||'null');
+        if(saved){
+            if(Array.isArray(saved.play))saved.play.filter(id=>topics.play.works.includes(id)).forEach(id=>collected.add(id));
+            for(const key of ['connect','space']){
+                const value=saved[key];
+                if(Number.isFinite(value)&&value>=0&&value<=100&&topics[key].works[Math.min(2,Math.floor(value/ (100/3)))]===selectedWorks[key]){
+                    if(key==='connect')rhythm=value;else depth=value;
+                }
+            }
+        }
+    } catch { /* Keep valid interests when detail storage is unavailable. */ }
     let paused = motion.matches, visible = true, frame = 0, time = 0, lastTime = 0;
     let width = 700, height = 650, pointer = { x: 0, y: 0 }, influence = { x: 0, y: 0 };
     let burst = 0;
@@ -112,13 +131,20 @@
     function selectedInterest(key){return interests[key].find(option=>option.project===selectedWorks[key])||null;}
     function appearanceSummary(key) {
         const work=selectedProject(key);
-        return work ? work.visual : 'Choose an interest to discover a related work.';
+        if(key==='play'&&collected.size)return `${collected.size} interests lit. Rings, stars and light trails build on the same amber spiral.`;
+        if(key==='create'&&work)return {presence:'A soft halo gathers around the violet spiral.',sketchar:'Fine sketch lines trace the same violet spiral.',light:'A trail of light threads through the violet spiral.'}[selectedWorks[key]];
+        if(key==='connect')return 'Two companion stars respond to your signal. The teal spiral stays in place.';
+        if(key==='space')return 'Orbital layers open around the same blue spiral.';
+        return 'Light a detail in this galaxy to discover a related work.';
     }
     function saveAppearance() {
         const value=JSON.stringify(selectedWorks);
         appearancePersistence='Changes last while this page is open.';
         try { sessionStorage.setItem(appearanceKey,value);appearancePersistence='Saved for this browser session.'; } catch { /* Optional persistence. */ }
         try { localStorage.setItem(appearanceKey,value);appearancePersistence='Saved in this browser.'; } catch { /* Session fallback. */ }
+        const details=JSON.stringify({play:[...collected],connect:rhythm,space:depth});
+        try { sessionStorage.setItem(detailKey,details); } catch { /* Optional persistence. */ }
+        try { localStorage.setItem(detailKey,details); } catch { /* Optional persistence. */ }
     }
     function updateProjectDetails(key){
         const work=selectedProject(key),topic=topics[key],interest=selectedInterest(key);
@@ -147,29 +173,77 @@
         figure.append(previewCanvas,element('figcaption','galaxy-preview-caption',appearanceSummary(key)));
         const actions=element('div','galaxy-preview-actions');
         const back=element('button','','View in my universe');back.type='button';back.addEventListener('click',()=>dialog.close());
-        const reset=element('button','','Clear selection');reset.type='button';
+        const reset=element('button','','Reset this galaxy');reset.type='button';
         reset.addEventListener('click',()=>{
             selectedWorks[key]=null;
-            surface.querySelectorAll('.project-choice').forEach(btn=>btn.setAttribute('aria-pressed','false'));
+            if(key==='play')collected.clear();
+            if(key==='connect')rhythm=0;
+            if(key==='space')depth=0;
+            surface.replaceChildren();renderTopic(key);
             applyAppearance(key);
+            surface.querySelector('.galaxy-preview-actions button:last-child').focus();
         });
         actions.append(back,reset);figure.append(actions);surface.append(figure);
     }
     function renderTopic(key){
-        intro(questions[key], 'Choose an interest. Discover a related work and reshape your galaxy.');
+        const hints={play:'Light the interests that draw you in. Tap again to undo; each star adds a detail.',create:'Complete a creative intention. Change the words to discover a different work.',connect:'Tune the signal from human direction to AI guidance. Each region reveals related research.',space:'Slide through three spaces. Open the orbital layers to discover what each space is for.'};
+        intro(questions[key], hints[key]);
         addGalaxyPreview(key);
-        const choices=element('div','project-choices');choices.setAttribute('role','group');choices.setAttribute('aria-label','Your interests in '+topics[key].label);
+        if(key==='connect'||key==='space'){renderContinuous(key);updateProjectDetails(key);return;}
+        const choices=element('div',key==='play'?'interest-constellation':'intention-composer');choices.setAttribute('role','group');choices.setAttribute('aria-label','Your interests in '+topics[key].label);
+        if(key==='create')choices.append(element('span','intention-prefix','I want to explore…'));
         for(const option of interests[key]){
-            const id=option.project,btn=element('button','project-choice');btn.type='button';btn.dataset.project=id;
-            btn.setAttribute('aria-pressed',String(selectedWorks[key]===id));btn.setAttribute('aria-controls','experiment-title experiment-description experiment-works');
+            const id=option.project,btn=element('button',key==='play'?'interest-star':'intention-word');btn.type='button';btn.dataset.project=id;
+            btn.setAttribute('aria-pressed',String(key==='play'?collected.has(id):selectedWorks[key]===id));btn.setAttribute('aria-controls','experiment-title experiment-description experiment-works');
             btn.append(element('strong','',option.label),element('small','',option.hint));
             btn.addEventListener('click',()=>{
-                selectedWorks[key]=id;
-                choices.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b===btn)));
+                if(key==='play'){
+                    if(collected.has(id))collected.delete(id);else collected.add(id);
+                    selectedWorks[key]=collected.has(id)?id:([...collected].at(-1)||null);
+                }else selectedWorks[key]=id;
+                choices.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(key==='play'?collected.has(b.dataset.project):b===btn)));
                 applyAppearance(key);
             });choices.append(btn);
         }
         surface.append(choices);updateProjectDetails(key);
+    }
+    function renderContinuous(key){
+        const isSignal=key==='connect',box=element('div',isSignal?'signal-interaction':'spatial-interaction');
+        let wave,planes;
+        if(isSignal){
+            const ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg');
+            svg.setAttribute('viewBox','0 0 360 90');svg.setAttribute('aria-hidden','true');svg.classList.add('wave-view');
+            const reference=document.createElementNS(ns,'path');wave=document.createElementNS(ns,'path');
+            reference.classList.add('wave-reference');wave.classList.add('wave-player');
+            const path=phase=>Array.from({length:91},(_,i)=>`${i?'L':'M'}${i*4} ${45+Math.sin(i*4/39+phase)*24}`).join(' ');
+            reference.setAttribute('d',path(0));wave.update=value=>wave.setAttribute('d',path((value-50)/22));svg.append(reference,wave);box.append(svg);
+        }else{
+            const scene=element('div','depth-scene');scene.setAttribute('aria-hidden','true');
+            planes=element('div','depth-world');
+            ['Self','Others','World'].forEach(label=>planes.append(element('div','depth-plane',label)));scene.append(planes);box.append(scene);
+        }
+        const label=element('label','tuning-label',isSignal?'Tune the relationship':'Explore a space');
+        const output=element('span');label.append(output);
+        const input=element('input','galaxy-range');input.type='range';input.min='0';input.max='100';input.step='1';input.value=isSignal?rhythm:depth;
+        input.id=isSignal?'rhythm-tuner':'depth-control';label.htmlFor=input.id;
+        input.setAttribute('aria-controls','experiment-title experiment-description experiment-works');
+        const stops=element('div','range-stops');
+        const update=user=>{
+            const value=Number(input.value),index=Math.min(2,Math.floor(value/(100/3))),option=interests[key][index];
+            if(isSignal){rhythm=value;wave.update(value);}else{
+                depth=value;planes.style.setProperty('--depth',String(8+value*.6));
+                [...planes.children].forEach((plane,i)=>{plane.textContent=i===index?['Self','Others','World'][i]:'';});
+            }
+            output.textContent=selectedWorks[key]||user?option.label:'Move to discover';input.setAttribute('aria-valuetext',`${option.label}, ${value} of 100`);
+            if(user)selectedWorks[key]=option.project;
+            stops.querySelectorAll('button').forEach((button,i)=>button.setAttribute('aria-pressed',String(selectedWorks[key]&&i===index)));
+            if(user)applyAppearance(key);
+        };
+        interests[key].forEach((option,i)=>{
+            const button=element('button','range-stop',option.label);button.type='button';button.dataset.project=option.project;
+            button.addEventListener('click',()=>{input.value=String(i*50);update(true);});stops.append(button);
+        });
+        input.addEventListener('input',()=>update(true));update(false);box.append(label,input,stops);surface.append(box);
     }
     function openTopic(key, trigger) {
         if (!topics[key]) return;
@@ -213,10 +287,12 @@
     dialog.addEventListener('close',returnToUniverse);
     document.addEventListener('keydown',event=>{if(event.key==='Escape'&&pendingEntry)returnToUniverse();});
     document.getElementById('reset-exploration').addEventListener('click', () => {
-        discovered.clear(); order.forEach(key=>selectedWorks[key]=null); burst = 0;
+        discovered.clear(); order.forEach(key=>selectedWorks[key]=null);collected.clear();rhythm=0;depth=0; burst = 0;
         try { sessionStorage.removeItem(storageKey); } catch { /* Optional persistence. */ }
         try { localStorage.removeItem(appearanceKey); } catch { /* Optional persistence. */ }
         try { sessionStorage.removeItem(appearanceKey); } catch { /* Optional persistence. */ }
+        try { localStorage.removeItem(detailKey); } catch { /* Optional persistence. */ }
+        try { sessionStorage.removeItem(detailKey); } catch { /* Optional persistence. */ }
         updateAppearanceColors();
         updateProgress(); announce('A fresh exploration. Choose any subject.'); draw();
         document.getElementById('begin-exploring').focus();
@@ -260,9 +336,8 @@
         space:{rgb:[104,147,225],angle:.48,arms:4,seed:911}
     };
     for(const key of order)galaxyData[key].texture=galaxyTexture(galaxyData[key].seed,galaxyData[key].rgb,galaxyData[key].arms);
-    const customTextures=new Map();
     function appearanceColor(key){
-        return selectedProject(key)?.color || topics[key].color;
+        return topics[key].color;
     }
     function updateAppearanceColors(){
         document.querySelectorAll('[data-open]').forEach(el=>{
@@ -275,26 +350,33 @@
         });
         if(active)dialog.style.setProperty('--topic-color',appearanceColor(active));
     }
-    function appearanceTexture(key){
-        const work=selectedProject(key),id=selectedWorks[key];
-        if(!work)return galaxyData[key].texture;
-        if(!customTextures.has(id))customTextures.set(id,galaxyTexture(work.seed,work.rgb,work.arms));
-        return customTextures.get(id);
-    }
     function paintGalaxy(pen,key,r){
-        const g=galaxyData[key],color=appearanceColor(key),texture=appearanceTexture(key),work=selectedProject(key),effect=work?.effect;
+        // Identity is immutable: every choice uses this galaxy's original texture,
+        // colour, scale and rotation. Only the lightweight details below respond.
+        const g=galaxyData[key],color=appearanceColor(key),texture=g.texture;
         pen.save();pen.rotate(g.angle+Math.sin(galaxyClocks[key]*(.035+order.indexOf(key)*.008))*.24);
         pen.globalCompositeOperation='lighter';
-        pen.save();
-        if(effect==='sketch')pen.scale(.8,.8);
         if(texture)pen.drawImage(texture,-r*1.27,-r*1.27,r*2.54,r*2.54);
-        pen.restore();
         const glow=(x,y,size,tint)=>{
             const halo=pen.createRadialGradient(x,y,0,x,y,size);
             halo.addColorStop(0,'#fff9ef');halo.addColorStop(.12,tint);halo.addColorStop(.4,tint+'66');halo.addColorStop(1,tint+'00');
             pen.fillStyle=halo;pen.fillRect(x-size,y-size,size*2,size*2);
         };
         const orbit=(rx,ry,angle,alpha=.5)=>{pen.beginPath();pen.ellipse(0,0,rx,ry,angle,0,Math.PI*2);pen.strokeStyle=color;pen.lineWidth=.8;pen.save();pen.globalAlpha*=alpha;pen.stroke();pen.restore();};
+        if(key==='connect'){
+            const signal=rhythm/100,offset=(signal-.5)*.9;
+            orbit(r*.78,r*.35,0,.28);orbit(r*.78,r*.35,offset,.22);
+            const a=-.65,b=a+Math.PI+offset;
+            const x=Math.cos(a)*r*.78,y=Math.sin(a)*r*.35,xx=Math.cos(b)*r*.78,yy=Math.sin(b)*r*.35;
+            pen.save();pen.globalAlpha*=.5;pen.beginPath();pen.moveTo(x,y);pen.lineTo(xx,yy);pen.strokeStyle=color;pen.lineWidth=.65;pen.stroke();pen.restore();
+            glow(x,y,r*.055,color);glow(xx,yy,r*.055,color);
+        }else if(key==='space'){
+            const separation=depth/100*r*.13;
+            for(const offset of [-separation,0,separation]){pen.save();pen.translate(0,offset);orbit(r*.78,r*.34,0,.32);pen.restore();}
+        }
+        const effects=key==='play'?[...collected].map(id=>projects[id].effect):key==='create'?[selectedProject(key)?.effect]:[];
+        for(const effect of effects){
+        pen.save();pen.globalAlpha*=.65;
         if(effect==='breath'){
             const breathe=1+Math.sin(time*.65)*.05;
             orbit(r*.45*breathe,r*.22*breathe,0,.7);orbit(r*.72*breathe,r*.35*breathe,0,.35);
@@ -309,7 +391,7 @@
             glow(0,0,r*.19,color);orbit(r*.66,r*.3,0,.6);glow(r*.58,-r*.14,r*.09,'#c8d5ff');
         }
         if(effect==='sanctuary'){
-            orbit(r*.78,r*.45,0,.4);glow(0,0,r*.36,color);
+            orbit(r*.78,r*.45,0,.4);glow(0,0,r*.16,color);
         }
         if(effect==='sketch'||effect==='layers'){
             orbit(r*.86,r*.48,-.12,.6);orbit(r*.65,r*.38,.35,.65);
@@ -319,6 +401,8 @@
             const pts=[[-.7,.18],[-.32,-.2],[.1,.05],[.42,-.29],[.73,.08]];
             pen.beginPath();pts.forEach(([x,y],i)=>i?pen.lineTo(x*r,y*r):pen.moveTo(x*r,y*r));pen.strokeStyle=color+'aa';pen.lineWidth=1;pen.stroke();
             pts.forEach(([x,y],i)=>glow(x*r,y*r,r*(i===2?.1:.055),color));
+        }
+        pen.restore();
         }
         pen.restore();
     }
