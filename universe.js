@@ -12,8 +12,7 @@
     const topics = {
         play: { color: '#e1b47d', label: 'Games & play', title: 'What keeps us playing?', description: 'I explore player motivation, embodied interaction, and alternate reality games. This optional collection exercise introduces autonomy, competence, and relatedness: three lenses in my work on player motivation.', href: 'research.html?theme=games', works: [
             ['CHI 2024 · Extended abstract', 'Listen to the Sword', 'https://dl.acm.org/doi/full/10.1145/3613905.3648109'],
-            ['DiGRA 2024', 'Motivational Landscapes of ARG Players', 'https://dl.digra.org/index.php/dl/article/view/2228'],
-            ['Playable game & level editor', 'Chicken Frontier', 'games/chicken-frontier/']
+            ['DiGRA 2024', 'Motivational Landscapes of ARG Players', 'https://dl.digra.org/index.php/dl/article/view/2228']
         ] },
         create: { color: '#bba1f7', label: 'AI & co-creation', title: 'From intention to experience.', description: 'How can people shape a virtual world that feels personal? I study human–AI co-creation and emotional sanctuaries in VR. The three authored visual states here are an interactive sketch of intention and feedback.', href: 'research.html?theme=llm', works: [
             ['IUI 2026 · Full paper', 'From Prompt to Presence', 'https://dl.acm.org/doi/full/10.1145/3742413.3789067'],
