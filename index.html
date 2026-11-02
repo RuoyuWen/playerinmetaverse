@@ -11,8 +11,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="playground.css?v=1">
+    <link rel="stylesheet" href="universe.css?v=1">
 </head>
-<body class="page-transition portfolio-home">
+<body class="page-transition portfolio-home cosmic-home">
     <a class="skip-link" href="#main">Skip to content</a>
     <!-- Navigation -->
     <nav class="navbar">
@@ -34,43 +35,45 @@
     </nav>
 
     <main id="main">
-    <section class="playground" id="hero" aria-labelledby="world-heading">
-        <div class="playground-intro">
-            <p class="intro-line"><span class="presence-dot"></span> HCI researcher & game designer</p>
-            <h1 id="world-heading">Ruoyu<br> Wen<span class="name-period">.</span></h1>
-            <p class="intro-description">I study how people <strong>play</strong>, <strong>create</strong>, and <strong>connect</strong> with intelligent systems.</p>
-            <p class="intro-affiliation">PhD candidate · University of Canterbury</p>
-            <div class="intro-actions"><button class="enter-playground" id="begin-exploring" type="button">Follow your curiosity <span aria-hidden="true">↗</span></button><a href="#projects">Or, go straight to the work ↓</a></div>
-            <div class="exploration-passport">
-                <div class="passport-top"><span>Your discoveries</span><span id="discovery-count">0 / 4</span></div>
-                <div class="discovery-slots" aria-label="Research experiences">
-                    <button type="button" data-open="play" aria-label="Explore Games and play"><span class="slot-symbol">✳</span><span>Play</span></button>
-                    <button type="button" data-open="create" aria-label="Explore Generative worlds"><span class="slot-symbol">◌</span><span>Create</span></button>
-                    <button type="button" data-open="connect" aria-label="Explore Human–agent interaction"><span class="slot-symbol">∞</span><span>Connect</span></button>
-                    <button type="button" data-open="meet" aria-label="Explore My journey"><span class="slot-symbol">↗</span><span>Meet</span></button>
-                </div>
-                <p id="passport-note">Four small experiments. Take your own route.</p>
-                <div class="completion-actions" id="completion-actions" hidden><button type="button" id="save-art">Save your exploration ↗</button><button type="button" id="reset-exploration">Play again</button></div>
-            </div>
-        </div>
-        <div class="playground-stage" id="playground-stage">
-            <div class="stage-caption"><span><span class="live-dot"></span> A small space for experimentation</span><button type="button" id="motion-toggle" aria-pressed="false">Pause motion</button></div>
+    <section class="playground universe" id="hero" aria-labelledby="world-heading">
+        <div class="playground-stage universe-stage" id="playground-stage">
             <canvas id="research-canvas" aria-hidden="true"></canvas>
-            <div class="stage-center" aria-hidden="true"><span>Move to influence.</span><span>Choose to discover.</span></div>
-            <a class="research-node node-play" href="research.html?theme=games" data-open="play"><span class="node-glyph" aria-hidden="true">✳</span><span class="node-copy"><strong>Games & play</strong><small>Find what draws you in</small></span><span class="node-arrow" aria-hidden="true">↗</span></a>
-            <a class="research-node node-create" href="research.html?theme=llm" data-open="create"><span class="node-glyph" aria-hidden="true">◌</span><span class="node-copy"><strong>Generative worlds</strong><small>A little room for possibility</small></span><span class="node-arrow" aria-hidden="true">↗</span></a>
-            <a class="research-node node-connect" href="research.html?theme=hai" data-open="connect"><span class="node-glyph" aria-hidden="true">∞</span><span class="node-copy"><strong>People & agents</strong><small>Find a shared rhythm</small></span><span class="node-arrow" aria-hidden="true">↗</span></a>
-            <a class="research-node node-meet" href="about.html" data-open="meet"><span class="node-glyph" aria-hidden="true">↗</span><span class="node-copy"><strong>The person behind it</strong><small>A journey through play</small></span><span class="node-arrow" aria-hidden="true">↗</span></a>
-            <div class="stage-bottom"><span>Curiosity is the controller.</span><span>Click a subject to begin <span aria-hidden="true">↗</span></span></div>
-            <p class="canvas-fallback" hidden>The interactive sculpture is unavailable. You can still explore every subject.</p>
+            <div class="universe-vignette" aria-hidden="true"></div>
+            <a class="research-node node-play" href="research.html?theme=games" data-open="play"><span class="galaxy-hit" aria-hidden="true"></span><span class="galaxy-marker" aria-hidden="true"></span><span class="node-copy"><small>Play galaxy</small><strong>Games & play</strong><span>Motivation · Embodiment · Play</span></span><span class="node-arrow" aria-hidden="true">↗</span></a>
+            <a class="research-node node-create" href="research.html?theme=llm" data-open="create"><span class="galaxy-hit" aria-hidden="true"></span><span class="galaxy-marker" aria-hidden="true"></span><span class="node-copy"><small>Generative galaxy</small><strong>AI & co-creation</strong><span>Intention · Imagination · Worlds</span></span><span class="node-arrow" aria-hidden="true">↗</span></a>
+            <a class="research-node node-connect" href="research.html?theme=hai" data-open="connect"><span class="galaxy-hit" aria-hidden="true"></span><span class="galaxy-marker" aria-hidden="true"></span><span class="node-copy"><small>Agency galaxy</small><strong>People & agents</strong><span>Collaboration · Agency · Trust</span></span><span class="node-arrow" aria-hidden="true">↗</span></a>
+            <a class="research-node node-space" href="research.html?theme=vr" data-open="space"><span class="galaxy-hit" aria-hidden="true"></span><span class="galaxy-marker" aria-hidden="true"></span><span class="node-copy"><small>Spatial galaxy</small><strong>VR & extended reality</strong><span>Presence · Space · Experience</span></span><span class="node-arrow" aria-hidden="true">↗</span></a>
+            <p class="canvas-fallback" hidden>The starfield is unavailable. Select any galaxy to explore its research.</p>
+        </div>
+        <div class="playground-intro universe-intro">
+            <p class="intro-line"><span class="presence-dot"></span> Ruoyu Wen · HCI researcher & game designer</p>
+            <h1 id="world-heading">Explore my<br>research universe.</h1>
+            <p class="intro-description">Different worlds. Connected by how we<br class="desktop-break"> play, create, and interact.</p>
+            <div class="intro-actions"><button class="enter-playground" id="begin-exploring" type="button">Choose a galaxy <span aria-hidden="true">↗</span></button><a href="#projects">View selected work ↓</a></div>
+        </div>
+        <div class="universe-coordinate" aria-hidden="true"><span class="coordinate-cross">+</span><span>Human–computer interaction<br>Four connected fields of inquiry</span></div>
+        <div class="universe-footer">
+            <div class="exploration-passport">
+                <div class="passport-top"><span>Galaxies explored</span><span id="discovery-count">0 / 4</span></div>
+                <div class="discovery-slots" aria-label="Research galaxies">
+                    <button type="button" data-open="play" aria-label="Explore Games and play"><span class="slot-symbol">✦</span><span>Play</span></button>
+                    <button type="button" data-open="create" aria-label="Explore AI and co-creation"><span class="slot-symbol">✦</span><span>Create</span></button>
+                    <button type="button" data-open="connect" aria-label="Explore People and agents"><span class="slot-symbol">✦</span><span>Connect</span></button>
+                    <button type="button" data-open="space" aria-label="Explore VR and extended reality"><span class="slot-symbol">✦</span><span>Immerse</span></button>
+                </div>
+                <p id="passport-note">Follow a galaxy. Find a new perspective.</p>
+                <div class="completion-actions" id="completion-actions" hidden><button type="button" id="save-art">Save your star chart ↗</button><button type="button" id="reset-exploration">Explore again</button></div>
+            </div>
+            <div class="universe-instructions"><span class="navigation-star" aria-hidden="true">✧</span><p>Select a galaxy to enter.<br>Every orbit leads to a research question.</p></div>
+            <button type="button" id="motion-toggle" aria-pressed="false">Pause motion</button>
         </div>
         <p class="sr-only" id="exploration-status" role="status" aria-live="polite"></p>
-        <noscript><p>Follow any subject to explore my research, or browse the selected work below.</p></noscript>
+        <noscript><p>Each galaxy links directly to its research. You can also browse the selected work below.</p></noscript>
     </section>
     <dialog class="experiment-dialog" id="experiment-dialog" aria-labelledby="experiment-title">
         <div class="experiment-layout">
-            <div class="experiment-lab"><div class="lab-top"><span id="lab-category">Play</span><button type="button" id="close-experiment" aria-label="Close experience">✕</button></div><div id="experiment-surface"></div><p class="experiment-feedback" id="experiment-feedback" role="status"></p></div>
-            <div class="experiment-notes"><p class="notes-label">Behind the interaction</p><h2 id="experiment-title"></h2><p id="experiment-description"></p><div id="experiment-works"></div><div class="experiment-links"><a id="experiment-more" href="research.html">Explore the research ↗</a><button type="button" id="next-experiment">Next discovery →</button></div></div>
+            <div class="experiment-lab"><div class="lab-top"><span id="lab-category">Play</span><button type="button" id="close-experiment" aria-label="Return to the universe">✕</button></div><div id="experiment-surface"></div><p class="experiment-feedback" id="experiment-feedback" role="status"></p></div>
+            <div class="experiment-notes"><p class="notes-label">Inside this galaxy</p><h2 id="experiment-title"></h2><p id="experiment-description"></p><div id="experiment-works"></div><div class="experiment-links"><a id="experiment-more" href="research.html">Explore the research ↗</a><button type="button" id="next-experiment">Next galaxy →</button></div></div>
         </div>
     </dialog>
 
@@ -364,6 +367,6 @@
     </footer>
 
     <script src="script.js"></script>
-    <script src="playground.js?v=1"></script>
+    <script src="universe.js?v=1"></script>
 </body>
 </html>

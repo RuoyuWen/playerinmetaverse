@@ -1,0 +1,101 @@
+/* A research atlas in deep space. The galaxies are live, seeded canvas drawings. */
+.cosmic-home { --bg:#080c16; --bg-soft:#0d1423; --surface:#111a2b; --surface-2:#131d30; --ink:#eef2ff; --ink-soft:#bbc6dc; --muted:#97a7c3; --accent:#aebeff; --accent-ink:#c7d2ff; --accent-soft:#9aaeff14; --accent-line:#9aaeff44; --line:#bfcee520; --line-strong:#bfcee538; }
+.cosmic-home .navbar { background:#080d18b8; border-color:#b1c5ed10; backdrop-filter:blur(20px); }
+.cosmic-home .navbar.scrolled { background:#080d18f0; }
+.cosmic-home .nav-logo a { color:#e5ecff; letter-spacing:-.04em; }
+.cosmic-home .nav-link { color:#a1aec7; }
+.cosmic-home .nav-link:hover,.cosmic-home .nav-link.active { color:#e8eeff; background:#a9beff0a; }
+.universe.playground { display:block; position:relative; max-width:none; padding:0; margin:0; height:max(850px,100svh); max-height:1150px; min-height:850px; overflow:hidden; background:#050913; isolation:isolate; }
+.universe .universe-stage { position:absolute; inset:0; height:100%; width:100%; border-radius:0; background:#050913; overflow:hidden; }
+.universe-vignette { position:absolute; inset:0; pointer-events:none; background:linear-gradient(180deg,#0509130a 65%,#080c16 100%),linear-gradient(90deg,#05091350,transparent 55%); z-index:1; }
+.universe-intro { position:absolute; z-index:4; left:6.5%; top:145px; padding:0; width:min(620px,46vw); pointer-events:none; }
+.universe-intro .intro-line { color:#a5b5d1; font-size:.73rem; letter-spacing:.01em; }
+.universe-intro .presence-dot { background:#b7c9fa; box-shadow:0 0 12px #9eb6ff77; width:5px; height:5px; }
+.universe h1 { font-size:clamp(2.9rem,4.3vw,4.5rem); font-weight:500; line-height:1.08; letter-spacing:-.055em; color:#eff3ff; margin:22px 0 18px; }
+.universe .intro-description { color:#99aac6; font-size:.88rem; max-width:330px; line-height:1.8; }
+.universe .intro-actions { flex-direction:row; align-items:center; gap:25px; margin-top:25px; pointer-events:auto; }
+.universe .enter-playground { background:transparent; border:1px solid #b0c5ef5c; border-radius:4px; padding:11px 16px; font-size:.72rem; color:#dce7fc; gap:25px; }
+.universe .enter-playground:hover { background:#a4bbf515; border-color:#b0c5ef; transform:none; }
+.universe .intro-actions > a { color:#8598b8; font-size:.68rem; text-decoration:none; }
+.universe .intro-actions > a:hover { color:#dce7fc; }
+.universe-coordinate { position:absolute; right:6.5%; top:127px; display:flex; align-items:center; gap:16px; color:#8394b1; font: .62rem/1.8 var(--font-body); pointer-events:none; z-index:2; }
+.coordinate-cross { color:#a4b6d8; font-size:24px; font-weight:300; }
+.universe .research-node { background:none; backdrop-filter:none; box-shadow:none; border:0; border-radius:0; padding:12px 14px; transform:translate(-50%,0); gap:10px; color:#e5ecfc; min-height:76px; z-index:3; transition:opacity .3s,color .3s; text-shadow:0 2px 12px #000; }
+.universe .research-node:hover,.universe .research-node:focus-visible { background:none; box-shadow:none; color:#fff; }
+.universe .node-copy { gap:4px; text-align:left; }
+.universe .node-copy strong { font-family:var(--font-display); color:#edf2ff; font-size:1rem; letter-spacing:-.02em; font-weight:500; }
+.universe .node-copy small { display:block; font-size:.62rem; color:var(--topic-color); letter-spacing:.025em; }
+.universe .node-copy > span { font-size:.6rem; color:#8d9fbd; letter-spacing:.015em; }
+.universe .node-arrow { color:#93a6c9; align-self:center; font-size:1rem; margin-left:6px; }
+.galaxy-marker { width:5px; height:5px; flex-shrink:0; border-radius:50%; background:var(--topic-color); box-shadow:0 0 9px var(--topic-color); }
+.galaxy-hit { position:absolute; width:var(--hit-size,220px); height:calc(var(--hit-size,220px)*.75); left:50%; bottom:calc(100% - 16px); transform:translateX(-50%); border-radius:50%; }
+.research-node::before { content:''; position:absolute; height:19px; width:1px; background:linear-gradient(transparent,var(--topic-color)); top:-15px; left:50%; opacity:.5; transition:height .3s; }
+.research-node:hover::before { height:30px; }
+.universe [data-open="play"] { --topic-color:#e1b47d; }
+.universe [data-open="create"] { --topic-color:#bba1f7; }
+.universe [data-open="connect"] { --topic-color:#83cdc9; }
+.universe [data-open="space"] { --topic-color:#8aaff6; }
+.universe-stage.is-travelling .research-node { opacity:0; pointer-events:none; }
+.universe .node-play { left:24%;top:59%; }
+.universe .node-create { left:69%;top:39%; }
+.universe .node-connect { left:80%;top:75%; }
+.universe .node-space { left:48%;top:83%; }
+.universe-footer { position:absolute; bottom:38px; left:6.5%; right:6.5%; display:flex; justify-content:space-between; align-items:flex-end; gap:35px; z-index:4; pointer-events:none; }
+.universe-footer > * { pointer-events:auto; }
+.universe .exploration-passport { margin:0; max-width:280px; }
+.universe .passport-top { color:#8a9cba; font-size:.65rem; max-width:245px; gap:40px; }
+.universe .discovery-slots { gap:27px; margin:13px 0 8px; }
+.universe .slot-symbol { width:25px;height:25px;font-size:17px;background:transparent;border:1px solid #8fa7d32e;color:#53627e; }
+.universe .discovery-slots button { color:#8397b8; font-size:.58rem; }
+.universe .discovery-slots button.discovered .slot-symbol { color:var(--topic-color); background:color-mix(in srgb,var(--topic-color) 12%,transparent); border-color:var(--topic-color); box-shadow:0 0 16px color-mix(in srgb,var(--topic-color) 20%,transparent); }
+.universe #passport-note { font-size:.61rem;color:#7e91b2;max-width:290px;min-height:0; }
+.universe .completion-actions { margin-top:8px;gap:18px; }
+.universe .completion-actions button { font-size:.65rem;color:#c3d1fa; }
+.universe-instructions { display:flex;align-items:center;gap:14px;padding-bottom:10px; }
+.universe-instructions p { font-size:.66rem;line-height:1.8;color:#7d91b2; }
+.navigation-star { color:#afc3ec;font-size:31px;font-weight:300; }
+.universe #motion-toggle { color:#8297b8;font-size:.64rem;margin-bottom:15px;text-decoration:none;border-bottom:1px solid #8297b83b;padding:0 0 3px; }
+.universe .canvas-fallback { top:48%;left:37%;width:26%;color:#c2cfea; }
+.cosmic-home .experiment-dialog { background:#0e1626;border:1px solid #859dcd38;box-shadow:0 30px 120px #0009; }
+.cosmic-home .experiment-dialog::backdrop { background:#02050bd9;backdrop-filter:blur(7px); }
+.cosmic-home .experiment-lab { background:radial-gradient(ellipse at 45% 40%,color-mix(in srgb,var(--topic-color) 10%,#101725),#0b1220 80%); }
+.cosmic-home .lab-top { color:#afc0df; }
+.cosmic-home #lab-category { color:var(--topic-color); }
+.cosmic-home #close-experiment { color:#b3c3df;background:#172236;border-color:#8498be40; }
+.cosmic-home .experiment-prompt { color:#e5ecfb; }
+.cosmic-home .experiment-hint,.cosmic-home .notes-label { color:#8b9dbb; }
+.cosmic-home .experiment-feedback { color:var(--topic-color); }
+.cosmic-home .experiment-notes h2 { color:#e9efff; }
+.cosmic-home #experiment-description { color:#a6b7d2; }
+.cosmic-home .experiment-work { border-color:#8196be24; }
+.cosmic-home .experiment-work small { color:#7f94b7; }
+.cosmic-home .experiment-work strong { color:#cfddf8; }
+.cosmic-home .experiment-work:hover strong { color:#fff; }
+.cosmic-home #next-experiment { background:#20304e;color:#d1dfff;border:1px solid #7b96c549; }
+.cosmic-home .play-target { background:radial-gradient(circle at 33% 27%,#f7ddb2,#c48e50 50%,#5e3f3d);border-color:#d6b18266;color:#201610;box-shadow:0 0 35px #c8994630; }
+.cosmic-home .play-target[aria-pressed="true"] { background:#d4b37b;color:#22190e; }
+.cosmic-home .mood-choices button { background:#19253b;border-color:#7388b04d;color:#b4c1db; }
+.cosmic-home .mood-choices button[aria-pressed="true"] { background:#69609d;color:white; }
+.cosmic-home .wave-reference { stroke:#a7bad663; }
+.cosmic-home .wave-player { stroke:#83cdc9; }
+.cosmic-home .tuning-label { color:#b6c6df; }
+.cosmic-home #rhythm-tuner { accent-color:#83cdc9; }
+.depth-scene { position:relative;height:190px;margin:20px 0;perspective:500px;overflow:hidden; }
+.depth-world { width:150px;height:130px;position:absolute;left:50%;top:30px;transform:translateX(-50%) rotateX(10deg) rotateY(-24deg);transform-style:preserve-3d; }
+.depth-plane { position:absolute;inset:0;border:1px solid #7da8ed66;background:linear-gradient(135deg,#719fe318,#1a325825);display:grid;place-items:center;font-size:.65rem;color:#9db9e7;transition:transform .12s linear; }
+.depth-plane:first-child { transform:translateZ(calc(var(--depth,0)*-1px)); }
+.depth-plane:nth-child(2) { transform:translateZ(calc(var(--depth,0)*0px)); }
+.depth-plane:last-child { transform:translateZ(calc(var(--depth,0)*1px));border-color:#b1d3ff;background:#233f6255; }
+#depth-control { width:100%;accent-color:#8aaff6;margin:16px 0; }
+.cosmic-home .project-section { border-color:#728ab125; }
+.cosmic-home .selected-project { border-color:#728ab125; }
+.cosmic-home .project-description .project-detail,.cosmic-home .project-context,.cosmic-home .project-publication { color:#8e9eba; }
+.cosmic-home .theme-card .t-icon { color:#aec0e9; }
+.cosmic-home .chip { border-color:#637da044; }
+.cosmic-home .chip.active { background:#24345a;color:#d9e5ff; }
+.cosmic-home .pub-venue { color:#c0d1f6; }
+.cosmic-home :focus-visible { outline-color:#bfd0ff; }
+@media (min-width:1700px) { .universe-intro { left:10%; } .universe-footer { left:10%;right:10%; } }
+@media (max-width:1100px) { .universe-intro { top:125px;left:5%;width:400px; } .universe h1 { font-size:3.3rem; } .universe .node-copy strong { font-size:.85rem; } .universe .node-copy > span { font-size:.55rem; } .universe-coordinate { right:5%;font-size:.57rem; } .universe-footer { left:5%;right:5%; } }
+@media (max-width:800px) { .universe.playground { height:1100px;min-height:1100px;max-height:none;display:block; } .universe .universe-stage { height:100%;width:100%;margin:0;border-radius:0; } .universe-intro { top:115px;left:7%;width:86%; } .universe h1 { font-size:3.5rem;line-height:1.06;margin:23px 0 15px; } .universe h1 br { display:block; } .universe .intro-line { font-size:.66rem; } .universe .intro-description { font-size:.8rem; } .universe-coordinate { display:none; } .universe .intro-actions { margin-top:20px;gap:22px; } .universe .enter-playground { padding:10px 12px;font-size:.66rem;gap:16px; } .universe-footer { left:7%;right:7%;bottom:28px;gap:15px; } .universe-instructions { display:none; } .universe .exploration-passport { max-width:260px; } .universe .node-copy small { font-size:.56rem; } .universe .node-copy strong { font-size:.82rem; } .universe .node-copy > span { font-size:.54rem; } .universe .node-arrow { display:block;font-size:.8rem; } .universe .research-node { padding:8px;gap:8px; } .universe .node-play { left:26%;top:47%; } .universe .node-create { left:72%;top:59%; } .universe .node-connect { left:28%;top:73%; } .universe .node-space { left:72%;top:84%; } .universe .galaxy-hit { width:180px; } }
+@media (max-width:480px) { .universe.playground { height:1080px;min-height:1080px; } .universe h1 { font-size:2.65rem;letter-spacing:-.055em; } .universe .intro-line { font-size:.57rem;gap:7px; } .universe .intro-description { font-size:.75rem; } .universe .node-copy > span { display:none; } .universe .node-copy strong { font-size:.75rem; } .universe .node-copy small { font-size:.55rem; } .universe .node-arrow { margin-left:0;font-size:.75rem; } .universe .galaxy-marker { width:3px;height:3px; } .universe .research-node { min-height:55px;gap:6px; } .universe .discovery-slots { gap:20px; } .universe #passport-note { max-width:230px; } .universe #motion-toggle { font-size:.58rem;white-space:nowrap; } .universe .canvas-fallback { top:55%;left:15%;width:70%; } }
