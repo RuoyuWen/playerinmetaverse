@@ -39,7 +39,7 @@
             title: 'Game designer. Researcher. Always a player.',
             description: 'I’m Ruoyu Wen, a PhD candidate at the University of Canterbury. My path connects game design, human–agent interaction, and research across cultures.',
             works: [
-                ['RESEARCH & PRACTICE', 'From game design to human-centered AI', 'Lead AI Game Designer at MICROFEEL and visiting researcher at the University of Augsburg.', 'experience.html'],
+                ['RESEARCH & PRACTICE', 'From game design to human-centered AI', 'Previously Lead AI Game Designer at MICROFEEL and a visiting researcher at the University of Augsburg; both roles concluded in July 2026.', 'experience.html'],
                 ['EDUCATION', 'China → Sweden → New Zealand', 'Communication and Information Science at HUST, Game Design at Uppsala, and Product Design at Canterbury.', 'education.html']
             ], more: 'Read my full story', href: 'about.html'
         }

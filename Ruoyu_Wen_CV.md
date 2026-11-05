@@ -50,11 +50,11 @@ National award recognising outstanding self-funded PhD students overseas (Univer
 ## Research & Professional Experience
 
 **Visiting PhD Student** — University of Augsburg, Chair for Human-Centered AI (Prof. Elisabeth André), Augsburg, Germany
-*Apr 2026 – Present*
-- Collaborating on human-centered AI, intelligent user interfaces, and human–agent interaction.
+*Apr 2026 – Jul 2026*
+- Collaborated on human-centered AI, intelligent user interfaces, and human–agent interaction.
 
 **Lead AI Game Designer** — [MICROFEEL](https://www.3dmicrofeel.com/), Remote
-*Oct 2024 – Present*
+*Oct 2024 – Jul 2026*
 - Led a cross-functional team building an end-to-end system that generates game stories, mechanics, and NPCs from natural-language input.
 - Translated generative-AI research into shipping product features.
 
@@ -66,10 +66,14 @@ National award recognising outstanding self-funded PhD students overseas (Univer
 *Jul 2025 – Oct 2025*
 - TA for *Computation for Games*; mentored undergraduates in game development, programming, and computational foundations.
 
-**PhD Researcher / Research Assistant** — University of Canterbury, School of Product Design, Christchurch, New Zealand
+**PhD Researcher** — University of Canterbury, School of Product Design, Christchurch, New Zealand
 *2023 – Present*
 - Designed and ran VR and human–agent interaction studies on conversational AI, including experiment design, data collection, and mixed-methods analysis.
 - First-author and co-author publications at CHI, OzCHI, DiGRA, and SIGGRAPH Asia.
+
+**Research Assistant** — University of Canterbury, Christchurch, New Zealand
+*Jul 2024 – Jan 2025 · Part-time*
+- Supported HCI and VR studies through experimental design, data collection, and analysis.
 
 **Research Intern** — NeXT SCENE (Immersive Entertainment), Shanghai, China
 *Apr 2022 – May 2022*
