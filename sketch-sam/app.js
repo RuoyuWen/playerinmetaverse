@@ -99,6 +99,7 @@
     cell.append(input,number); return cell;
   }
   function renderSam() {
+    $('ratingSketchImage').src = $('sketchImage').src;
     const matrix = $('samMatrix'); matrix.replaceChildren();
     for (const dimension of dimensions) {
       const field = document.createElement('fieldset'); field.className = 'sam-dimension';
