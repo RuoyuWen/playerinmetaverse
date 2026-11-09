@@ -1,5 +1,11 @@
 # 2D / Sketch SAM — 60 participants
 
+## Group recruitment
+
+Share `https://playerinmetaverse.tech/2d-sketch-sam/join.html`. Page previews and GET requests do not allocate slots. Only an explicit confirmed button click POSTs a browser-generated 192-bit recovery token. An IndexedDB read/write transaction creates one token across simultaneous tabs; a single atomic SQL statement reserves one unused participant. The server stores only its SHA256. Repeated requests and returning browsers recover the same task, even when capacity is full. Already-started production tasks are excluded from allocation. Claim records are never auto-recycled. The original 60 schedules, scale protocol, SAM guidance and audio stay unchanged.
+
+This is browser-level deduplication, not person verification or bot protection: clearing storage, private browsing or switching devices without restoring the recovery code may consume another slot. Participants can save their private recovery code and restore it on the join page. Do not distribute independent invitations alongside the group link; keep the researcher ADMIN link private. No email, name or IP address is stored by application code. Researcher results show claimed/started/completed counts; token hashes are never returned in results.
+
 S41–S60 were appended without changing S01–S40 assignments, existing invitations, or saved scores. Capacity is 720 ratings; the historical protocol identifier retains `40` for compatibility.
 
 Each S01–S60 has a fixed random mixture of six 2D and six Sketch trials from twelve different P1–P24 works. Across the complete allocation each work appears fifteen times in each condition. Allocation is server-side, immutable under `2d-sketch-40-mixed-audio-v1`, and resumes from confirmed submissions.

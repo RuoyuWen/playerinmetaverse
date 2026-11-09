@@ -8,6 +8,7 @@
   const gate=document.createElement('section');gate.className='screen home';gate.id='accessGate';
   gate.innerHTML='<div class="eyebrow">SELF-SCAPE / INVITED RATERS</div><h1>Sketch 情绪评价</h1><p class="lead">请使用研究者发给你的邀请链接。</p><p class="muted">也可以输入邀请码。每位评价者只会进入自己的评分任务，提交后数据会保存在云端。</p><form id="accessForm" style="max-width:540px;margin-top:28px"><label for="accessCode">邀请码</label><input id="accessCode" type="password" autocomplete="off" spellcheck="false" required style="display:block;width:100%;padding:13px;margin:10px 0 18px;border:1px solid var(--line);border-radius:8px;font:inherit"><button class="primary" id="accessSubmit">进入评价</button><p id="accessStatus" class="status" role="status"></p></form>';
   main.before(gate);
+  if(cfg.cohort&&!location.pathname.endsWith('results.html')){const join=document.createElement('a');join.href='join.html';join.className='primary';join.id='publicJoin';join.textContent='没有邀请码？开始或继续参与 →';gate.querySelector('#accessForm').before(join);}
   if(cfg.cohort){gate.querySelector('h1').textContent='2D / Sketch 情绪评价';gate.querySelector('.eyebrow').textContent='SELF-SCAPE / INVITED PARTICIPANTS';}
   let key='';let resolveReady;
   const ready=new Promise(resolve=>resolveReady=resolve);
@@ -20,6 +21,14 @@
       const data=await response.json();if(!response.ok)throw new Error(data.error||'验证失败');
       key=code;try{sessionStorage.setItem(SLOT,key);}catch{}
       window.SketchAuth.role=data.role;
+      if(cfg.cohort&&data.access==='claim'){
+        try{localStorage.setItem('cohort-sam-claim',code);}catch{}
+        document.querySelector('.mode-switch')?.classList.add('hidden');
+        const recovery=document.createElement('details');recovery.className='home-guide';
+        recovery.innerHTML='<summary>保存我的恢复码（请勿分享）</summary><p class="muted">同一浏览器会自动继续。若需换设备，请在群入口选择“已有恢复码”，恢复原任务，不要重新报名。</p><input type="password" readonly aria-label="我的恢复码" style="max-width:100%;width:360px;padding:10px"><button type="button" class="secondary">复制恢复码</button><span role="status"></span>';
+        recovery.querySelector('input').value=code;recovery.querySelector('button').onclick=async()=>{try{await navigator.clipboard.writeText(code);recovery.querySelector('span').textContent=' 已复制，请私下保存。';}catch{const input=recovery.querySelector('input');input.type='text';input.select();recovery.querySelector('span').textContent=' 请手动复制并私下保存。';}};
+        document.getElementById('home')?.append(recovery);
+      }
       if(data.role!=='ADMIN')document.querySelectorAll('a[href="results.html"]').forEach(a=>a.classList.add('hidden'));
       const identity=document.createElement('span');identity.className='pill';identity.textContent=data.role==='ADMIN'?'研究者':data.role;
       const logout=document.createElement('button');logout.className='text-button';logout.textContent='退出';
@@ -34,5 +43,6 @@
   const hash=new URLSearchParams(location.hash.slice(1));const invitation=hash.get('key');
   if(invitation)history.replaceState(null,'',location.pathname+location.search);
   let cached='';try{cached=sessionStorage.getItem(SLOT)||'';}catch{}
+  if(cfg.cohort&&!cached&&!location.pathname.endsWith('results.html'))try{cached=localStorage.getItem('cohort-sam-claim')||'';}catch{}
   if(invitation||cached)login(invitation||cached);
 })();
