@@ -11,6 +11,7 @@ from datetime import datetime
 import json
 import httpx
 from pathlib import Path
+from sam_proxy import router as sam_router
 
 # 配置日志记录
 logging.basicConfig(
@@ -60,7 +61,10 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["Content-Disposition"],
 )
+
+app.include_router(sam_router)
 
 # 基础数据模型
 class ChatRequest(BaseModel):
