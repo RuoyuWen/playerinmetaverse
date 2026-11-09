@@ -30,7 +30,8 @@
         }
         const total = document.createElement('td'); total.textContent = `${count} / 3`; tr.appendChild(total); $('rows').appendChild(tr);
       }
-      $('status').textContent = `${mode === 'test' ? '测试' : '正式'}数据：${data.rows.length} / 72 份已保存`;
+      const silent=data.rows.filter(r=>!r.audio_version||r.audio_version==='none').length;
+      $('status').textContent = `${mode === 'test' ? '测试' : '正式'}数据：${data.rows.length} / 72 份已保存；其中无声旧版 ${silent} 份，有声版 ${data.rows.length-silent} 份。CSV 已分别标记，请勿直接混合分析。`;
     } catch (error) { $('status').textContent = error.message; $('status').classList.add('error'); }
     finally { loading = false; $('refresh').disabled = false; $('mode').disabled = false; }
   }
