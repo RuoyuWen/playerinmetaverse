@@ -20,4 +20,4 @@ There is no audio player, audio download or playback requirement. New scores use
 
 Invitation keys, exported ratings and local databases must never be committed to this repository.
 
-Backend origin is configured in `auth.js`. The other website pages and domain configuration are unchanged.
+Backend origin is `https://sam-api.playerinmetaverse.tech`, configured in `auth.js`; recruitment uses the same origin in `../2d-sketch-sam/join.js`. It routes to the same existing Sites service and D1 database. DNS setup is documented in `../2d-sketch-sam/DNS_SETUP.md`.

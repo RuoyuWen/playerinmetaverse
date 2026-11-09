@@ -1,6 +1,6 @@
 # SAM backend custom domain
 
-Status: Sites binding created; DNS validation is pending. Keep production on the existing backend until the new hostname has valid HTTPS and passes the checks below.
+Status: Domain and TLS certificate active, verified on 2026-11-10 (Pacific/Auckland). Health, GET/POST preflight and non-enrolling API checks passed before frontend cutover.
 
 - Frontend: `https://playerinmetaverse.tech/2d-sketch-sam/`
 - Backend: `https://sam-api.playerinmetaverse.tech`
