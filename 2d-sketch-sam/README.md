@@ -20,6 +20,12 @@ Each S01–S60 has a fixed random mixture of six 2D and six Sketch trials from t
 
 Both conditions display the original images only. The stimulus image remains visible during scoring.
 
+## Image loading
+
+After the current image loads, the viewer downloads only the next unfinished trial's original image in the background with low fetch priority. The current image has high fetch priority. Prefetched images are detached from the page and do not start observation timing or appear before their turn. Pausing cancels the pending prefetch; resuming uses the server-confirmed order and progress. This applies to the cohort, local demo and shared three-rater viewer.
+
+Images still come directly from GitHub Pages, independently of the Render API ingress. The 24 original 2D PNGs total 71,637,119 bytes (2,261,596–3,794,474 bytes each). Prefetching can reduce waits between trials, but the first image and slow cross-border transfers still depend on the participant's connection. Original stimulus files, checksums, assignments and protocol identifiers are unchanged.
+
 SAM valence/arousal/dominance = 1–9, confidence = 1–7. Rate the emotion communicated by the work, not the viewer's own current mood. Dominance runs low-control to high-control.
 
 The public frontend is hosted by GitHub Pages; authenticated submissions persist in the existing Sites D1 backend, in a separate `cohort_ratings` table. Test/production data are separate. Invite tokens are never committed. Each participant's bearer invitation restricts access to their own task. Researcher invitation is separate and exports ratings and all assignments. Treat invitations like passwords; distribute only one participant's link at a time.

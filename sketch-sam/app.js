@@ -4,6 +4,7 @@
   const cfg=window.StudyConfig||{},total=cfg.cohort?12:24;
   const audioVersion='none';
   const assetBase=cfg.cohort?'../sketch-sam/assets':'./assets';
+  let prefetchedImage = null;
   const state = { mode: 'production', rater: null, protocol: null, sequence: [], completed: [], profile: null,
     answers: {}, viewMs: 0, viewingSince: null, busy: false, screen: 'home', loaded: false,
     trials:[],condition:'Sketch' };
@@ -70,7 +71,29 @@
       }
     } catch { /* An invalid local draft does not change server progress. */ }
   }
+  function imageSource(profile, condition) {
+    return condition === '2D' ? `../study-media/2d/${profile}.png` : `${assetBase}/sketches/${profile}.png`;
+  }
+  function clearPrefetch() {
+    if (prefetchedImage) prefetchedImage.removeAttribute('src');
+    prefetchedImage = null;
+  }
+  function preloadNextImage() {
+    const profile = state.sequence.find(p => p !== state.profile && !state.completed.includes(p));
+    if (!profile) { clearPrefetch(); return; }
+    const condition = state.trials.find(t => t.profile === profile)?.condition || 'Sketch';
+    const src = imageSource(profile, condition);
+    if (prefetchedImage?.getAttribute('src') === src) return;
+    clearPrefetch();
+    // Fetch only the next original stimulus after the current one has loaded.
+    // This detached image never changes presentation, answers or viewing time.
+    prefetchedImage = new Image();
+    prefetchedImage.fetchPriority = 'low';
+    prefetchedImage.decoding = 'async';
+    prefetchedImage.src = src;
+  }
   async function home() {
+    clearPrefetch();
     show('home'); state.busy = false; state.rater = null;
     $('raterGrid').replaceChildren(); status('homeStatus','正在读取已保存的进度…');
     const mode = state.mode;
@@ -103,17 +126,17 @@
   function tag() { return `${state.rater} · ${state.condition} · ${state.sequence.indexOf(state.profile)+1} / ${total}`; }
   function next() {
     state.profile = state.sequence.find(profile => !state.completed.includes(profile));
-    if (!state.profile) { $('doneMessage').textContent = `${state.rater} · ${total} / ${total} 张已完成`; show('done'); return; }
+    if (!state.profile) { clearPrefetch(); $('doneMessage').textContent = `${state.rater} · ${total} / ${total} 张已完成`; show('done'); return; }
     state.condition=state.trials.find(t=>t.profile===state.profile)?.condition||'Sketch';
     state.answers = {}; state.viewMs = 0; state.loaded = false; restoreDraft();
     $('viewTag').textContent = tag(); $('ratingTag').textContent = tag();
-    $('finishView').disabled = true; $('imageLoading').classList.remove('hidden'); $('imageLoading').textContent = '正在加载 Sketch…';
-    $('imageLoading').textContent='正在加载图片…';
+    $('finishView').disabled = true; $('imageLoading').classList.remove('hidden'); $('imageLoading').textContent = '正在加载图片…';
     const image = $('sketchImage');
+    image.fetchPriority = 'high';
     image.alt=`待评价的 ${state.condition}`;
-    image.onload = () => { state.loaded = true; updateFinish(); $('imageLoading').classList.add('hidden'); clock(); };
+    image.onload = () => { state.loaded = true; updateFinish(); $('imageLoading').classList.add('hidden'); clock(); if (state.screen === 'view') preloadNextImage(); };
     image.onerror = () => { state.loaded = false; $('finishView').disabled = true; $('imageLoading').textContent = '图片加载失败，请返回首页后重试。'; stopClock(); };
-    image.src = state.condition==='2D'?`../study-media/2d/${state.profile}.png`:`${assetBase}/sketches/${state.profile}.png`;
+    image.src = imageSource(state.profile, state.condition);
     status('viewStatus'); show('view');
   }
   function radio(key, value, label) {
