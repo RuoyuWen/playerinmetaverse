@@ -26,6 +26,22 @@
     {key:'arousal', label:'Arousal · 唤醒度', description:'How calm or activated is the emotion expressed in this sketch?', captions:['Calm','','Neutral','','Excited']},
     {key:'dominance', label:'Dominance · 控制感', description:'How much control does the person seem to feel in the emotional experience expressed by this sketch?', captions:['Low control','','Neutral','','High control']}
   ];
+  const ratingContext=document.createElement('aside');ratingContext.className='rating-context';
+  const ratingFigure=document.querySelector('.rating-sketch');ratingFigure.before(ratingContext);ratingContext.append(ratingFigure);
+  const guide=document.createElement('section');guide.className='sam-guide';guide.id='samGuide';guide.setAttribute('aria-labelledby','samGuideTitle');
+  guide.innerHTML=`<div class="eyebrow">HOW TO RATE / 填写指导</div><h2 id="samGuideTitle">先推断情绪，再选择分值</h2>
+    <p class="guide-intro">结合图片与音效，推断<strong>创作者想表达的情绪</strong>。评价的不是你此刻的心情，也不是作品是否好看、声音是否好听。</p>
+    <dl>
+      <div><dt>愉悦度 <span>Valence · 1–9</span></dt><dd>这种情绪有多不愉快或愉快？<br><strong>1 很不愉快 · 5 中性 · 9 很愉快</strong></dd></div>
+      <div><dt>唤醒度 <span>Arousal · 1–9</span></dt><dd>这种情绪有多平静或激动？<br><strong>1 很平静 · 5 中等 · 9 很激动</strong><small>高唤醒可以是兴奋，也可以是紧张；不等于开心。</small></dd></div>
+      <div><dt>控制感 <span>Dominance · 1–9</span></dt><dd>创作者在这种情绪中有多被动或有掌控感？<br><strong>1 很无助／被支配 · 5 中等 · 9 很有掌控感</strong><small>不是你对图片、VR 或评分系统的操作能力。</small></dd></div>
+      <div><dt>判断信心 <span>Confidence · 1–7</span></dt><dd>你对上述情绪推断有多确定？<br><strong>1 完全没把握 · 4 中等 · 7 非常有把握</strong><small>这是额外的信心题，不是 SAM 的第四个情绪维度。</small></dd></div>
+    </dl><p class="guide-footer">每行选一个分值。SAM 小人从左到右对应 <strong>1、3、5、7、9</strong>；2、4、6、8 表示相邻两档之间，也可以选择。三项情绪维度分别判断；不确定时按最接近的判断作答，并在信心题如实反映，不要一律选中点。</p>`;
+  ratingContext.append(guide);
+  const homeGuide=document.createElement('section');homeGuide.className='home-guide';homeGuide.setAttribute('aria-labelledby','homeGuideTitle');
+  homeGuide.innerHTML='<h2 id="homeGuideTitle">开始前：你要推断谁的情绪？</h2><p>请通过图片和音效推断<strong>创作者想表达的情绪</strong>，而不是报告你自己此刻的心情，也不是评价作品的美观程度。先形成整体判断，再分别填写 SAM 的愉悦度、唤醒度、控制感，以及额外的判断信心题。</p><p>每次评分时都会显示详细指导。没有预设答案，请独立判断，不需要让三个维度的分数保持一致。</p>';
+  $('raterGrid').before(homeGuide);
+  document.querySelector('.rating-instruction').textContent='先结合图片与音效推断创作者表达的情绪，再逐项评分。不是评价你自己的心情或作品好不好看；每行选择一个分值。';
   async function api(url, options) {
     const response = await window.SketchAuth.fetch(url, options);
     const data = await response.json();
@@ -132,6 +148,7 @@
       const field = document.createElement('fieldset'); field.className = 'sam-dimension';
       const legend = document.createElement('legend'); legend.textContent = dimension.label;
       const description = document.createElement('p'); description.className = 'dimension-desc'; description.textContent = dimension.description;
+      const help=document.createElement('p');help.className='dimension-help';help.id=`${dimension.key}-help`;help.textContent=dimension.help;field.setAttribute('aria-describedby',help.id);
       const images = document.createElement('div'); images.className = 'sam-images';
       const radios = document.createElement('div'); radios.className = 'sam-radios';
       for (let value=1; value<=9; value++) {
@@ -144,10 +161,11 @@
         }
         images.appendChild(cell); radios.appendChild(radio(dimension.key,value,dimension.key));
       }
-      field.append(legend,description,images,radios); matrix.appendChild(field);
+      field.append(legend,description,help,images,radios); matrix.appendChild(field);
     }
     const confidence = document.createElement('fieldset'); confidence.className = 'sam-dimension';
-    confidence.innerHTML = '<legend>Confidence · 判断信心</legend><p class="dimension-desc">How confident are you in your interpretation of the participant\'s emotional state?</p>';
+    confidence.innerHTML = '<legend>Confidence · 判断信心</legend><p class="dimension-desc">How confident are you in your interpretation of the creator\'s emotional state?</p><p class="dimension-help" id="confidence-help">对刚才的情绪推断有多确定？1 = 完全没把握，4 = 中等，7 = 非常有把握。不是情绪强度。</p>';
+    confidence.setAttribute('aria-describedby','confidence-help');
     const likert = document.createElement('div'); likert.className = 'likert';
     for (let value=1; value<=7; value++) likert.appendChild(radio('confidence',value,'Confidence'));
     const endpoints = document.createElement('div'); endpoints.className = 'endpoints'; endpoints.innerHTML = '<span>1 = Not at all confident</span><span>7 = Extremely confident</span>';
@@ -183,9 +201,12 @@
   $('backHome').addEventListener('click',home);
   $('testMode').addEventListener('change', () => { state.mode = $('testMode').checked ? 'test' : 'production'; $('testBanner').classList.toggle('hidden',state.mode !== 'test'); home(); });
   window.addEventListener('pagehide', () => { if (state.profile) { stopClock();pauseAudio(); persistDraft(); } });
-  dimensions[0].description='How positive or negative is the emotion expressed by this environment and its sound?';
-  dimensions[1].description='How calm or activated is the emotion expressed by this environment and its sound?';
-  dimensions[2].description='How much control does the person seem to feel in the emotional experience expressed by this environment and its sound?';
+  dimensions[0].description='Infer how unpleasant or pleasant the creator’s expressed emotion is.';
+  dimensions[0].help='情绪有多不愉快或愉快？1 = 很不愉快，5 = 中性，9 = 很愉快。不是你对作品的喜好。';
+  dimensions[1].description='Infer how calm or activated the creator’s expressed emotion is.';
+  dimensions[1].help='情绪有多平静或激动？1 = 很平静，5 = 中等，9 = 很激动。兴奋和紧张都可能是高唤醒。';
+  dimensions[2].description='Infer how powerless or in control the creator seems to feel in that emotional experience.';
+  dimensions[2].help='在这种情绪中有多无助或有掌控感？1 = 很无助／被支配，5 = 中等，9 = 很有掌控感。不是操作系统的能力。';
   window.SketchAuth.ready.then(() => {
     if(window.SketchAuth.role==='ADMIN'){
       state.mode='test';$('testMode').checked=true;$('testBanner').classList.remove('hidden');
