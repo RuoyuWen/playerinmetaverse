@@ -17,7 +17,7 @@ No arbitrary URL proxying, cookies or client IP forwarding are supported. The or
 
 The frontend uses `https://sam-api.playerinmetaverse.tech` as its primary origin. `../sketch-sam/transport.js` automatically retries a network failure, primary timeout or HTML provider-block page once on the deployed Render ingress. JSON API authorization errors do not trigger fallback. The exact same token, authorization and request body are reused, preserving the existing service's idempotent join/submission behavior. No stored recovery code or browser storage namespace changes.
 
-The public Render bridge has passed health, non-enrolling invalid-join, unauthorized-auth/export, CORS and existing-service checks. The custom-domain reassignment remains pending manual Render account access and its DNS/certificate verification.
+The public Render bridge and `sam-api.playerinmetaverse.tech` have both passed health, non-enrolling invalid-join, unauthorized-auth/export and CORS checks. On 2026-11-10 (Pacific/Auckland), both the authoritative Aliyun DNS and a public resolver returned `chi-backend-jif6.onrender.com` as the CNAME target; HTTPS and the custom hostname's `/api/sam/health` were verified. The custom-domain reassignment is complete. Mainland participants still need to retry the actual study in their original browser to confirm their full browser-to-service path.
 
 Tests: `python -m unittest test_sam_proxy -v` (mock upstream only; no production enrollments or ratings).
 
