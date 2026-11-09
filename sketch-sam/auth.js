@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  const API='https://self-scape-sketch-sam-data.christianqaq.chatgpt.site';
+  const API='https://sam-api.playerinmetaverse.tech';
   const cfg=window.StudyConfig||{};
   const SLOT=cfg.cohort?'cohort-sam-online-access':'sketch-sam-online-access';
   const main=document.querySelector('main');

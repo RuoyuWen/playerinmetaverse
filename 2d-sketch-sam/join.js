@@ -1,5 +1,5 @@
 (()=>{
- const $=id=>document.getElementById(id),API='https://self-scape-sketch-sam-data.christianqaq.chatgpt.site/api/cohort',SLOT='cohort-sam-claim';let busy=false;
+ const $=id=>document.getElementById(id),API='https://sam-api.playerinmetaverse.tech/api/cohort',SLOT='cohort-sam-claim';let busy=false;
  try{if(localStorage.getItem(SLOT))$('joinStart').textContent='继续我的原任务（不新增名额） →';}catch{}
  // IndexedDB read/write transactions serialize first-time token creation across browser tabs.
  function browserToken(){return new Promise((resolve,reject)=>{
