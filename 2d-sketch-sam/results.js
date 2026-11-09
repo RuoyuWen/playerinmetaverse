@@ -6,7 +6,7 @@
    const response=await SketchAuth.fetch('/api/results?mode='+$('mode').value),data=await response.json();if(!response.ok)throw Error(data.error);
    $('metrics').replaceChildren();$('rows').replaceChildren();
    for(const p of data.participants){const n=data.rows.filter(r=>r.participant===p).length,card=document.createElement('div');card.className='metric';card.innerHTML=`<span>${p} · ${(data.claims||[]).some(c=>c.participant===p)?'已领取':n?'独立邀请':'未领取'}</span><strong>${n} / 12</strong><progress value="${n}" max="12" aria-label="${p} 进度"></progress>`;$('metrics').append(card);}
-   for(const r of data.rows){const tr=document.createElement('tr');for(const v of [r.participant,r.trial_index,r.profile,r.condition,r.valence,r.arousal,r.dominance,r.confidence,(r.audio_ms/1000).toFixed(1)]){const td=document.createElement('td');td.textContent=v;tr.append(td);}$('rows').append(tr);}
+   for(const r of data.rows){const tr=document.createElement('tr');for(const v of [r.participant,r.trial_index,r.profile,r.condition,r.valence,r.arousal,r.dominance,r.confidence,r.audio_version==='none'?'仅图片':'历史有声']){const td=document.createElement('td');td.textContent=v;tr.append(td);}$('rows').append(tr);}
    const people=data.participants.length,target=people*data.total;
    $('cohortSummary').textContent=`${people} PARTICIPANTS / ${target} RATINGS`;
    $('status').textContent=`${$('mode').value==='test'?'测试':'正式'}：${data.rows.length} / ${target} 份评分；群入口已领取 ${(data.claims||[]).length} / ${people} 人；本数据集已开始 ${new Set(data.rows.map(r=>r.participant)).size} 人；${data.participants.filter(p=>data.rows.filter(r=>r.participant===p).length===data.total).length} 人已完成`;

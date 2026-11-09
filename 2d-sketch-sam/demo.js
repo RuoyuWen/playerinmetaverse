@@ -1,6 +1,6 @@
 // Offline-in-browser scoring adapter. No fetch, claim, invitation or production writes.
 (()=>{
- const SLOT='self-scape-demo-local-v1',PROTOCOL='demo-local-v1',RATER='T1';
+ const SLOT='self-scape-demo-local-silent-v2',PROTOCOL='demo-local-silent-v2',RATER='T1';
  const trials=[['P7','2D'],['P2','Sketch'],['P12','Sketch'],['P4','2D'],['P9','Sketch'],['P1','2D'],['P11','2D'],['P6','Sketch'],['P3','Sketch'],['P10','2D'],['P5','2D'],['P8','Sketch']].map(([profile,condition])=>({profile,condition}));
  const config={protocol:PROTOCOL,total:12,raters:[RATER],dominance_low:'Low control',dominance_high:'High control'};
  const reply=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json'}});
@@ -16,7 +16,7 @@
    if(b.mode!=='test'||b.protocol!==PROTOCOL||b.rater!==RATER||!trials.some(t=>t.profile===b.profile&&t.condition===b.condition))return reply({error:'仅允许演示任务，不会提交正式数据。'},400);
    const scores=['valence','arousal','dominance','confidence'];
    if(scores.some(k=>!Number.isInteger(b[k])||b[k]<1||b[k]>(k==='confidence'?7:9)))return reply({error:'请完整填写四项评分。'},400);
-   if(!Number.isInteger(b.audio_ms)||b.audio_ms<1)return reply({error:'请先聆听音效。'},400);
+   if(b.audio_version!=='none'||b.audio_ms!==0)return reply({error:'测试页面已更新，请刷新后重试。'},400);
    const previous=saved.find(r=>r.profile===b.profile);
    if(previous)return scores.every(k=>previous[k]===b[k])?reply({ok:true,already_saved:true}):reply({error:'本地测试评分已保存，可重新开始测试。'},409);
    if(trials.find(t=>!saved.some(r=>r.profile===t.profile))?.profile!==b.profile)return reply({error:'测试进度已变化，请刷新继续。'},409);

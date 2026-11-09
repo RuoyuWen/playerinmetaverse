@@ -2,25 +2,12 @@
   'use strict';
   const $ = id => document.getElementById(id);
   const cfg=window.StudyConfig||{},total=cfg.cohort?12:24;
-  const audioVersion='matched-sound-effect-v1';
+  const audioVersion='none';
   const assetBase=cfg.cohort?'../sketch-sam/assets':'./assets';
   const state = { mode: 'production', rater: null, protocol: null, sequence: [], completed: [], profile: null,
     answers: {}, viewMs: 0, viewingSince: null, busy: false, screen: 'home', loaded: false,
-    trials:[],condition:'Sketch',audioMs:0,audioSince:null };
-  const audio=document.createElement('audio');audio.id='stimulusAudio';audio.loop=true;audio.preload='auto';audio.controls=true;
-  const audioPanel=document.createElement('div');audioPanel.className='audio-panel';
-  const playAudio=document.createElement('button');playAudio.type='button';playAudio.id='playAudio';playAudio.className='primary';playAudio.textContent='播放 / 继续音效';
-  const audioStatus=document.createElement('span');audioStatus.id='audioStatus';audioStatus.setAttribute('role','status');
-  audioPanel.append(playAudio,audio,audioStatus);document.querySelector('.sketch-stage').after(audioPanel);
-  const note=document.createElement('p');note.className='muted';note.textContent='请戴耳机并确认音量，点击播放后观察图片、聆听音效。进入评分页会暂停声音；可返回查看并继续播放。';audioPanel.before(note);
-  function stopAudioClock(){if(state.audioSince!==null)state.audioMs+=performance.now()-state.audioSince;state.audioSince=null;}
-  function audioClock(){stopAudioClock();if(state.screen==='view'&&!document.hidden&&!audio.paused&&!audio.muted&&audio.volume>0&&audio.readyState>=3)state.audioSince=performance.now();}
-  function pauseAudio(){stopAudioClock();audio.pause();}
-  function updateFinish(){const heard=state.audioMs+(state.audioSince===null?0:performance.now()-state.audioSince);$('finishView').disabled=!state.loaded||heard<1;}
-  for(const event of ['playing','pause','waiting','volumechange','ended'])audio.addEventListener(event,()=>{audioClock();updateFinish();});
-  audio.addEventListener('timeupdate',()=>{updateFinish();if(!audio.paused)audioStatus.textContent=audio.muted||audio.volume===0?'请取消静音并调高音量':'音效播放中 · 循环';});
-  audio.addEventListener('error',()=>{pauseAudio();audioStatus.textContent='音效加载失败，请点击播放重试，或返回首页重试。';});
-  playAudio.onclick=async()=>{try{if(audio.error)audio.load();audio.muted=false;if(audio.volume===0)audio.volume=1;await audio.play();audioStatus.textContent='音效播放中 · 循环';}catch{audioStatus.textContent='播放失败，请检查网络和声音设置后再次点击。';}};
+    trials:[],condition:'Sketch' };
+  function updateFinish(){ $('finishView').disabled=!state.loaded; }
   const dimensions = [
     {key:'valence', label:'Valence · 愉悦度', description:'How positive or negative is the emotion expressed in this sketch?', captions:['Unhappy','','Neutral','','Happy']},
     {key:'arousal', label:'Arousal · 唤醒度', description:'How calm or activated is the emotion expressed in this sketch?', captions:['Calm','','Neutral','','Excited']},
@@ -30,7 +17,7 @@
   const ratingFigure=document.querySelector('.rating-sketch');ratingFigure.before(ratingContext);ratingContext.append(ratingFigure);
   const guide=document.createElement('section');guide.className='sam-guide';guide.id='samGuide';guide.setAttribute('aria-labelledby','samGuideTitle');
   guide.innerHTML=`<div class="eyebrow">HOW TO RATE / 填写指导</div><h2 id="samGuideTitle">先推断情绪，再选择分值</h2>
-    <p class="guide-intro">结合图片与音效，推断<strong>创作者想表达的情绪</strong>。评价的不是你此刻的心情，也不是作品是否好看、声音是否好听。</p>
+    <p class="guide-intro">观察图片，推断<strong>创作者想表达的情绪</strong>。评价的不是你此刻的心情，也不是作品是否好看。</p>
     <dl>
       <div><dt>愉悦度 <span>Valence · 1–9</span></dt><dd>这种情绪有多不愉快或愉快？<br><strong>1 很不愉快 · 5 中性 · 9 很愉快</strong></dd></div>
       <div><dt>唤醒度 <span>Arousal · 1–9</span></dt><dd>这种情绪有多平静或激动？<br><strong>1 很平静 · 5 中等 · 9 很激动</strong><small>高唤醒可以是兴奋，也可以是紧张；不等于开心。</small></dd></div>
@@ -39,9 +26,9 @@
     </dl><p class="guide-footer">每行选一个分值。SAM 小人从左到右对应 <strong>1、3、5、7、9</strong>；2、4、6、8 表示相邻两档之间，也可以选择。三项情绪维度分别判断；不确定时按最接近的判断作答，并在信心题如实反映，不要一律选中点。</p>`;
   ratingContext.append(guide);
   const homeGuide=document.createElement('section');homeGuide.className='home-guide';homeGuide.setAttribute('aria-labelledby','homeGuideTitle');
-  homeGuide.innerHTML='<h2 id="homeGuideTitle">开始前：你要推断谁的情绪？</h2><p>请通过图片和音效推断<strong>创作者想表达的情绪</strong>，而不是报告你自己此刻的心情，也不是评价作品的美观程度。先形成整体判断，再分别填写 SAM 的愉悦度、唤醒度、控制感，以及额外的判断信心题。</p><p>每次评分时都会显示详细指导。没有预设答案，请独立判断，不需要让三个维度的分数保持一致。</p>';
+  homeGuide.innerHTML='<h2 id="homeGuideTitle">开始前：你要推断谁的情绪？</h2><p>请通过图片推断<strong>创作者想表达的情绪</strong>，而不是报告你自己此刻的心情，也不是评价作品的美观程度。先形成整体判断，再分别填写 SAM 的愉悦度、唤醒度、控制感，以及额外的判断信心题。</p><p>每次评分时都会显示详细指导。没有预设答案，请独立判断，不需要让三个维度的分数保持一致。</p>';
   $('raterGrid').before(homeGuide);
-  document.querySelector('.rating-instruction').textContent='先结合图片与音效推断创作者表达的情绪，再逐项评分。不是评价你自己的心情或作品好不好看；每行选择一个分值。';
+  document.querySelector('.rating-instruction').textContent='先通过图片推断创作者表达的情绪，再逐项评分。不是评价你自己的心情或作品好不好看；每行选择一个分值。';
   async function api(url, options) {
     const response = await window.SketchAuth.fetch(url, options);
     const data = await response.json();
@@ -58,10 +45,9 @@
     if (state.screen === 'view' && state.loaded && !document.hidden) state.viewingSince = performance.now();
   }
   document.addEventListener('visibilitychange', clock);
-  document.addEventListener('visibilitychange',()=>{if(document.hidden){pauseAudio();persistDraft();}else if(state.screen==='view')audioStatus.textContent='请点击播放继续聆听';});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)persistDraft();});
   function show(name) {
     stopClock(); state.screen = name;
-    if(name!=='view')pauseAudio();
     for (const screen of ['home','view','rating','done']) $(screen).classList.toggle('hidden', screen !== name);
     $('testMode').disabled = name !== 'home';
     if (name === 'view') clock();
@@ -69,7 +55,7 @@
   }
   function draftKey() { return `sketch-sam:${state.protocol}:${audioVersion}:${state.mode}:${state.rater}:${state.profile}`; }
   function persistDraft() {
-    try { localStorage.setItem(draftKey(), JSON.stringify({answers:state.answers,viewMs:Math.round(state.viewMs),audioMs:Math.round(state.audioMs)})); }
+    try { localStorage.setItem(draftKey(), JSON.stringify({answers:state.answers,viewMs:Math.round(state.viewMs)})); }
     catch { /* Server-confirmed ratings remain durable even when browser storage is unavailable. */ }
   }
   function restoreDraft() {
@@ -81,7 +67,6 @@
           if (Number.isInteger(value) && value >= 1 && value <= (key === 'confidence' ? 7 : 9)) state.answers[key] = value;
         }
         if (Number.isFinite(draft.viewMs) && draft.viewMs >= 0) state.viewMs = Math.min(draft.viewMs,604800000);
-        if(Number.isFinite(draft.audioMs)&&draft.audioMs>=0)state.audioMs=Math.min(draft.audioMs,604800000);
       }
     } catch { /* An invalid local draft does not change server progress. */ }
   }
@@ -118,11 +103,9 @@
   function tag() { return `${state.rater} · ${state.condition} · ${state.sequence.indexOf(state.profile)+1} / ${total}`; }
   function next() {
     state.profile = state.sequence.find(profile => !state.completed.includes(profile));
-    pauseAudio();
     if (!state.profile) { $('doneMessage').textContent = `${state.rater} · ${total} / ${total} 张已完成`; show('done'); return; }
     state.condition=state.trials.find(t=>t.profile===state.profile)?.condition||'Sketch';
-    state.answers = {}; state.viewMs = 0; state.audioMs=0;state.loaded = false; restoreDraft();
-    audio.src=`../study-media/audio/${state.profile}.mp3`;audio.load();audioStatus.textContent='请点击播放音效';
+    state.answers = {}; state.viewMs = 0; state.loaded = false; restoreDraft();
     $('viewTag').textContent = tag(); $('ratingTag').textContent = tag();
     $('finishView').disabled = true; $('imageLoading').classList.remove('hidden'); $('imageLoading').textContent = '正在加载 Sketch…';
     $('imageLoading').textContent='正在加载图片…';
@@ -188,19 +171,19 @@
     try {
       await api('/api/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
         mode:state.mode,rater:state.rater,profile:state.profile,protocol:state.protocol,
-        ...state.answers,view_ms:Math.round(state.viewMs),audio_ms:Math.round(state.audioMs),audio_version:audioVersion,condition:state.condition
+        ...state.answers,view_ms:Math.round(state.viewMs),audio_ms:0,audio_version:audioVersion,condition:state.condition
       })});
       try { localStorage.removeItem(draftKey()); } catch {}
       state.completed.push(state.profile); next();
     } catch (error) { status('ratingStatus', `${error.message} 当前选择已保留，可重试。`, true); }
     finally { lock(false); }
   });
-  $('finishView').addEventListener('click', () => { if (!state.loaded||$('finishView').disabled) return; stopClock(); pauseAudio();persistDraft(); renderSam(); show('rating'); });
+  $('finishView').addEventListener('click', () => { if (!state.loaded||$('finishView').disabled) return; stopClock(); persistDraft(); renderSam(); show('rating'); });
   $('review').addEventListener('click', () => show('view'));
-  for (const id of ['pauseView','pauseRating']) $(id).addEventListener('click', () => { stopClock();pauseAudio(); persistDraft(); home(); });
+  for (const id of ['pauseView','pauseRating']) $(id).addEventListener('click', () => { stopClock(); persistDraft(); home(); });
   $('backHome').addEventListener('click',home);
   $('testMode').addEventListener('change', () => { state.mode = $('testMode').checked ? 'test' : 'production'; $('testBanner').classList.toggle('hidden',state.mode !== 'test'); home(); });
-  window.addEventListener('pagehide', () => { if (state.profile) { stopClock();pauseAudio(); persistDraft(); } });
+  window.addEventListener('pagehide', () => { if (state.profile) { stopClock(); persistDraft(); } });
   dimensions[0].description='Infer how unpleasant or pleasant the creator’s expressed emotion is.';
   dimensions[0].help='情绪有多不愉快或愉快？1 = 很不愉快，5 = 中性，9 = 很愉快。不是你对作品的喜好。';
   dimensions[1].description='Infer how calm or activated the creator’s expressed emotion is.';

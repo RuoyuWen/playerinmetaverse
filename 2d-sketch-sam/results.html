@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer"><title>2D / Sketch · 研究者结果</title><link rel="stylesheet" href="../sketch-sam/style.css?v=20261109-audio2"></head><body>
 <header class="topbar"><div class="brand"><span class="brand-mark">S</span> 2D / Sketch · 研究者结果</div><nav><a href="./" class="secondary">测试评分页</a></nav></header>
-<main class="screen results-screen"><div class="eyebrow" id="cohortSummary">60 PARTICIPANTS / 720 RATINGS</div><h1>实验进度与数据</h1><p class="muted">每人 6 个 2D + 6 个 Sketch，12 份不同作品，随机混合；两类均使用对应作品的循环音效。</p>
+<main class="screen results-screen"><div class="eyebrow" id="cohortSummary">60 PARTICIPANTS / 720 RATINGS</div><h1>实验进度与数据</h1><p class="muted">每人 6 个 2D + 6 个 Sketch，12 份不同作品，随机混合；两类均仅呈现图片。</p>
 <div class="toolbar"><label>数据 <select id="mode"><option value="production">正式数据</option><option value="test">测试数据</option></select></label><button id="refresh" class="secondary">刷新</button><button id="export" class="primary">下载评分 CSV</button><button id="assignments" class="secondary">下载分配表 CSV</button></div>
-<p id="status" class="status" role="status"></p><p class="results-note">SAM 1–9，判断信心 1–7；Dominance：1 = Low control，9 = High control。CSV 包含参与者、作品、条件、呈现顺序、观看与音效播放时长、量表版本及素材校验值。播放时长是浏览器记录，不保证耳机实际发声。</p>
-<div id="metrics" class="cohort-progress"></div><div class="table-wrap"><table><thead><tr><th>参与者</th><th>顺序</th><th>作品</th><th>条件</th><th>Valence</th><th>Arousal</th><th>Dominance</th><th>Confidence</th><th>音效秒数</th></tr></thead><tbody id="rows"></tbody></table></div></main>
-<script>window.StudyConfig={cohort:true};</script><script src="../sketch-sam/auth.js?v=20261109-join1"></script><script src="results.js?v=20261109-join1"></script></body></html>
+<p id="status" class="status" role="status"></p><p class="results-note">SAM 1–9，判断信心 1–7；Dominance：1 = Low control，9 = High control。CSV 包含参与者、作品、条件、呈现顺序、观看时长、量表版本及素材校验值。历史有声评分保留原有版本标记。</p>
+<div id="metrics" class="cohort-progress"></div><div class="table-wrap"><table><thead><tr><th>参与者</th><th>顺序</th><th>作品</th><th>条件</th><th>Valence</th><th>Arousal</th><th>Dominance</th><th>Confidence</th><th>评分版本</th></tr></thead><tbody id="rows"></tbody></table></div></main>
+<script>window.StudyConfig={cohort:true};</script><script src="../sketch-sam/auth.js?v=20261109-join1"></script><script src="results.js?v=20261109-silent2"></script></body></html>
