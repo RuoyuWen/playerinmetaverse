@@ -26,6 +26,8 @@ After the current image loads, the viewer downloads only the next unfinished tri
 
 Images still come directly from GitHub Pages, independently of the Render API ingress. The 24 original 2D PNGs total 71,637,119 bytes (2,261,596–3,794,474 bytes each). Prefetching can reduce waits between trials, but the first image and slow cross-border transfers still depend on the participant's connection. Original stimulus files, checksums, assignments and protocol identifiers are unchanged.
 
+Validation (2026-11-10): JavaScript syntax and all seven transport checks passed. An offline viewer workflow checked mixed-condition URLs, skipping completed trials, no early display or observation timing, one pending prefetch, pause cancellation, image-error gating and the final trial. No participant was enrolled or submitted during validation. Mainland loading speed still requires verification on a participant's own connection.
+
 SAM valence/arousal/dominance = 1–9, confidence = 1–7. Rate the emotion communicated by the work, not the viewer's own current mood. Dominance runs low-control to high-control.
 
 The public frontend is hosted by GitHub Pages; authenticated submissions persist in the existing Sites D1 backend, in a separate `cohort_ratings` table. Test/production data are separate. Invite tokens are never committed. Each participant's bearer invitation restricts access to their own task. Researcher invitation is separate and exports ratings and all assignments. Treat invitations like passwords; distribute only one participant's link at a time.
