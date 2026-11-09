@@ -7,7 +7,9 @@
    $('metrics').replaceChildren();$('rows').replaceChildren();
    for(const p of data.participants){const n=data.rows.filter(r=>r.participant===p).length,card=document.createElement('div');card.className='metric';card.innerHTML=`<span>${p}</span><strong>${n} / 12</strong><progress value="${n}" max="12" aria-label="${p} 进度"></progress>`;$('metrics').append(card);}
    for(const r of data.rows){const tr=document.createElement('tr');for(const v of [r.participant,r.trial_index,r.profile,r.condition,r.valence,r.arousal,r.dominance,r.confidence,(r.audio_ms/1000).toFixed(1)]){const td=document.createElement('td');td.textContent=v;tr.append(td);}$('rows').append(tr);}
-   $('status').textContent=`${$('mode').value==='test'?'测试':'正式'}：${data.rows.length} / 480 份评分；${data.participants.filter(p=>data.rows.filter(r=>r.participant===p).length===12).length} / 40 人已完成`;
+   const people=data.participants.length,target=people*data.total;
+   $('cohortSummary').textContent=`${people} PARTICIPANTS / ${target} RATINGS`;
+   $('status').textContent=`${$('mode').value==='test'?'测试':'正式'}：${data.rows.length} / ${target} 份评分；${data.participants.filter(p=>data.rows.filter(r=>r.participant===p).length===data.total).length} / ${people} 人已完成`;
   }catch(e){$('status').textContent=e.message;}finally{busy=false;$('refresh').disabled=false;}
  }
  async function download(path,name){try{const r=await SketchAuth.fetch(path);if(!r.ok)throw Error((await r.json()).error);const url=URL.createObjectURL(await r.blob()),a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}catch(e){$('status').textContent=e.message;}}

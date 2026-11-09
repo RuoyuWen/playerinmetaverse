@@ -1,6 +1,8 @@
-# 2D / Sketch SAM — 40 participants
+# 2D / Sketch SAM — 60 participants
 
-Each S01–S40 has a fixed random mixture of six 2D and six Sketch trials from twelve different P1–P24 works. Across the complete allocation each work appears ten times in each condition. Allocation is server-side, immutable under `2d-sketch-40-mixed-audio-v1`, and resumes from confirmed submissions.
+S41–S60 were appended without changing S01–S40 assignments, existing invitations, or saved scores. Capacity is 720 ratings; the historical protocol identifier retains `40` for compatibility.
+
+Each S01–S60 has a fixed random mixture of six 2D and six Sketch trials from twelve different P1–P24 works. Across the complete allocation each work appears fifteen times in each condition. Allocation is server-side, immutable under `2d-sketch-40-mixed-audio-v1`, and resumes from confirmed submissions.
 
 Both conditions play the matching work's original `2D/sound_effect.mp3` on loop. Explicit playback is required before rating. Audio pauses for the SAM screen, navigation, or hidden tabs. The stimulus image remains visible during scoring. Headphones and audible volume must be checked by the participant: browser playback duration is not proof of actual acoustic exposure.
 
