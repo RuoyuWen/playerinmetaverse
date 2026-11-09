@@ -48,9 +48,9 @@ async def forward_sam_request(request: Request):
     _, upstream_path = ROUTES[request.url.path]
     body = bytearray()
     async for chunk in request.stream():
-        body.extend(chunk)
-        if len(body) > MAX_REQUEST_BYTES:
+        if len(body) + len(chunk) > MAX_REQUEST_BYTES:
             return JSONResponse({"error": "Request too large"}, status_code=413)
+        body.extend(chunk)
 
     # Do not forward cookies, client IP headers, Host, or upstream CORS headers.
     headers = {

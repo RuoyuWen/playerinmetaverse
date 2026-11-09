@@ -20,4 +20,4 @@ There is no audio player, audio download or playback requirement. New scores use
 
 Invitation keys, exported ratings and local databases must never be committed to this repository.
 
-Backend origin is `https://sam-api.playerinmetaverse.tech`, configured in `auth.js`; recruitment uses the same origin in `../2d-sketch-sam/join.js`. It routes to the same existing Sites service and D1 database. DNS setup is documented in `../2d-sketch-sam/DNS_SETUP.md`.
+`transport.js` uses `https://sam-api.playerinmetaverse.tech` first, with the existing Render ingress (`https://chi-backend-jif6.onrender.com`) as an automatic fallback for network failures, primary timeouts or HTML provider-block pages. JSON authorization errors are returned unchanged. Both routes use the same existing Sites service, D1 database and invitation keys; retries preserve the exact token and submitted body. Recruitment and authenticated requests share this transport. DNS setup is documented in `../2d-sketch-sam/DNS_SETUP.md`; the Render ingress is documented in `../2d-sketch-sam/RENDER_INGRESS.md`.

@@ -1,5 +1,5 @@
 (()=>{
- const $=id=>document.getElementById(id),API='https://sam-api.playerinmetaverse.tech/api/cohort',SLOT='cohort-sam-claim';let busy=false;
+ const $=id=>document.getElementById(id),API='/api/cohort',SLOT='cohort-sam-claim';let busy=false;
  try{if(localStorage.getItem(SLOT))$('joinStart').textContent='继续我的原任务（不新增名额） →';}catch{}
  // IndexedDB read/write transactions serialize first-time token creation across browser tabs.
  function browserToken(){return new Promise((resolve,reject)=>{
@@ -19,12 +19,12 @@
    if(!localStorage.getItem(SLOT)&&!window.confirm('确认正式参与本次研究吗？\n\n确认后才会分配参与者编号，并占用 1 个正式名额。\n如果你只是查看页面或测试，请选择“取消”。\n研究者测试评分请使用 ADMIN 入口的测试模式。')){
     $('joinStatus').textContent='已取消参与，未分配编号，也未占用名额。';return;
    }
-   const token=await browserToken(),response=await fetch(API+'/join',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token})}),data=await response.json();
+   const token=await browserToken(),response=await SamApi.request(API+'/join',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token})}),data=await response.json();
    if(!response.ok)throw Error(data.error||'暂时无法领取，请稍后重试。');enter(token);
   }catch(e){$('joinStatus').textContent=e.message;$('joinStatus').classList.add('error');}finally{busy=false;$('joinStart').disabled=!$('joinConfirm').checked;}
  };
  $('recoverForm').onsubmit=async e=>{
   e.preventDefault();if(busy)return;busy=true;const token=$('recoverCode').value.trim();$('joinStatus').textContent='正在找回原任务…';
-  try{if(!/^[A-Za-z0-9_-]{32}$/.test(token))throw Error('恢复码格式不正确。');const r=await fetch(API+'/auth',{headers:{Authorization:'Bearer '+token}}),data=await r.json();if(!r.ok||data.access!=='claim')throw Error('恢复码无效，请联系研究者，不要重新报名。');enter(token);}catch(e){$('joinStatus').textContent=e.message;}finally{busy=false;}
+  try{if(!/^[A-Za-z0-9_-]{32}$/.test(token))throw Error('恢复码格式不正确。');const r=await SamApi.request(API+'/auth',{headers:{Authorization:'Bearer '+token}}),data=await r.json();if(!r.ok||data.access!=='claim')throw Error('恢复码无效，请联系研究者，不要重新报名。');enter(token);}catch(e){$('joinStatus').textContent=e.message;}finally{busy=false;}
  };
 })();

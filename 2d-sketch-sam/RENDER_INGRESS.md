@@ -15,6 +15,10 @@ No arbitrary URL proxying, cookies or client IP forwarding are supported. The or
 5. Add `sam-api.playerinmetaverse.tech` as a custom domain on this existing Render service. Follow Render's returned DNS/certificate instructions; do not change the apex or www records.
 6. Switch the sam-api DNS record only after Render confirms its domain setup. Verify valid HTTPS, the bridge health endpoint and the same non-enrolling API checks through the custom hostname.
 
-The frontend already uses `https://sam-api.playerinmetaverse.tech`; no frontend URL, stored recovery code or browser storage namespace needs to change.
+The frontend uses `https://sam-api.playerinmetaverse.tech` as its primary origin. `../sketch-sam/transport.js` automatically retries a network failure, primary timeout or HTML provider-block page once on the deployed Render ingress. JSON API authorization errors do not trigger fallback. The exact same token, authorization and request body are reused, preserving the existing service's idempotent join/submission behavior. No stored recovery code or browser storage namespace changes.
+
+The public Render bridge has passed health, non-enrolling invalid-join, unauthorized-auth/export, CORS and existing-service checks. The custom-domain reassignment remains pending manual Render account access and its DNS/certificate verification.
 
 Tests: `python -m unittest test_sam_proxy -v` (mock upstream only; no production enrollments or ratings).
+
+Transport checks: `node --test sketch-sam/transport.test.cjs` (mock fetch only; no production requests).

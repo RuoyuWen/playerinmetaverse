@@ -1,6 +1,5 @@
 (() => {
   'use strict';
-  const API='https://sam-api.playerinmetaverse.tech';
   const cfg=window.StudyConfig||{};
   const SLOT=cfg.cohort?'cohort-sam-online-access':'sketch-sam-online-access';
   const main=document.querySelector('main');
@@ -17,7 +16,7 @@
     if(!/^[A-Za-z0-9_-]{32}$/.test(code)){status.textContent='邀请码格式不正确，请使用完整邀请链接或重新输入。';return;}
     button.disabled=true;status.textContent='正在验证邀请码…';
     try{
-      const response=await fetch(API+(cfg.cohort?'/api/cohort/auth':'/api/auth'),{headers:{Authorization:`Bearer ${code}`}});
+      const response=await SamApi.request(cfg.cohort?'/api/cohort/auth':'/api/auth',{headers:{Authorization:`Bearer ${code}`}});
       const data=await response.json();if(!response.ok)throw new Error(data.error||'验证失败');
       key=code;try{sessionStorage.setItem(SLOT,key);}catch{}
       window.SketchAuth.role=data.role;
@@ -38,7 +37,7 @@
     }catch(error){status.textContent=error.message||'暂时无法连接，请稍后重试。';status.classList.add('error');}
     finally{button.disabled=false;}
   }
-  window.SketchAuth={ready,role:null,fetch:(url,options={})=>fetch(API+(cfg.cohort?url.replace(/^\/api\//,'/api/cohort/'):url),{...options,headers:{...options.headers,Authorization:`Bearer ${key}`}})};
+  window.SketchAuth={ready,role:null,fetch:(url,options={})=>SamApi.request(cfg.cohort?url.replace(/^\/api\//,'/api/cohort/'):url,{...options,headers:{...options.headers,Authorization:`Bearer ${key}`}})};
   document.getElementById('accessForm').onsubmit=e=>{e.preventDefault();login(document.getElementById('accessCode').value.trim());};
   const hash=new URLSearchParams(location.hash.slice(1));const invitation=hash.get('key');
   if(invitation)history.replaceState(null,'',location.pathname+location.search);
