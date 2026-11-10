@@ -7,6 +7,10 @@ desktop.ini
 *.tmp
 *.temp
 *.log
+__pycache__/
+.env
+.env.*
+sam-private/
 
 # 编辑器文件
 .vscode/
@@ -49,4 +53,4 @@ survey_submissions/
 # - script.js
 # - README.md
 # - CNAME
-# - assets/ (如果有的话) 
+# - assets/ (如果有的话)

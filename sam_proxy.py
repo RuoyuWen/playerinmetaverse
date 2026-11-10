@@ -1,6 +1,7 @@
-"""Fixed-destination SAM API ingress; durable data stays in the existing service."""
+"""SAM API ingress with a legacy bridge and a verified PostgreSQL cutover."""
 
 import logging
+import os
 
 import httpx
 from fastapi import APIRouter, Request, Response
@@ -52,6 +53,25 @@ async def forward_sam_request(request: Request):
             return JSONResponse({"error": "Request too large"}, status_code=413)
         body.extend(chunk)
 
+    if request.method == "POST" and os.getenv("SAM_WRITE_PAUSED") == "1":
+        return JSONResponse({"error": "数据迁移中，当前选择已保留，请稍后重试。"}, status_code=503,
+                            headers={"Cache-Control": "no-store", "Retry-After": "15"})
+    backend = os.getenv("SAM_BACKEND", "sites")
+    migration_prepared = False
+    if backend == "migrate":
+        from sam_backend.api import target_is_ready
+        try:
+            backend = "postgres" if await target_is_ready() else "sites"
+            migration_prepared = backend == "sites"
+        except Exception as exc:
+            logger.warning("SAM migration target unavailable (%s)", type(exc).__name__)
+            return unavailable()
+    if backend == "postgres":
+        from sam_backend.api import handle_request
+        return await handle_request(request, bytes(body))
+    if backend != "sites":
+        return unavailable()
+
     # Do not forward cookies, client IP headers, Host, or upstream CORS headers.
     headers = {
         name: request.headers[name]
@@ -80,7 +100,12 @@ async def forward_sam_request(request: Request):
         "Content-Type": content_type,
         "Cache-Control": "no-store",
         "X-Content-Type-Options": "nosniff",
+        "X-SAM-Ingress-Revision": "20261110-postgres-v1",
     }
+    if migration_prepared and request.url.path == "/api/sam/health" and upstream.is_success:
+        data = upstream.json()
+        data.update(migration_target="postgresql", migration_target_ready=False)
+        return JSONResponse(data, headers=response_headers)
     if "content-disposition" in upstream.headers:
         response_headers["Content-Disposition"] = upstream.headers["content-disposition"]
     return Response(content=upstream.content, status_code=upstream.status_code, headers=response_headers)
@@ -88,3 +113,9 @@ async def forward_sam_request(request: Request):
 
 for public_path, (method, _) in ROUTES.items():
     router.add_api_route(public_path, forward_sam_request, methods=[method], include_in_schema=False)
+
+
+@router.on_event("shutdown")
+async def shutdown_sam_connections():
+    from sam_backend.api import close_connections
+    await close_connections()
