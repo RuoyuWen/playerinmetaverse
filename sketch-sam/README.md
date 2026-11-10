@@ -28,3 +28,5 @@ Invitation keys, exported ratings and local databases must never be committed to
 每张展示原 Sketch、创作者解释及该 Rater 本人第一阶段的四项评分（只读）。解释从已授权的后台 session 返回，第一阶段未完成时服务端不返回解释或原评分。Valence / Arousal / Dominance / Confidence 需要重新选择，不预填原评分；可以维持原判断或调整。暂停续填使用独立的第二阶段草稿。
 
 复评分使用 `sketch-sam-stage2-explanations-v1`，解释版本为 `creator-explanations-20261110-v1`；保存到独立的 `sketch_stage2_ratings` 表，保留展示的解释原文、校验值和完整第一阶段评分快照。第一阶段已有数据保持原样。观察时长记录图片加载后、观察页可见的时间（包含阅读解释，不含评分页停留时间）。研究者结果页增加阶段选择，第二阶段长表和宽表都包含原评分与复评分。正式与测试数据分别保存；研究者测试第二阶段也需要先完成对应 Rater 的测试版第一阶段。此环节仅用于三位 Rater，不向 60 人的 2D / Sketch 问卷添加。
+
+验证记录：后台第 9 版已部署，新增表已确认，初始正式复评记录为 0。12 项后台测试与 7 项网络传输测试通过；本地模拟数据浏览器检查了入口解锁、只读原评分、空白复评分、提交下一张、暂停及草稿恢复、研究者阶段切换和前后评分显示。验证过程未新增正式参与者或正式评分。
