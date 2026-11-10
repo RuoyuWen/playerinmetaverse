@@ -18,9 +18,9 @@ from psycopg.rows import dict_row
 from psycopg.conninfo import conninfo_to_dict
 from psycopg_pool import AsyncConnectionPool, PoolTimeout
 
-from .config import (CODING, COHORT_PROTOCOL, EXPLANATION_VERSION, PARTICIPANTS, PROFILES,
-                     RATERS, SCORES, SKETCH_PROTOCOL, STAGE2_PROFILES, STAGE2_PROTOCOL,
-                     config, digest, sequence, validate_access, validate_catalog)
+from .config import (BASE_PARTICIPANTS, CODING, COHORT_PROTOCOL, EXPLANATION_VERSION, PARTICIPANTS, PROFILES,
+                     RATERS, REPLACEMENT_SOURCES, SCORES, SKETCH_PROTOCOL, STAGE2_PROFILES, STAGE2_PROTOCOL,
+                     config, digest, schedule_source, sequence, validate_access, validate_catalog)
 
 logger = logging.getLogger(__name__)
 HEADERS = {"Cache-Control": "no-store", "X-Content-Type-Options": "nosniff", "X-SAM-Ingress-Revision": "20261110-postgres-v1"}
@@ -100,6 +100,9 @@ class Study:
     def __init__(self, connection, catalog, access):
         self.db, self.catalog, self.access = connection, catalog, access
 
+    def schedule(self, participant):
+        return self.catalog["schedules"][schedule_source(participant)]
+
     async def all(self, statement, params=()):
         return await (await self.db.execute(statement, params)).fetchall()
 
@@ -166,9 +169,20 @@ class Study:
         candidate = await self.one("""SELECT candidate.participant FROM unnest(%s::text[]) AS candidate(participant)
             WHERE NOT EXISTS (SELECT 1 FROM cohort_claims c WHERE c.participant=candidate.participant)
             AND NOT EXISTS (SELECT 1 FROM cohort_ratings r WHERE r.mode='production' AND r.participant=candidate.participant)
-            ORDER BY candidate.participant LIMIT 1""", (PARTICIPANTS,))
+            ORDER BY candidate.participant LIMIT 1""", (BASE_PARTICIPANTS,))
         if not candidate:
-            return reply({"error": "本次研究的 60 个名额已领完。已领取者请使用原浏览器或自己的恢复码继续，不要重新报名。", "full": True}, 409)
+            # Extra slots reuse the schedule of an original participant who has not finished yet,
+            # least-progressed first; a slot whose source has since finished is not handed out.
+            candidate = await self.one("""SELECT slot.participant FROM unnest(%s::text[], %s::text[]) AS slot(participant, source)
+                CROSS JOIN LATERAL (SELECT count(*) AS n FROM cohort_ratings r
+                    WHERE r.mode='production' AND r.participant=slot.source) AS progress
+                WHERE progress.n < 12
+                AND NOT EXISTS (SELECT 1 FROM cohort_claims c WHERE c.participant=slot.participant)
+                AND NOT EXISTS (SELECT 1 FROM cohort_ratings r WHERE r.mode='production' AND r.participant=slot.participant)
+                ORDER BY progress.n, slot.participant LIMIT 1""",
+                (list(REPLACEMENT_SOURCES), list(REPLACEMENT_SOURCES.values())))
+        if not candidate:
+            return reply({"error": "本次研究的名额已领完。已领取者请使用原浏览器或自己的恢复码继续，不要重新报名。", "full": True}, 409)
         saved = await self.one("""INSERT INTO cohort_claims (participant,token_hash,claimed_at_utc)
             VALUES (%s,%s,%s) ON CONFLICT DO NOTHING RETURNING participant""", (candidate["participant"], token_hash, now()))
         if not saved:
@@ -225,7 +239,7 @@ class Study:
                 return failure("只能进入自己的任务；研究者请使用测试模式。", 403)
             data = await self.rows(active, mode, identity)
             if family == "cohort":
-                trials = self.catalog["schedules"][identity]
+                trials = self.schedule(identity)
                 return reply({**cfg, "sequence": [t["profile"] for t in trials], "trials": trials,
                               "completed": [row["profile"] for row in data]})
             order = sequence(identity)
@@ -243,15 +257,18 @@ class Study:
                 return failure("仅研究者可查看或下载评分结果。", 403)
             if family == "cohort" and endpoint == "/assignments.csv":
                 data = [{"participant": p, "trial_index": i + 1, **trial, "protocol": COHORT_PROTOCOL}
-                        for p in PARTICIPANTS for i, trial in enumerate(self.catalog["schedules"][p])]
-                return csv_response(data, ["participant", "trial_index", "profile", "condition", "protocol"], "assignment", "cohort")
+                        for p in PARTICIPANTS for i, trial in enumerate(self.schedule(p))]
+                for row in data:
+                    row["schedule_source"] = schedule_source(row["participant"])
+                return csv_response(data, ["participant", "trial_index", "profile", "condition", "protocol", "schedule_source"], "assignment", "cohort")
             if endpoint == "/assignments.csv":
                 return failure("Not found", 404)
             data = await self.rows(active, mode)
             if endpoint == "/results":
                 if family == "cohort":
                     claims = await self.all("SELECT participant,claimed_at_utc FROM cohort_claims ORDER BY participant")
-                    return reply({**cfg, "participants": identities, "rows": data, "claims": claims})
+                    return reply({**cfg, "participants": identities, "rows": data, "claims": claims,
+                                  "base_participants": BASE_PARTICIPANTS, "replacements": REPLACEMENT_SOURCES})
                 return reply({**cfg, "raters": RATERS, "rows": data})
             return self.export(data, family, phase2, mode, query(request, "layout", "long"))
         return failure("Not found", 404)
@@ -278,7 +295,7 @@ class Study:
             return failure("Invalid viewing duration")
         active = "stage2" if phase2 else family
         if family == "cohort":
-            trials = self.catalog["schedules"][identity]
+            trials = self.schedule(identity)
             order = [t["profile"] for t in trials]
             trial = next((t for t in trials if t["profile"] == profile), None)
             if not trial or trial["condition"] != body.get("condition"):
@@ -326,8 +343,10 @@ class Study:
     def export(self, data, family, phase2, mode, layout):
         if family == "cohort":
             fields = ["mode", "participant", "trial_index", "profile", "condition", *SCORES, "view_ms", "audio_ms",
-                      "audio_version", "submitted_at_utc", "protocol", "image_sha256", "audio_sha256", "dominance_coding"]
-            return csv_response([{**r, "dominance_coding": CODING} for r in data], fields, mode, "cohort")
+                      "audio_version", "submitted_at_utc", "protocol", "image_sha256", "audio_sha256", "dominance_coding",
+                      "schedule_source"]
+            return csv_response([{**r, "dominance_coding": CODING, "schedule_source": schedule_source(r["participant"])}
+                                 for r in data], fields, mode, "cohort")
         if layout not in ("long", "wide"):
             return failure("Invalid layout")
         if phase2:

@@ -8,6 +8,10 @@ All SAM entry points now show images only: no player, headphone instruction, aud
 
 Use `https://playerinmetaverse.tech/2d-sketch-sam/demo.html` for testing without reserving a slot. It uses the same image viewer and SAM UI with a separate browser-local adapter, not `auth.js`. It makes no research-backend requests, stores only demo-local progress (`self-scape-demo-local-silent-v2` / `demo-local-silent-v2` draft namespace), and can reset without clearing real credentials or drafts. No invitation or ADMIN key is required. Demo ratings are not cloud-saved or available in researcher exports.
 
+## Extra slots S61–S74 (2026-11-11)
+
+All 60 original slots had been claimed, and 14 claimants had not finished (S04, S06, S08, S11, S15, S16, S30, S39, S41, S44, S45, S46, S50, S55). The group link now hands out 14 extra slots, S61–S74, each reusing the fixed schedule of one of these participants. When a new person joins after the original 60 are gone, the server gives out the extra slot whose source participant has the least progress; a slot whose source has since finished all 12 trials is not handed out. Original claimants keep their tokens and can still finish. A schedule may therefore end up completed twice; the cohort export and assignments CSV include `schedule_source` so duplicates can be filtered before analysis. Assignments of S01–S60 and all saved scores are unchanged.
+
 ## Group recruitment
 
 Share `https://playerinmetaverse.tech/2d-sketch-sam/join.html`. Page previews and GET requests do not allocate slots. Only an explicit confirmed button click POSTs a browser-generated 192-bit recovery token. An IndexedDB read/write transaction creates one token across simultaneous tabs; a single atomic SQL statement reserves one unused participant. The server stores only its SHA256. Repeated requests and returning browsers recover the same task, even when capacity is full. Already-started production tasks are excluded from allocation. Claim records are never auto-recycled. The original 60 schedules and SAM scales stay unchanged.

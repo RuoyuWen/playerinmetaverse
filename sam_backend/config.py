@@ -4,7 +4,12 @@ import hashlib
 
 RATERS = ["R1", "R2", "R3"]
 PROFILES = [f"P{i}" for i in range(1, 25)]
-PARTICIPANTS = [f"S{i:02}" for i in range(1, 61)]
+BASE_PARTICIPANTS = [f"S{i:02}" for i in range(1, 61)]
+# Extra group-link slots opened on 2026-11-11 (NZDT). Each reuses the fixed schedule of a base
+# participant who had claimed but not finished. Both copies may finish; the researcher filters later.
+REPLACEMENT_SOURCES = {f"S{61 + i}": source for i, source in enumerate(
+    ["S04", "S06", "S08", "S11", "S15", "S16", "S30", "S39", "S41", "S44", "S45", "S46", "S50", "S55"])}
+PARTICIPANTS = BASE_PARTICIPANTS + list(REPLACEMENT_SOURCES)
 SCORES = ["valence", "arousal", "dominance", "confidence"]
 STAGE2_PROFILES = ["P1", "P2", "P3", "P5", "P12", "P22", "P24"]
 SHUFFLE_SEED = "sketch-sam-v1-low-to-high-control"
@@ -17,6 +22,10 @@ CODING = "1=Low control;9=High control"
 
 def digest(value):
     return hashlib.sha256(value.encode("utf-8")).hexdigest()
+
+
+def schedule_source(participant):
+    return REPLACEMENT_SOURCES.get(participant, participant)
 
 
 def sequence(rater):
@@ -32,7 +41,7 @@ def validate_catalog(catalog):
     if not isinstance(catalog, dict) or any(catalog.get(k) != v for k, v in expected.items()):
         raise ValueError("SAM protocol configuration mismatch")
     schedules = catalog.get("schedules", {})
-    if set(schedules) != set(PARTICIPANTS):
+    if set(schedules) != set(BASE_PARTICIPANTS):
         raise ValueError("SAM participant schedules are incomplete")
     allocations = {(p, c): 0 for p in PROFILES for c in ("2D", "Sketch")}
     for trials in schedules.values():

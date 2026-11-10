@@ -18,7 +18,8 @@ from psycopg.conninfo import conninfo_to_dict, make_conninfo
 from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb
 
-from sam_backend.config import (COHORT_PROTOCOL, EXPLANATION_VERSION, PARTICIPANTS, PROFILES,
+from sam_backend.config import (BASE_PARTICIPANTS, COHORT_PROTOCOL, EXPLANATION_VERSION, PARTICIPANTS, PROFILES,
+                                REPLACEMENT_SOURCES,
                                 RATERS, SHUFFLE_SEED, SKETCH_PROTOCOL, STAGE2_PROFILES,
                                 STAGE2_PROTOCOL, digest, sequence, validate_catalog)
 from sam_backend.migration import checksum, import_bundle, normalized
@@ -33,7 +34,7 @@ KEYS = {role: role.ljust(32, "a") for role in RATERS + ["ADMIN"]}
 
 def catalog_fixture():
     schedules = {}
-    for i, participant in enumerate(PARTICIPANTS):
+    for i, participant in enumerate(BASE_PARTICIPANTS):
         schedules[participant] = [{"profile": PROFILES[(2 * (i % 12) + j) % 24],
                                   "condition": "2D" if (j + i % 12 + i // 12) % 2 == 0 else "Sketch"} for j in range(12)]
     return {"shuffle_seed": SHUFFLE_SEED, "sketch_protocol": SKETCH_PROTOCOL, "cohort_protocol": COHORT_PROTOCOL,
@@ -118,20 +119,49 @@ class PostgresStudyTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.count("sketch_ratings"), 0)
 
     async def test_concurrent_claims_capacity_and_recovery_never_duplicate(self):
-        tokens = [f"claim{i}".ljust(32, "x") for i in range(75)]
+        tokens = [f"claim{i}".ljust(32, "x") for i in range(80)]
         responses = await asyncio.gather(*(self.call("/api/cohort/join", body={"token": token}) for token in tokens))
         successes = [(token, response.json()["role"]) for token, response in zip(tokens, responses) if response.status_code == 200]
-        self.assertEqual(len(successes), 60)
-        self.assertEqual(len({role for _, role in successes}), 60)
-        self.assertEqual(sum(r.status_code == 409 for r in responses), 15)
-        self.assertEqual(self.count("cohort_claims"), 60)
+        self.assertEqual(len(successes), 74)
+        self.assertEqual({role for _, role in successes}, set(PARTICIPANTS))
+        self.assertEqual(sum(r.status_code == 409 for r in responses), 6)
+        self.assertEqual(self.count("cohort_claims"), 74)
         token, participant = successes[0]
         retries = await asyncio.gather(*(self.call("/api/cohort/join", body={"token": token}) for _ in range(12)))
         self.assertTrue(all(r.json()["role"] == participant for r in retries))
         auth = await self.call("/api/cohort/auth", token=token)
         self.assertEqual(auth.json(), {"ok": True, "role": participant, "access": "claim"})
         self.assertEqual((await self.call("/api/cohort/results", token=token)).status_code, 403)
-        self.assertEqual(self.count("cohort_claims"), 60)
+        self.assertEqual(self.count("cohort_claims"), 74)
+
+    async def test_replacement_slots_reuse_unfinished_schedules_least_progress_first(self):
+        for i in range(60):
+            self.assertEqual((await self.call("/api/cohort/join", body={"token": f"base{i}".ljust(32, "b")})).status_code, 200)
+        sources = dict(REPLACEMENT_SOURCES)
+        finished, partial = sources["S61"], sources["S62"]
+        with self.connect() as connection:
+            for participant, n in ((finished, 12), (partial, 3)):
+                for index, trial in enumerate(self.catalog["schedules"][participant][:n]):
+                    connection.execute("INSERT INTO cohort_ratings VALUES ('production',%s,%s,%s,%s,5,4,6,7,1000,0,'none','t',%s,'h','')",
+                                       (participant, trial["profile"], trial["condition"], index + 1, COHORT_PROTOCOL))
+        roles = []
+        for i in range(14):
+            response = await self.call("/api/cohort/join", body={"token": f"extra{i}".ljust(32, "e")})
+            roles.append(response.json().get("role") if response.status_code == 200 else None)
+        self.assertNotIn("S61", roles)
+        self.assertEqual(roles[-1], None)
+        self.assertEqual(roles[-2], "S62")
+        token = "extra0".ljust(32, "e")
+        session = (await self.call(f"/api/cohort/session?rater={roles[0]}", token=token)).json()
+        self.assertEqual(session["trials"], self.catalog["schedules"][sources[roles[0]]])
+        trial = session["trials"][0]
+        body = self.payload(roles[0], trial["profile"], COHORT_PROTOCOL, condition=trial["condition"])
+        self.assertEqual((await self.call("/api/cohort/submit", token=token, body=body)).status_code, 200)
+        results = (await self.call("/api/cohort/results", "ADMIN")).json()
+        self.assertEqual(results["replacements"], sources)
+        export = (await self.call("/api/cohort/export.csv", "ADMIN")).text
+        self.assertIn(f'"{roles[0]}"', export)
+        self.assertIn(f'"{sources[roles[0]]}"', export.splitlines()[-1])
 
     async def test_same_token_simultaneous_join_occupies_one_slot_and_skips_started_tasks(self):
         token = "same-token".ljust(32, "x")
@@ -157,12 +187,12 @@ class PostgresStudyTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual((await self.call("/api/session?rater=R1")).json()["completed"], [first, second])
 
     async def test_all_720_cohort_scores_resume_and_authorization(self):
-        for participant in PARTICIPANTS:
+        for participant in BASE_PARTICIPANTS:
             token = ("legacy-" + participant).ljust(32, "z")
             self.access["cohort"][participant] = digest(token)
         with self.connect() as connection:
             connection.execute("UPDATE sam_settings SET document=%s WHERE key='access_hashes'", (Jsonb(self.access),))
-        for participant in PARTICIPANTS:
+        for participant in BASE_PARTICIPANTS:
             token = ("legacy-" + participant).ljust(32, "z")
             for trial in self.catalog["schedules"][participant]:
                 body = self.payload(participant, trial["profile"], COHORT_PROTOCOL, condition=trial["condition"])
@@ -177,7 +207,7 @@ class PostgresStudyTests(unittest.IsolatedAsyncioTestCase):
         self.assertNotIn("token_hash", response.text)
         csv = await self.call("/api/cohort/export.csv", "ADMIN")
         self.assertEqual(len(csv.text.strip().splitlines()), 721)
-        self.assertEqual(len((await self.call("/api/cohort/assignments.csv", "ADMIN")).text.strip().splitlines()), 721)
+        self.assertEqual(len((await self.call("/api/cohort/assignments.csv", "ADMIN")).text.strip().splitlines()), 1 + 12 * 74)
 
     async def test_all_standalone_and_second_stage_scores_preserve_originals_and_export(self):
         self.assertEqual((await self.call("/api/session?stage=2&rater=R1")).status_code, 403)
