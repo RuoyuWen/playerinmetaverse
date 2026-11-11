@@ -2,8 +2,9 @@
   const $ = id => document.getElementById(id);
   let loading = false;
   const stage=()=>$('stage').value;
-  const expert=()=>$('instrument').value==='expert-dual-v1';
-  const apiPath=path=>path+(path.includes('?')?'&':'?')+'stage='+stage()+(expert()?'&instrument=expert-dual-v1':'');
+  const expert=()=>$('instrument').value!=='legacy';
+  const condition=()=>$('instrument').value==='expert-2d-dual-v1'?'2D':'Sketch';
+  const apiPath=path=>path+(path.includes('?')?'&':'?')+'stage='+stage()+(expert()?'&instrument='+encodeURIComponent($('instrument').value):'');
   if(new URLSearchParams(location.search).get('stage')==='2')$('stage').value='2';
   async function load() {
     if (loading) return; loading = true;
@@ -19,7 +20,7 @@
       $('overview').textContent=second?'第二阶段：7 份作品 × 3 位 Rater，共 21 份复评。每格显示第一阶段评分与第二阶段评分。':'第一阶段：24 张 Sketch × 3 位 Rater，共 72 份评价。';
       $('tableNote').textContent=second?'每格上行为第一阶段评分，下行为第二阶段评分；两行均依次为 Valence / Arousal / Dominance / Confidence。CSV 同时保留原评分、复评分和展示的解释。':'表格每格依次为 Valence / Arousal / Dominance / Confidence。长表为每次评价一行；宽表为每张 Sketch 一行、三位 Rater 的评分分别列出，空值表示未评价。';
       if(expert()){
-        $('overview').textContent=second?'新版第二阶段：7 份作品 × 3 位专家，共 21 份创作者意图复评。':'新版第一阶段：24 张 × 3 位专家；每张两组 SAM、Confidence 和两道文字题。';
+        $('overview').textContent=second?`${condition()} 第二阶段：${total} 份作品 × 3 位专家，共 ${total*3} 份创作者意图复评。`:`${condition()} 第一阶段：24 张 × 3 位专家；每张两组 SAM、Confidence 和两道文字题。`;
         $('tableNote').textContent=second?'两行均为创作者意图的 Valence / Arousal / Dominance / Confidence。CSV 另含完整新版第一阶段快照和解释。':'场景氛围：V / A / D；创作者意图：V / A / D / Confidence。展开查看文字回答；CSV 保留两组分数、文字与呈现顺序。';
       }
       for (const rater of data.raters) {
@@ -53,7 +54,7 @@
       }
       const silent=data.rows.filter(r=>!r.audio_version||r.audio_version==='none').length;
       $('status').textContent = second?`${mode==='test'?'测试':'正式'}第二阶段：${data.rows.length} / 21 份已保存。第一阶段评分与复评分分别保留。`:`${mode === 'test' ? '测试' : '正式'}第一阶段：${data.rows.length} / 72 份已保存；其中仅图片 ${silent} 份，有声版 ${data.rows.length-silent} 份。CSV 已分别标记，请勿直接混合分析。`;
-          if(expert())$('status').textContent=`${mode==='test'?'测试':'正式'}新版第 ${stage()} 阶段：${data.rows.length} / ${second?21:72} 份已保存。旧版记录单独保留。`;
+          if(expert())$('status').textContent=`${mode==='test'?'测试':'正式'} ${condition()} 第 ${stage()} 阶段：${data.rows.length} / ${total*3} 份已保存。其他版本记录单独保留。`;
     } catch (error) { $('status').textContent = error.message; $('status').classList.add('error'); }
     finally { loading = false; $('refresh').disabled = false; $('mode').disabled = false; $('stage').disabled = false; $('instrument').disabled=false; }
   }
@@ -67,7 +68,7 @@
         const response=await window.SketchAuth.fetch(apiPath(`/api/export.csv?mode=${mode}&layout=${layout}`));
         if(!response.ok)throw new Error((await response.json()).error||'导出失败');
         const url=URL.createObjectURL(await response.blob());const link=document.createElement('a');
-        link.href=url;link.download=`${expert()?'expert_dual':'sketch_sam_legacy'}_stage${selectedStage}_${mode}_${layout}.csv`;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+        link.href=url;link.download=`${expert()?$('instrument').value:'sketch_sam_legacy'}_stage${selectedStage}_${mode}_${layout}.csv`;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
       }catch(error){$('status').textContent=error.message;$('status').classList.add('error');}
     });
   }

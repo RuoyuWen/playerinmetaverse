@@ -1,7 +1,8 @@
 (() => {
   'use strict';
   const $ = id => document.getElementById(id);
-  const cfg=window.StudyConfig||{},stage2=cfg.stage2===true&&!cfg.cohort,total=cfg.cohort?12:stage2?7:24;
+  const cfg=window.StudyConfig||{},stage2=cfg.stage2===true;
+  let total=stage2?11:24;
   const audioVersion='none';
   const intendedKeys=['intended_valence','intended_arousal','intended_dominance'];
   const atmosphereKeys=['atmosphere_valence','atmosphere_arousal','atmosphere_dominance'];
@@ -12,7 +13,7 @@
   let prefetchedImage = null;
   const state = { mode: 'production', rater: null, protocol: null, sequence: [], completed: [], profile: null,
     answers: {}, viewMs: 0, viewingSince: null, busy: false, screen: 'home', loaded: false,
-    trials:[],condition:'Sketch',contexts:{},explanationVersion:null,questionOrders:{},groupStep:0 };
+    trials:[],condition:'2D',contexts:{},explanationVersion:null,questionOrders:{},groupStep:0 };
   const stage2Entry=!cfg.cohort&&!stage2?document.createElement('section'):null;
   if(stage2Entry){stage2Entry.className='home-guide hidden';$('raterGrid').after(stage2Entry);}
   function secondStageUrl(rater){return `stage2.html?rater=${encodeURIComponent(rater)}&mode=${state.mode}`;}
@@ -40,14 +41,15 @@
   const homeGuide=document.createElement('section');homeGuide.className='home-guide';homeGuide.setAttribute('aria-labelledby','homeGuideTitle');
   homeGuide.innerHTML='<h2 id="homeGuideTitle">每张图片：两组情绪评价与补充回答</h2><p>分别判断场景本身传达的情绪氛围，以及创作者希望表达的情绪。两组问题分步显示，请根据当前问题独立作答。每组均填写 Valence、Arousal、Dominance（1–9）。</p><p>随后填写你对创作者意图判断的 Confidence（1–7）和两道文字题。个人意义无法判断时可直接说明。每张提交后保存，可暂停续填。</p>';
   $('raterGrid').before(homeGuide);
-  if(stage2)homeGuide.innerHTML='<h2>阅读解释后，重新判断创作者意图</h2><p>本阶段包含 7 份作品。阅读创作者解释，回顾你本人第一阶段对创作者意图的评分，然后重新填写 Valence、Arousal、Dominance（1–9）和 Confidence（1–7）。</p><p>四项均需重新选择，可以保持或调整原判断。新评分单独保存。</p>';
+  if(stage2)homeGuide.innerHTML='<h2>阅读解释后，重新判断创作者意图</h2><p>本阶段包含 11 份作品。阅读创作者解释，回顾你本人第一阶段对创作者意图的评分，然后重新填写 Valence、Arousal、Dominance（1–9）和 Confidence（1–7）。</p><p>四项均需重新选择，可以保持或调整原判断。新评分单独保存。</p>';
   document.querySelector('.rating-instruction').textContent=stage2?'阅读解释后，重新判断创作者希望表达的情绪。四项均需重新选择。':'请按当前问题完成两组 SAM，再填写判断信心和两道文字题。';
   async function api(url, options) {
-    url+=(url.includes('?')?'&':'?')+'instrument=expert-dual-v1';
+    url+=(url.includes('?')?'&':'?')+'instrument=expert-2d-dual-v1';
     if(stage2)url+=(url.includes('?')?'&':'?')+'stage=2';
     const response = await window.SketchAuth.fetch(url, options);
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || '请求失败');
+    if((options?.method||'GET')==='GET'&&(data.instrument!=='expert-2d-dual-v1'||data.condition!=='2D'))throw new Error('问卷版本正在更新，请稍后刷新。');
     return data;
   }
   function status(id, message = '', error = false) { $(id).textContent = message; $(id).classList.toggle('error', error); }
@@ -88,7 +90,7 @@
     } catch { /* An invalid local draft does not change server progress. */ }
   }
   function imageSource(profile, condition) {
-    return condition === '2D' ? `../study-media/2d/${profile}.png` : `${assetBase}/sketches/${profile}.png`;
+    return `../study-media/2d/${profile}.png`;
   }
   function clearPrefetch() {
     if (prefetchedImage) prefetchedImage.removeAttribute('src');
@@ -97,7 +99,7 @@
   function preloadNextImage() {
     const profile = state.sequence.find(p => p !== state.profile && !state.completed.includes(p));
     if (!profile) { clearPrefetch(); return; }
-    const condition = state.trials.find(t => t.profile === profile)?.condition || 'Sketch';
+    const condition = state.trials.find(t => t.profile === profile)?.condition || '2D';
     const src = imageSource(profile, condition);
     if (prefetchedImage?.getAttribute('src') === src) return;
     clearPrefetch();
@@ -117,7 +119,7 @@
     try {
       const data = await api(`/api/status?mode=${mode}`);
       if (mode !== state.mode || state.screen !== 'home') return;
-      state.protocol = data.protocol;
+      state.protocol = data.protocol; total=data.total;
       dimensions[2].captions = [data.dominance_low,'','Neutral','',data.dominance_high];
       for (const [index,rater] of data.raters.entries()) {
         const done = data.counts[rater];
@@ -129,7 +131,7 @@
           button.querySelector('.card-action').textContent='完成第一阶段后解锁';
         }
         if(stage2Entry&&done===24){
-          if(!stage2Entry.childElementCount){const title=document.createElement('h2');title.textContent='第二阶段评价';const note=document.createElement('p');note.textContent='阅读 7 位创作者的解释，并回顾你第一阶段的评分，然后再次评价。';stage2Entry.append(title,note);}
+          if(!stage2Entry.childElementCount){const title=document.createElement('h2');title.textContent='第二阶段评价';const note=document.createElement('p');note.textContent='阅读 11 位创作者的解释，并回顾你第一阶段的评分，然后再次评价。';stage2Entry.append(title,note);}
           const link=document.createElement('a');link.className='primary';link.href=secondStageUrl(rater);link.textContent=`${rater} · 进入第二阶段评价 →`;stage2Entry.append(link);stage2Entry.classList.remove('hidden');
         }
         button.addEventListener('click', () => select(rater)); $('raterGrid').appendChild(button);
@@ -144,7 +146,7 @@
     try {
       const data = await api(`/api/session?rater=${rater}&mode=${state.mode}`);
       state.rater = rater; state.sequence = data.sequence; state.completed = data.completed; state.protocol = data.protocol;
-      state.trials=data.trials||data.sequence.map(profile=>({profile,condition:'Sketch'}));
+      state.trials=data.trials||data.sequence.map(profile=>({profile,condition:'2D'}));
       state.questionOrders=data.question_orders||{};
       state.contexts=data.contexts||{};state.explanationVersion=data.explanation_version||null;
       next();
@@ -169,7 +171,7 @@
   function next() {
     state.profile = state.sequence.find(profile => !state.completed.includes(profile));
     if (!state.profile) { clearPrefetch(); $('doneMessage').textContent = `${state.rater} · ${total} / ${total} 张已完成`;const link=$('secondStageLink');if(link){link.href=secondStageUrl(state.rater);link.classList.remove('hidden');} show('done'); return; }
-    state.condition=state.trials.find(t=>t.profile===state.profile)?.condition||'Sketch';
+    state.condition=state.trials.find(t=>t.profile===state.profile)?.condition||'2D';
     state.answers = {}; state.groupStep=0; state.viewMs = 0; state.loaded = false; restoreDraft();
     renderExplanation();
     $('viewTag').textContent = tag(); $('ratingTag').textContent = tag();

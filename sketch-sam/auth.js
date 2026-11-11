@@ -8,6 +8,7 @@
   gate.innerHTML='<div class="eyebrow">SELF-SCAPE / INVITED RATERS</div><h1>Sketch 情绪评价</h1><p class="lead">请使用研究者发给你的邀请链接。</p><p class="muted">也可以输入邀请码。每位评价者只会进入自己的评分任务，提交后数据会保存在云端。</p><form id="accessForm" style="max-width:540px;margin-top:28px"><label for="accessCode">邀请码</label><input id="accessCode" type="password" autocomplete="off" spellcheck="false" required style="display:block;width:100%;padding:13px;margin:10px 0 18px;border:1px solid var(--line);border-radius:8px;font:inherit"><button class="primary" id="accessSubmit">进入评价</button><p id="accessStatus" class="status" role="status"></p></form>';
   main.before(gate);
   if(cfg.cohort&&!location.pathname.endsWith('results.html')){const join=document.createElement('a');join.href='join.html';join.className='primary';join.id='publicJoin';join.textContent='没有邀请码？开始或继续参与 →';gate.querySelector('#accessForm').before(join);}
+  if(cfg.expert2d)gate.querySelector('h1').textContent='2D 图片情绪评价';
   if(cfg.cohort){gate.querySelector('h1').textContent='2D / Sketch 情绪评价';gate.querySelector('.eyebrow').textContent='SELF-SCAPE / INVITED PARTICIPANTS';}
   let key='';let resolveReady;
   const ready=new Promise(resolve=>resolveReady=resolve);
