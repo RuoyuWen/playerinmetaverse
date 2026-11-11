@@ -171,16 +171,22 @@ class Study:
             AND NOT EXISTS (SELECT 1 FROM cohort_ratings r WHERE r.mode='production' AND r.participant=candidate.participant)
             ORDER BY candidate.participant LIMIT 1""", (BASE_PARTICIPANTS,))
         if not candidate:
-            # Extra slots reuse the schedule of an original participant who has not finished yet,
-            # least-progressed first; a slot whose source has since finished is not handed out.
-            candidate = await self.one("""SELECT slot.participant FROM unnest(%s::text[], %s::text[]) AS slot(participant, source)
-                CROSS JOIN LATERAL (SELECT count(*) AS n FROM cohort_ratings r
-                    WHERE r.mode='production' AND r.participant=slot.source) AS progress
-                WHERE progress.n < 12
+            # Extra slots reuse a schedule that nobody (original or earlier extra slot) has completed yet.
+            # The schedule with the least best progress goes first; completed schedules are skipped.
+            candidate = await self.one("""WITH holders AS (
+                    SELECT h.source, coalesce(max(r.n), 0) AS best
+                    FROM unnest(%s::text[], %s::text[]) AS h(participant, source)
+                    LEFT JOIN (SELECT participant, count(*) AS n FROM cohort_ratings
+                               WHERE mode='production' GROUP BY participant) r ON r.participant=h.participant
+                    GROUP BY h.source)
+                SELECT slot.participant FROM unnest(%s::text[], %s::text[]) AS slot(participant, source)
+                JOIN holders ON holders.source=slot.source
+                WHERE holders.best < 12
                 AND NOT EXISTS (SELECT 1 FROM cohort_claims c WHERE c.participant=slot.participant)
                 AND NOT EXISTS (SELECT 1 FROM cohort_ratings r WHERE r.mode='production' AND r.participant=slot.participant)
-                ORDER BY progress.n, slot.participant LIMIT 1""",
-                (list(REPLACEMENT_SOURCES), list(REPLACEMENT_SOURCES.values())))
+                ORDER BY holders.best, slot.participant LIMIT 1""",
+                (PARTICIPANTS, [schedule_source(p) for p in PARTICIPANTS],
+                 list(REPLACEMENT_SOURCES), list(REPLACEMENT_SOURCES.values())))
         if not candidate:
             return reply({"error": "本次研究的名额已领完。已领取者请使用原浏览器或自己的恢复码继续，不要重新报名。", "full": True}, 409)
         saved = await self.one("""INSERT INTO cohort_claims (participant,token_hash,claimed_at_utc)

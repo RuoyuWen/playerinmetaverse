@@ -5,10 +5,12 @@ import hashlib
 RATERS = ["R1", "R2", "R3"]
 PROFILES = [f"P{i}" for i in range(1, 25)]
 BASE_PARTICIPANTS = [f"S{i:02}" for i in range(1, 61)]
-# Extra group-link slots opened on 2026-11-11 (NZDT). Each reuses the fixed schedule of a base
-# participant who had claimed but not finished. Both copies may finish; the researcher filters later.
+# Extra group-link slots. Each reuses the fixed schedule of a base participant whose schedule had
+# not been completed by anyone. Several copies may finish; the researcher filters duplicates later.
+# Round 1 (2026-11-11 09:53 NZDT): S61-S74. Round 2 (2026-11-11 16:26 NZDT): S75-S79.
 REPLACEMENT_SOURCES = {f"S{61 + i}": source for i, source in enumerate(
-    ["S04", "S06", "S08", "S11", "S15", "S16", "S30", "S39", "S41", "S44", "S45", "S46", "S50", "S55"])}
+    ["S04", "S06", "S08", "S11", "S15", "S16", "S30", "S39", "S41", "S44", "S45", "S46", "S50", "S55",
+     "S11", "S30", "S44", "S46", "S50"])}
 PARTICIPANTS = BASE_PARTICIPANTS + list(REPLACEMENT_SOURCES)
 SCORES = ["valence", "arousal", "dominance", "confidence"]
 STAGE2_PROFILES = ["P1", "P2", "P3", "P5", "P12", "P22", "P24"]

@@ -122,35 +122,40 @@ class PostgresStudyTests(unittest.IsolatedAsyncioTestCase):
         tokens = [f"claim{i}".ljust(32, "x") for i in range(80)]
         responses = await asyncio.gather(*(self.call("/api/cohort/join", body={"token": token}) for token in tokens))
         successes = [(token, response.json()["role"]) for token, response in zip(tokens, responses) if response.status_code == 200]
-        self.assertEqual(len(successes), 74)
+        self.assertEqual(len(successes), len(PARTICIPANTS))
         self.assertEqual({role for _, role in successes}, set(PARTICIPANTS))
-        self.assertEqual(sum(r.status_code == 409 for r in responses), 6)
-        self.assertEqual(self.count("cohort_claims"), 74)
+        self.assertEqual(sum(r.status_code == 409 for r in responses), 80 - len(PARTICIPANTS))
+        self.assertEqual(self.count("cohort_claims"), len(PARTICIPANTS))
         token, participant = successes[0]
         retries = await asyncio.gather(*(self.call("/api/cohort/join", body={"token": token}) for _ in range(12)))
         self.assertTrue(all(r.json()["role"] == participant for r in retries))
         auth = await self.call("/api/cohort/auth", token=token)
         self.assertEqual(auth.json(), {"ok": True, "role": participant, "access": "claim"})
         self.assertEqual((await self.call("/api/cohort/results", token=token)).status_code, 403)
-        self.assertEqual(self.count("cohort_claims"), 74)
+        self.assertEqual(self.count("cohort_claims"), len(PARTICIPANTS))
 
     async def test_replacement_slots_reuse_unfinished_schedules_least_progress_first(self):
         for i in range(60):
             self.assertEqual((await self.call("/api/cohort/join", body={"token": f"base{i}".ljust(32, "b")})).status_code, 200)
         sources = dict(REPLACEMENT_SOURCES)
-        finished, partial = sources["S61"], sources["S62"]
+        # S04 finished by its original holder; S11 finished by its round-1 extra slot S64 (never claimed here);
+        # S06 partially done by its original holder.
+        done_by = {"S04": "S04", "S11": "S64"}
         with self.connect() as connection:
-            for participant, n in ((finished, 12), (partial, 3)):
-                for index, trial in enumerate(self.catalog["schedules"][participant][:n]):
+            for holder, schedule, n in (("S04", "S04", 12), ("S64", "S11", 12), ("S06", "S06", 3)):
+                for index, trial in enumerate(self.catalog["schedules"][schedule][:n]):
                     connection.execute("INSERT INTO cohort_ratings VALUES ('production',%s,%s,%s,%s,5,4,6,7,1000,0,'none','t',%s,'h','')",
-                                       (participant, trial["profile"], trial["condition"], index + 1, COHORT_PROTOCOL))
+                                       (holder, trial["profile"], trial["condition"], index + 1, COHORT_PROTOCOL))
+        expected = [p for p, src in sources.items() if src not in done_by and p not in done_by.values()]
         roles = []
-        for i in range(14):
+        for i in range(len(sources)):
             response = await self.call("/api/cohort/join", body={"token": f"extra{i}".ljust(32, "e")})
             roles.append(response.json().get("role") if response.status_code == 200 else None)
-        self.assertNotIn("S61", roles)
-        self.assertEqual(roles[-1], None)
-        self.assertEqual(roles[-2], "S62")
+        handed = [r for r in roles if r]
+        self.assertEqual(sorted(handed), sorted(expected))
+        self.assertTrue(all(r is None for r in roles[len(handed):]))
+        self.assertEqual(handed[-1], "S62")
+        self.assertNotIn("S75", handed)
         token = "extra0".ljust(32, "e")
         session = (await self.call(f"/api/cohort/session?rater={roles[0]}", token=token)).json()
         self.assertEqual(session["trials"], self.catalog["schedules"][sources[roles[0]]])
@@ -161,7 +166,8 @@ class PostgresStudyTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(results["replacements"], sources)
         export = (await self.call("/api/cohort/export.csv", "ADMIN")).text
         self.assertIn(f'"{roles[0]}"', export)
-        self.assertIn(f'"{sources[roles[0]]}"', export.splitlines()[-1])
+        line = next(l for l in export.splitlines() if l.startswith(f'"production","{roles[0]}"'))
+        self.assertTrue(line.endswith(f'"{sources[roles[0]]}"'))
 
     async def test_same_token_simultaneous_join_occupies_one_slot_and_skips_started_tasks(self):
         token = "same-token".ljust(32, "x")
@@ -207,7 +213,7 @@ class PostgresStudyTests(unittest.IsolatedAsyncioTestCase):
         self.assertNotIn("token_hash", response.text)
         csv = await self.call("/api/cohort/export.csv", "ADMIN")
         self.assertEqual(len(csv.text.strip().splitlines()), 721)
-        self.assertEqual(len((await self.call("/api/cohort/assignments.csv", "ADMIN")).text.strip().splitlines()), 1 + 12 * 74)
+        self.assertEqual(len((await self.call("/api/cohort/assignments.csv", "ADMIN")).text.strip().splitlines()), 1 + 12 * len(PARTICIPANTS))
 
     async def test_all_standalone_and_second_stage_scores_preserve_originals_and_export(self):
         self.assertEqual((await self.call("/api/session?stage=2&rater=R1")).status_code, 403)
