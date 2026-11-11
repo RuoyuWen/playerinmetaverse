@@ -61,6 +61,7 @@ class PostgresStudyTests(unittest.IsolatedAsyncioTestCase):
         with self.connect() as connection:
             connection.execute(Path("sam_backend/schema.sql").read_text(encoding="utf-8"))
             connection.execute(Path("sam_backend/expert_schema.sql").read_text(encoding="utf-8"))
+            connection.execute(Path("sam_backend/expert_2d_schema.sql").read_text(encoding="utf-8"))
             for key, value in [("catalog", self.catalog), ("access_hashes", self.access), ("migration", {"ready": True})]:
                 connection.execute("INSERT INTO sam_settings VALUES (%s,%s)", (key, Jsonb(value)))
         self.environment = patch.dict(os.environ, {"SAM_DATABASE_URL": self.dsn, "SAM_BACKEND": "postgres", "SAM_WRITE_PAUSED": "0"})

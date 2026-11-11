@@ -97,8 +97,9 @@ def complete(rows):
 
 
 class Study:
-    def __init__(self, connection, catalog, access):
+    def __init__(self, connection, catalog, access, expert_2d_explanations=None):
         self.db, self.catalog, self.access = connection, catalog, access
+        self.expert_2d_explanations = expert_2d_explanations
 
     def schedule(self, participant):
         return self.catalog["schedules"][schedule_source(participant)]
@@ -198,11 +199,11 @@ class Study:
     async def handle(self, request, raw):
         path = request.url.path
         if path == "/api/sam/health":
-            from .expert import PROTOCOL as expert_protocol
+            from .expert import PROTOCOL_2D as expert_protocol
             return reply({"ok": True, "service": "Sketch SAM", "protocol": SKETCH_PROTOCOL,
                           "cohort_protocol": COHORT_PROTOCOL, "stage2_protocol": STAGE2_PROTOCOL,
-                          "audio_version": "none", "storage": "postgresql", "revision": "20261111-expert-dual-v1",
-                          "expert_protocol": expert_protocol})
+                          "audio_version": "none", "storage": "postgresql", "revision": "20261111-expert-2d-v1",
+                          "expert_protocol": expert_protocol, "expert_condition": "2D", "expert_stage2_total": 11})
         family = "cohort" if path.startswith("/api/cohort/") else "sketch"
         endpoint = path.removeprefix("/api/cohort" if family == "cohort" else "/api")
         if family == "cohort" and endpoint == "/join" and request.method == "POST":
@@ -217,10 +218,11 @@ class Study:
                 result["access"] = "claim" if claim else "invitation"
             return reply(result)
         if family == "sketch" and query(request, "instrument") is not None:
-            from .expert import ExpertStudy, INSTRUMENT
-            if query(request, "instrument") != INSTRUMENT:
+            from .expert import ExpertStudy, Expert2DStudy, INSTRUMENT, INSTRUMENT_2D
+            if query(request, "instrument") not in (INSTRUMENT, INSTRUMENT_2D):
                 return failure("问卷版本不匹配，请刷新。")
-            return await ExpertStudy(self).handle(request, raw, role)
+            expert_class = Expert2DStudy if query(request, "instrument") == INSTRUMENT_2D else ExpertStudy
+            return await expert_class(self).handle(request, raw, role)
         mode = query(request, "mode", "production")
         if mode not in ("production", "test"):
             return failure("Invalid mode")
@@ -416,7 +418,7 @@ async def _database_request(request: Request, raw: bytes):
                 catalog, access = documents["catalog"], documents["access_hashes"]
                 validate_catalog(catalog)
                 validate_access(access)
-                result = await Study(connection, catalog, access).handle(request, raw)
+                result = await Study(connection, catalog, access, documents.get("expert_2d_explanations")).handle(request, raw)
             # Connection context commits successfully before the response is returned.
             return result
         except (psycopg.OperationalError, psycopg.errors.SerializationFailure, psycopg.errors.DeadlockDetected, PoolTimeout) as error:
