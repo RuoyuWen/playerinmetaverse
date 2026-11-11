@@ -14,14 +14,14 @@
     try {
       const response = await window.SketchAuth.fetch(apiPath(`/api/results?mode=${mode}`)); const data = await response.json();
       if (!response.ok) throw new Error(data.error || '读取失败');
-      $('coding').textContent = `SAM：1–9；Confidence：1–7。Dominance：1 = ${data.dominance_low}，9 = ${data.dominance_high}。`;
+      $('coding').textContent = `情绪评分：1–9；判断信心：1–7。控制感：1 = 低控制感，9 = 高控制感。`;
       $('metrics').replaceChildren(); $('rows').replaceChildren();
       const second=stage()==='2',profiles=second?data.profiles:Array.from({length:24},(_,n)=>`P${n+1}`),total=profiles.length;
       $('overview').textContent=second?'第二阶段：7 份作品 × 3 位 Rater，共 21 份复评。每格显示第一阶段评分与第二阶段评分。':'第一阶段：24 张 Sketch × 3 位 Rater，共 72 份评价。';
       $('tableNote').textContent=second?'每格上行为第一阶段评分，下行为第二阶段评分；两行均依次为 Valence / Arousal / Dominance / Confidence。CSV 同时保留原评分、复评分和展示的解释。':'表格每格依次为 Valence / Arousal / Dominance / Confidence。长表为每次评价一行；宽表为每张 Sketch 一行、三位 Rater 的评分分别列出，空值表示未评价。';
       if(expert()){
-        $('overview').textContent=second?`${condition()} 第二阶段：${total} 份作品 × 3 位专家，共 ${total*3} 份创作者意图复评。`:`${condition()} 第一阶段：24 张 × 3 位专家；每张两组 SAM、Confidence 和两道文字题。`;
-        $('tableNote').textContent=second?'两行均为创作者意图的 Valence / Arousal / Dominance / Confidence。CSV 另含完整新版第一阶段快照和解释。':'场景氛围：V / A / D；创作者意图：V / A / D / Confidence。展开查看文字回答；CSV 保留两组分数、文字与呈现顺序。';
+        $('overview').textContent=second?`${condition()} 第二阶段：${total} 份作品 × 3 位专家，共 ${total*3} 份创作者意图复评。`:`${condition()} 第一阶段：24 张 × 3 位专家；每张两组情绪评分，2D 版每组另含独立判断信心。`;
+        $('tableNote').textContent=second?'两行均为创作者意图的愉悦度／唤醒度／控制感／判断信心。CSV 另含完整新版第一阶段快照和解释。':(condition()==='2D'?'场景氛围与创作者意图均按愉悦度／唤醒度／控制感／判断信心显示。— 表示旧版未收集该项；CSV 保留两组分数与呈现顺序。':'场景氛围：V / A / D；创作者意图：V / A / D / Confidence。');
       }
       for (const rater of data.raters) {
         const count = data.rows.filter(row => row.rater === rater).length;
@@ -40,10 +40,10 @@
             const keys=expert()?['intended_valence','intended_arousal','intended_dominance','confidence']:['valence','arousal','dominance','confidence'];
             if(second){for(const [label,scores]of [['原评分',row.baseline],['复评分',row]]){const line=document.createElement('span');line.className='stage2-results';line.textContent=label+'：'+keys.map(k=>scores[k]).join(' / ');td.append(line);}}
             else if(expert()){
-              for(const [label,values]of [['场景氛围',['atmosphere_valence','atmosphere_arousal','atmosphere_dominance']],['创作者意图',keys]]){const line=document.createElement('span');line.className='stage2-results';line.textContent=label+'：'+values.map(k=>row[k]).join(' / ');td.append(line);}
+              for(const [label,values]of [['场景氛围',['atmosphere_valence','atmosphere_arousal','atmosphere_dominance',...(condition()==='2D'?['atmosphere_confidence']:[])]],['创作者意图',keys]]){const line=document.createElement('span');line.className='stage2-results';line.textContent=label+'：'+values.map(k=>row[k]??'—').join(' / ');td.append(line);}
               const order=document.createElement('span');order.className='stage2-results';order.textContent=row.question_order==='atmosphere_first'?'顺序：场景氛围 → 创作者意图':'顺序：创作者意图 → 场景氛围';td.append(order);
-              const details=document.createElement('details');const summary=document.createElement('summary');summary.textContent='查看文字回答';details.append(summary);
-              for(const [key,label]of [['visual_elements','视觉元素'],['personal_meaning','个人意义']]){const p=document.createElement('p');p.className='result-text';p.textContent=label+'：'+row[key];details.append(p);}td.append(details);
+              if(condition()!=='2D'){const details=document.createElement('details');const summary=document.createElement('summary');summary.textContent='查看文字回答';details.append(summary);
+              for(const [key,label]of [['visual_elements','视觉元素'],['personal_meaning','个人意义']]){const p=document.createElement('p');p.className='result-text';p.textContent=label+'：'+row[key];details.append(p);}td.append(details);}
             }else td.textContent=keys.map(k=>row[k]).join(' / ');
             count++;
           }

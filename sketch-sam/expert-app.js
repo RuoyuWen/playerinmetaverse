@@ -6,9 +6,9 @@
   const audioVersion='none';
   const intendedKeys=['intended_valence','intended_arousal','intended_dominance'];
   const atmosphereKeys=['atmosphere_valence','atmosphere_arousal','atmosphere_dominance'];
-  const textKeys=['visual_elements','personal_meaning'];
-  const numericKeys=[...intendedKeys,'confidence',...(stage2?[]:atmosphereKeys)];
-  const answerKeys=[...numericKeys,...(stage2?[]:textKeys)];
+
+  const numericKeys=[...intendedKeys,'confidence',...(stage2?[]:[...atmosphereKeys,'atmosphere_confidence'])];
+  const answerKeys=numericKeys;
   const assetBase=cfg.cohort?'../sketch-sam/assets':'./assets';
   let prefetchedImage = null;
   const state = { mode: 'production', rater: null, protocol: null, sequence: [], completed: [], profile: null,
@@ -19,17 +19,22 @@
   function secondStageUrl(rater){return `stage2.html?rater=${encodeURIComponent(rater)}&mode=${state.mode}`;}
   function updateFinish(){ $('finishView').disabled=!state.loaded; }
   const dimensions = [
-    {key:'valence', label:'Valence · 愉悦度', description:'How positive or negative is the emotion expressed in this sketch?', captions:['Unhappy','','Neutral','','Happy']},
-    {key:'arousal', label:'Arousal · 唤醒度', description:'How calm or activated is the emotion expressed in this sketch?', captions:['Calm','','Neutral','','Excited']},
-    {key:'dominance', label:'Dominance · 控制感', description:'How much control does the person seem to feel in the emotional experience expressed by this sketch?', captions:['Low control','','Neutral','','High control']}
+    {key:'valence',label:'愉悦度',english:'Valence',captions:['不愉快','','中性','','愉快'],englishCaptions:['Unhappy','','Neutral','','Happy']},
+    {key:'arousal',label:'唤醒度',english:'Arousal',captions:['平静','','中等','','激动'],englishCaptions:['Calm','','Neutral','','Excited']},
+    {key:'dominance',label:'控制感',english:'Dominance',captions:['低控制感','','中等','','高控制感'],englishCaptions:['Low control','','Neutral','','High control']}
   ];
+  function bilingual(element,chinese,english){
+    element.textContent=chinese;
+    const secondary=document.createElement('span');secondary.className='english-secondary';secondary.lang='en';secondary.textContent=english;element.append(secondary);return element;
+  }
+  function firstGroupKeys(){return state.questionOrders[state.profile]==='atmosphere_first'?[...atmosphereKeys,'atmosphere_confidence']:[...intendedKeys,'confidence'];}
   const ratingContext=document.createElement('aside');ratingContext.className='rating-context';
   const ratingFigure=document.querySelector('.rating-sketch');ratingFigure.before(ratingContext);ratingContext.append(ratingFigure);
   const guide=document.createElement('section');guide.className='sam-guide';guide.id='samGuide';guide.setAttribute('aria-labelledby','samGuideTitle');
-  guide.innerHTML=`<div class="eyebrow">HOW TO RATE / 填写指导</div><h2 id="samGuideTitle">分别判断三个情绪维度</h2><dl>
-    <div><dt>Valence · 愉悦度</dt><dd>1 很不愉快 · 5 中性 · 9 很愉快</dd></div>
-    <div><dt>Arousal · 唤醒度</dt><dd>1 很平静 · 5 中等 · 9 很激动<small>兴奋和紧张都可能是高唤醒。</small></dd></div>
-    <div><dt>Dominance · 控制感</dt><dd>1 很无助／被支配 · 5 中等 · 9 很有掌控感<small>判断情绪中的控制感，不是操作系统的能力。</small></dd></div>
+  guide.innerHTML=`<div class="eyebrow">填写指导</div><h2 id="samGuideTitle">分别判断三个情绪维度</h2><dl>
+    <div><dt>愉悦度<span class="english-secondary" lang="en">Valence</span></dt><dd>1 很不愉快 · 5 中性 · 9 很愉快</dd></div>
+    <div><dt>唤醒度<span class="english-secondary" lang="en">Arousal</span></dt><dd>1 很平静 · 5 中等 · 9 很激动<small>兴奋和紧张都可能是高唤醒。</small></dd></div>
+    <div><dt>控制感<span class="english-secondary" lang="en">Dominance</span></dt><dd>1 很无助／被支配 · 5 中等 · 9 很有掌控感<small>判断情绪中的控制感，不是操作系统的能力。</small></dd></div>
     </dl><p class="guide-footer">请根据当前显示的问题独立判断。小人对应 1、3、5、7、9；中间分值 2、4、6、8 也可选择。所有评分均不预填。</p>`;
   ratingContext.append(guide);
   const explanationPanels=stage2?[document.createElement('section'),document.createElement('section')]:[];
@@ -39,17 +44,17 @@
     ratingFigure.after(explanationPanels[1]);
   }
   const homeGuide=document.createElement('section');homeGuide.className='home-guide';homeGuide.setAttribute('aria-labelledby','homeGuideTitle');
-  homeGuide.innerHTML='<h2 id="homeGuideTitle">每张图片：两组情绪评价与补充回答</h2><p>分别判断场景本身传达的情绪氛围，以及创作者希望表达的情绪。两组问题分步显示，请根据当前问题独立作答。每组均填写 Valence、Arousal、Dominance（1–9）。</p><p>随后填写你对创作者意图判断的 Confidence（1–7）和两道文字题。个人意义无法判断时可直接说明。每张提交后保存，可暂停续填。</p>';
+  homeGuide.innerHTML='<h2 id="homeGuideTitle">每张图片：两组情绪与信心评价</h2><p>分别判断场景本身传达的情绪氛围，以及创作者希望表达的情绪。两组问题分步显示，请根据当前问题独立作答。每组均填写愉悦度、唤醒度、控制感（1–9），以及对本组判断的信心（1–7）。</p><p>两组信心分别作答，没有预设答案。每张提交后保存，可暂停续填。</p>';
   $('raterGrid').before(homeGuide);
-  if(stage2)homeGuide.innerHTML='<h2>阅读解释后，重新判断创作者意图</h2><p>本阶段包含 11 份作品。阅读创作者解释，回顾你本人第一阶段对创作者意图的评分，然后重新填写 Valence、Arousal、Dominance（1–9）和 Confidence（1–7）。</p><p>四项均需重新选择，可以保持或调整原判断。新评分单独保存。</p>';
-  document.querySelector('.rating-instruction').textContent=stage2?'阅读解释后，重新判断创作者希望表达的情绪。四项均需重新选择。':'请按当前问题完成两组 SAM，再填写判断信心和两道文字题。';
+  if(stage2)homeGuide.innerHTML='<h2>阅读解释后，重新判断创作者意图</h2><p>本阶段包含 11 份作品。阅读创作者解释，回顾你本人第一阶段对创作者意图的评分，然后重新填写 愉悦度、唤醒度、控制感（1–9）和判断信心（1–7）。</p><p>四项均需重新选择，可以保持或调整原判断。新评分单独保存。</p>';
+  document.querySelector('.rating-instruction').textContent=stage2?'阅读解释后，重新判断创作者希望表达的情绪。四项均需重新选择。':'请分别完成两组情绪评分和各自的判断信心。';
   async function api(url, options) {
     url+=(url.includes('?')?'&':'?')+'instrument=expert-2d-dual-v1';
     if(stage2)url+=(url.includes('?')?'&':'?')+'stage=2';
     const response = await window.SketchAuth.fetch(url, options);
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || '请求失败');
-    if((options?.method||'GET')==='GET'&&(data.instrument!=='expert-2d-dual-v1'||data.condition!=='2D'))throw new Error('问卷版本正在更新，请稍后刷新。');
+    if((options?.method||'GET')==='GET'&&(data.instrument!=='expert-2d-dual-v1'||data.condition!=='2D'||(!stage2&&data.protocol!=='2d-expert-atmosphere-intention-v2')))throw new Error('问卷版本正在更新，请稍后刷新。');
     return data;
   }
   function status(id, message = '', error = false) { $(id).textContent = message; $(id).classList.toggle('error', error); }
@@ -77,14 +82,16 @@
   }
   function restoreDraft() {
     try {
-      const draft = JSON.parse(localStorage.getItem(draftKey()) || 'null');
+      const previousKey=draftKey().replace('2d-expert-atmosphere-intention-v2','2d-expert-atmosphere-intention-v1');
+      const draft = JSON.parse(localStorage.getItem(draftKey()) || (!stage2?localStorage.getItem(previousKey):null) || 'null');
       if (draft) {
         for (const key of numericKeys) {
           const value = draft.answers?.[key];
-          if (Number.isInteger(value) && value >= 1 && value <= (key === 'confidence' ? 7 : 9)) state.answers[key] = value;
+          if (Number.isInteger(value) && value >= 1 && value <= (key.endsWith('confidence') ? 7 : 9)) state.answers[key] = value;
         }
-        for(const key of textKeys)if(typeof draft.answers?.[key]==='string')state.answers[key]=draft.answers[key].slice(0,2000);
+
         state.groupStep=draft.groupStep===1?1:0;
+        if(!stage2&&state.groupStep===1&&!firstGroupKeys().every(k=>state.answers[k]!=null))state.groupStep=0;
         if (Number.isFinite(draft.viewMs) && draft.viewMs >= 0) state.viewMs = Math.min(draft.viewMs,604800000);
       }
     } catch { /* An invalid local draft does not change server progress. */ }
@@ -120,11 +127,11 @@
       const data = await api(`/api/status?mode=${mode}`);
       if (mode !== state.mode || state.screen !== 'home') return;
       state.protocol = data.protocol; total=data.total;
-      dimensions[2].captions = [data.dominance_low,'','Neutral','',data.dominance_high];
+
       for (const [index,rater] of data.raters.entries()) {
         const done = data.counts[rater];
         const button = document.createElement('button'); button.className = 'rater-card'; button.dataset.rater = rater;
-        button.innerHTML = `<div class="rater-top"><span class="rater-number">${rater}</span><span aria-hidden="true">↗</span></div><h2>${cfg.cohort?'Participant':'Rater'} ${rater.slice(1)}</h2><p>${done} / ${total} 张已保存</p><progress max="${total}" value="${done}" aria-label="${rater} 已保存 ${done} 张"></progress><span class="card-action">${done === total ? '已完成 · 查看状态' : done ? '继续评价 →' : '开始评价 →'}</span>`;
+        button.innerHTML = `<div class="rater-top"><span class="rater-number">${rater}</span><span aria-hidden="true">↗</span></div><h2>评价者 ${rater.slice(1)}<span class="english-secondary" lang="en">Rater ${rater.slice(1)}</span></h2><p>${done} / ${total} 张已保存</p><progress max="${total}" value="${done}" aria-label="${rater} 已保存 ${done} 张"></progress><span class="card-action">${done === total ? '已完成 · 查看状态' : done ? '继续评价 →' : '开始评价 →'}</span>`;
         if(stage2&&!data.eligible[rater]){
           button.disabled=true;button.dataset.locked='true';
           button.querySelector('p').textContent=`第一阶段 ${data.first_stage_counts[rater]} / 24 张已保存`;
@@ -195,8 +202,8 @@
   function dimensionField(dimension, group) {
     const key=`${group}_${dimension.key}`;
     const field=document.createElement('fieldset');field.className='sam-dimension';
-    const legend=document.createElement('legend');legend.textContent=dimension.label;
-    const description=document.createElement('p');description.className='dimension-desc';
+    const legend=document.createElement('legend');bilingual(legend,dimension.label,dimension.english);
+    const description=document.createElement('p');description.className='dimension-desc english-secondary';description.lang='en';
     const subject=group==='atmosphere'?'the emotional atmosphere':'the emotion the creator intended to express';
     description.textContent={valence:`How unpleasant or pleasant is ${subject}?`,arousal:`How calm or activated is ${subject}?`,dominance:group==='atmosphere'?'How powerless or in control does the emotional atmosphere conveyed by this landscape feel?':'In the intended emotional experience, how powerless or in control does the creator seem to feel?'}[dimension.key];
     const help=document.createElement('p');help.className='dimension-help';help.id=key+'-help';help.textContent=dimension.help;field.setAttribute('aria-describedby',help.id);
@@ -204,10 +211,22 @@
     const radios=document.createElement('div');radios.className='sam-radios';
     for(let value=1;value<=9;value++){
       const cell=document.createElement('div');cell.className='sam-image-cell';
-      if(value%2){const img=document.createElement('img');img.src=`${assetBase}/sam/${dimension.key}${(value+1)/2}.png`;img.alt=`${dimension.label} ${value}`;const caption=document.createElement('span');caption.className='caption';caption.textContent=dimension.captions[(value-1)/2];cell.append(img,caption);}
+      if(value%2){const img=document.createElement('img');img.src=`${assetBase}/sam/${dimension.key}${(value+1)/2}.png`;img.alt=`${dimension.label} ${value}`;const caption=document.createElement('span');caption.className='caption';bilingual(caption,dimension.captions[(value-1)/2],dimension.englishCaptions[(value-1)/2]);cell.append(img,caption);}
       images.append(cell);radios.append(radio(key,value,dimension.label));
     }
-    field.append(legend,description,help,images,radios);return field;
+    field.append(legend,help,description,images,radios);return field;
+  }
+  function confidenceField(group){
+    const atmosphere=group==='atmosphere',key=atmosphere?'atmosphere_confidence':'confidence';
+    const label=atmosphere?'场景情绪判断信心':'创作者意图判断信心';
+    const field=document.createElement('fieldset');field.className='sam-dimension confidence-dimension';
+    const legend=bilingual(document.createElement('legend'),label,atmosphere?'Confidence in the emotional atmosphere':"Confidence in the creator's intended emotion");
+    const question=bilingual(document.createElement('p'),atmosphere?'你对场景情绪氛围的判断有多大把握？':'你对创作者希望表达的情绪判断有多大把握？',atmosphere?'How confident are you in your interpretation of the emotional atmosphere?':"How confident are you in your interpretation of the creator's intended emotion?");
+    question.className='confidence-question';
+    const help=document.createElement('p');help.className='dimension-help';help.id=key+'-help';help.textContent='1 = 完全没把握，4 = 中等，7 = 非常有把握。';field.setAttribute('aria-describedby',help.id);
+    const likert=document.createElement('div');likert.className='likert';for(let value=1;value<=7;value++)likert.append(radio(key,value,label));
+    const ends=document.createElement('div');ends.className='endpoints';ends.append(bilingual(document.createElement('span'),'1 = 完全没把握','Not at all confident'),bilingual(document.createElement('span'),'7 = 非常有把握','Extremely confident'));
+    field.append(legend,question,help,likert,ends);return field;
   }
   function renderSam() {
     $('ratingSketchImage').src=$('sketchImage').src;
@@ -215,39 +234,24 @@
     const groups=stage2?['intended']:(state.questionOrders[state.profile]==='atmosphere_first'?['atmosphere','intended']:['intended','atmosphere']);
     for(const [index,group]of groups.entries()){
       const section=document.createElement('section');section.className='expert-group';section.dataset.step=index;
-      const title=document.createElement('h2');title.textContent=group==='atmosphere'?'场景本身的情绪 · Emotional atmosphere':'创作者希望表达的情绪 · Intended emotion';
+      const title=document.createElement('h2');bilingual(title,group==='atmosphere'?'场景本身的情绪':'创作者希望表达的情绪',group==='atmosphere'?'Emotional atmosphere':'Intended emotion');
       const question=document.createElement('p');question.className='expert-question';
-      question.textContent=stage2?"After reading the creator's explanation, what emotion do you think the creator intended to express?":group==='atmosphere'?'What emotional atmosphere does this landscape convey to you?':'What emotion do you think the creator intended to express through this landscape?';
+      const englishQuestion=stage2?"After reading the creator's explanation, what emotion do you think the creator intended to express?":group==='atmosphere'?'What emotional atmosphere does this landscape convey to you?':'What emotion do you think the creator intended to express through this landscape?';
+      bilingual(question,stage2?'阅读创作者的解释后，你认为创作者希望表达怎样的情绪？':group==='atmosphere'?'这个场景向你传达了怎样的情绪氛围？':'你认为创作者希望通过这个场景表达怎样的情绪？',englishQuestion);
       const intro=document.createElement('p');intro.className='muted';intro.textContent=group==='atmosphere'?'请判断场景传达的情绪氛围。':'请推断创作者希望通过场景表达的情绪。';
-      section.append(title,question,intro);for(const dimension of dimensions)section.append(dimensionField(dimension,group));matrix.append(section);
+      section.append(title,question,intro);for(const dimension of dimensions)section.append(dimensionField(dimension,group));section.append(confidenceField(group));matrix.append(section);
     }
-    const additional=document.createElement('section');additional.id='expertAdditional';additional.className='expert-additional';
-    const confidence=document.createElement('fieldset');confidence.className='sam-dimension';
-    confidence.innerHTML='<legend>Confidence · 判断信心</legend><p class="dimension-desc">How confident are you in your interpretation of the creator\'s intended emotion?</p><p class="dimension-help" id="confidence-help">你对创作者意图的情绪判断有多确定？1 = 完全没把握，4 = 中等，7 = 非常有把握。</p>';
-    confidence.setAttribute('aria-describedby','confidence-help');const likert=document.createElement('div');likert.className='likert';
-    for(let value=1;value<=7;value++)likert.append(radio('confidence',value,'Confidence'));
-    const endpoints=document.createElement('div');endpoints.className='endpoints';endpoints.innerHTML='<span>1 = Not at all confident</span><span>7 = Extremely confident</span>';confidence.append(likert,endpoints);additional.append(confidence);
-    if(!stage2)for(const [key,label,help]of [
-      ['visual_elements','What visual elements influenced your interpretation?','哪些视觉元素影响了你的解读？'],
-      ['personal_meaning','What personal meaning, if any, do you think this landscape might have for the creator?','你认为这个场景对创作者可能有什么个人意义？如果无法判断或认为没有，可直接说明。']]){
-      const field=document.createElement('div');field.className='expert-text';const title=document.createElement('label');title.htmlFor=key;title.textContent=label;
-      const hint=document.createElement('p');hint.id=key+'-hint';hint.className='muted';hint.textContent=help+'（最多 2000 字）';
-      const input=document.createElement('textarea');input.id=key;input.name=key;input.maxLength=2000;input.rows=4;input.required=true;input.value=state.answers[key]||'';input.setAttribute('aria-describedby',hint.id);
-      input.addEventListener('input',()=>{state.answers[key]=input.value;persistDraft();updateSubmit();});field.append(title,hint,input);additional.append(field);
-    }
-    matrix.append(additional);
     if(!stage2){const navigation=document.createElement('div');navigation.className='expert-navigation';const back=document.createElement('button');back.id='previousGroup';back.type='button';back.className='secondary';back.textContent='← 返回上一组';back.onclick=()=>{state.groupStep=0;persistDraft();updateSubmit();matrix.scrollIntoView({block:'start'});};const next=document.createElement('button');next.id='nextGroup';next.type='button';next.className='primary';next.textContent='完成本组，进入下一组 →';next.onclick=()=>{state.groupStep=1;persistDraft();updateSubmit();matrix.scrollIntoView({block:'start'});};const progress=document.createElement('span');progress.id='groupProgress';progress.className='muted';navigation.append(back,progress,next);matrix.append(navigation);}
     status('ratingStatus');updateSubmit();
   }
   function updateSubmit() {
-    const answered=key=>key==='visual_elements'||key==='personal_meaning'?typeof state.answers[key]==='string'&&state.answers[key].trim().length>0:Number.isInteger(state.answers[key])&&state.answers[key]>=1&&state.answers[key]<=(key==='confidence'?7:9);
+    const answered=key=>Number.isInteger(state.answers[key])&&state.answers[key]>=1&&state.answers[key]<=(key.endsWith('confidence')?7:9);
     const count=answerKeys.filter(answered).length;
     $('answerCount').textContent=`已完成 ${count} / ${answerKeys.length} 项`;
     $('submit').disabled=count!==answerKeys.length||state.busy||(!stage2&&state.groupStep!==1);
     if(!stage2&&$('nextGroup')){
-      const first=state.questionOrders[state.profile]==='atmosphere_first'?atmosphereKeys:intendedKeys;
+      const first=firstGroupKeys();
       document.querySelectorAll('.expert-group').forEach(section=>section.classList.toggle('hidden',Number(section.dataset.step)!==state.groupStep));
-      $('expertAdditional').classList.toggle('hidden',state.groupStep!==1);
       $('nextGroup').classList.toggle('hidden',state.groupStep===1);$('nextGroup').disabled=state.busy||!first.every(answered);
       $('previousGroup').classList.toggle('hidden',state.groupStep===0);$('groupProgress').textContent=`SAM 组 ${state.groupStep+1} / 2`;
     }
@@ -277,11 +281,11 @@
   $('backHome').addEventListener('click',home);
   $('testMode').addEventListener('change', () => { state.mode = $('testMode').checked ? 'test' : 'production'; $('testBanner').classList.toggle('hidden',state.mode !== 'test'); home(); });
   window.addEventListener('pagehide', () => { if (state.profile) { stopClock(); persistDraft(); } });
-  
+
   dimensions[0].help='情绪有多不愉快或愉快？1 = 很不愉快，5 = 中性，9 = 很愉快。不是你对作品的喜好。';
-  
+
   dimensions[1].help='情绪有多平静或激动？1 = 很平静，5 = 中等，9 = 很激动。兴奋和紧张都可能是高唤醒。';
-  
+
   dimensions[2].help='在这种情绪中有多无助或有掌控感？1 = 很无助／被支配，5 = 中等，9 = 很有掌控感。不是操作系统的能力。';
   window.SketchAuth.ready.then(() => {
     if(stage2&&new URLSearchParams(location.search).get('mode')==='test'){

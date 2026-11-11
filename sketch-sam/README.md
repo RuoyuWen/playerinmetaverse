@@ -13,9 +13,9 @@ Each first-stage image has two sequential question groups:
 - “What emotional atmosphere does this landscape convey to you?” — atmosphere Valence / Arousal / Dominance (1–9).
 - “What emotion do you think the creator intended to express through this landscape?” — intended Valence / Arousal / Dominance (1–9).
 
-The server assigns and validates the order using profile number plus rater index parity. Each expert has 12 images in each order; each work has a 2/1 split across experts. The second group is hidden until all three first-group scores are chosen. The actual `question_order` is stored with the response. Scores are never prefilled.
+The server assigns and validates the order using profile number plus rater index parity. Each expert has 12 images in each order; each work has a 2/1 split across experts. The second group is hidden until all three first-group emotion scores and that group's confidence score are chosen. The actual `question_order` is stored with the response. Scores are never prefilled.
 
-After both groups, collect Confidence (1–7) for the intended-emotion interpretation, plus the exact visual-elements and possible-personal-meaning questions. Both text answers are required, up to 2000 characters each; “cannot infer” or “none” is valid for personal meaning. Unsubmitted numeric answers, text and group position are saved locally under the new protocol. Submit, resume and retries preserve the full response without overwriting saved data.
+Each group now includes its own 1–7 confidence judgment: `atmosphere_confidence` for scene atmosphere, and the existing `confidence` field for intended emotion. The first stage contains eight numeric answers in total. Questions, dimension labels and captions present Chinese prominently with smaller English underneath. Both qualitative questions were removed from the experiment on 2026-11-12 and will be asked in interviews instead. No text response is required or collected by the new 2D questionnaire. Numeric answers and group position are saved locally; v1 drafts can carry forward their existing numeric answers, while the new scene-confidence answer starts empty. Submit, resume and retries preserve the complete response without overwriting saved data.
 
 ## Explanation-informed reassessment
 
@@ -25,14 +25,18 @@ The image and creator explanation appear alongside that expert's own first-stage
 
 ## Data versions and access
 
-- New data is stored in `expert_2d_ratings` and `expert_2d_stage2_ratings`, protocols `2d-expert-atmosphere-intention-v1` and `2d-expert-intention-explanations-v1`.
+- New data is stored in `expert_2d_ratings` and `expert_2d_stage2_ratings`, protocols `2d-expert-atmosphere-intention-v2` and `2d-expert-intention-explanations-v1`.
 - Earlier `sketch_ratings`, `sketch_stage2_ratings`, `expert_ratings` and `expert_stage2_ratings` remain unchanged; results provide separate Sketch-original and Sketch-dual selectors. All experts begin the new instrument from zero; no earlier scores are relabelled as a new construct.
-- Researcher results default to the new instrument, with an explicit legacy-data selector. New long/wide CSV exports identify the 2D condition and original image SHA256 (not a Sketch checksum), and include both SAM groups, qualitative answers, question order and, for stage 2, the complete original baseline and explanation.
+- Researcher results default to the new instrument, with an explicit legacy-data selector. New long/wide CSV exports identify the 2D condition and original image SHA256 (not a Sketch checksum), and include both SAM groups and their confidence ratings, question order and, for stage 2, the complete original baseline and explanation.
 - Test and production are separate. ADMIN can submit only in test mode; experts can access only their own sessions; only ADMIN may view/export aggregate results.
 - Audio remains removed. DOM rendering uses textContent for expert responses and explanations. Invitation keys, rating exports, private catalogs and database credentials must never be committed.
 
 ## Verification
 
-`python -m unittest test_expert_2d_sam test_expert_sam test_sam_postgres test_sam_proxy -v` uses a disposable LOCAL `SAM_TEST_DATABASE_URL`; checks cover all 72 2D first-stage and 33 reassessment responses, counterbalance, legacy preservation, gating, permissions, strict validation, idempotent retries and both CSV layouts. The seven transport tests also passed. Browser QA used only a separate local synthetic database and checked sequential groups, blank scores, text input, pause/draft restoration, save/next, explanation context, reassessment and versioned results. No production enrollment or rating was created for QA.
+`python -m unittest test_expert_2d_sam test_expert_sam test_sam_postgres test_sam_proxy -v` uses a disposable LOCAL `SAM_TEST_DATABASE_URL`; checks cover all 72 2D first-stage and 33 reassessment responses, counterbalance, legacy preservation, gating, permissions, strict validation, idempotent retries and both CSV layouts. The seven transport tests also passed. Browser QA used only a separate local synthetic database and checked sequential groups, blank scores, independent confidence, absence of text questions, pause/draft restoration, save/next, explanation context, reassessment and versioned results. No production enrollment or rating was created for QA.
 
 All 24 local 2D image hashes were compared with the private media catalog. Browser QA additionally verified actual `/study-media/2d/` images in both observation and scoring views, the revised creator text, 11-work progress, blank reassessment scores, successful save/next and the 33-response results denominator. Original image files, cohort tasks, SAM question wording, confidence scale, counterbalance, invitation keys and resume behavior are unchanged.
+
+## Chinese-first presentation and confidence update — 2026-11-12
+
+The 2D first-stage protocol is v2; second-stage scoring, stimuli, explanation text, question-order balance and invitations are unchanged. Each first-stage group requires its own confidence before moving on. Historical rows retain NULL for uncollected atmosphere confidence. Earlier qualitative responses stay in the database, but the current 2D form and CSV export omit those questions/columns. The additive schema migration adds the nullable confidence column and relaxes the old text NOT NULL requirements without changing any stored value. Existing progress continues. Regression checks passed: 23 backend/integration tests and seven transport tests, including historical migration preservation, numeric-only submission, strict confidence bounds, both CSV layouts and all 72 baseline/33 reassessment records in a disposable local database.
