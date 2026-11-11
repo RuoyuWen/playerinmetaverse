@@ -28,3 +28,9 @@ Before activation, a failed import leaves the source authoritative and can be ro
 ## Verification
 
 Use a disposable LOCAL PostgreSQL instance via `SAM_TEST_DATABASE_URL`, then run `python -m unittest test_sam_postgres test_sam_proxy -v`. The tests refuse a remote integration-test database. They cover concurrent claims, full capacity/recovery, all 720 cohort scores, both psychologist stages, immutable historical metadata, source/target checksum verification, activation gating and export compatibility. Test data is synthetic and confined to random local schemas. No production invitation keys or ratings belong in this repository.
+
+## Versioned expert questionnaire (2026-11-11)
+
+`expert.py` handles sketch requests carrying `instrument=expert-dual-v1`. Apply the additive `expert_schema.sql`, then grant SELECT and INSERT on `expert_ratings` and `expert_stage2_ratings` to `sam_app` before publishing the new frontend. Earlier tables and cohort routes are unchanged. New first-stage ratings store separate `atmosphere_*` and `intended_*` dimensions, Confidence, both qualitative answers and validated presentation order. New second-stage ratings refer only to a complete new first stage and save intended-emotion reassessments with a server-generated full baseline snapshot. The old migration importer is a retired one-time tool, not an ongoing backup mechanism; backups of the active service must include the two new tables.
+
+Run `python -m unittest test_expert_sam test_sam_postgres test_sam_proxy -v` against a disposable local PostgreSQL instance.

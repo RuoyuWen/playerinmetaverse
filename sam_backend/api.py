@@ -198,9 +198,11 @@ class Study:
     async def handle(self, request, raw):
         path = request.url.path
         if path == "/api/sam/health":
+            from .expert import PROTOCOL as expert_protocol
             return reply({"ok": True, "service": "Sketch SAM", "protocol": SKETCH_PROTOCOL,
                           "cohort_protocol": COHORT_PROTOCOL, "stage2_protocol": STAGE2_PROTOCOL,
-                          "audio_version": "none", "storage": "postgresql", "revision": "20261110-postgres-v1"})
+                          "audio_version": "none", "storage": "postgresql", "revision": "20261111-expert-dual-v1",
+                          "expert_protocol": expert_protocol})
         family = "cohort" if path.startswith("/api/cohort/") else "sketch"
         endpoint = path.removeprefix("/api/cohort" if family == "cohort" else "/api")
         if family == "cohort" and endpoint == "/join" and request.method == "POST":
@@ -214,6 +216,11 @@ class Study:
                 claim = await self.one("SELECT participant FROM cohort_claims WHERE token_hash=%s", (token_hash,))
                 result["access"] = "claim" if claim else "invitation"
             return reply(result)
+        if family == "sketch" and query(request, "instrument") is not None:
+            from .expert import ExpertStudy, INSTRUMENT
+            if query(request, "instrument") != INSTRUMENT:
+                return failure("问卷版本不匹配，请刷新。")
+            return await ExpertStudy(self).handle(request, raw, role)
         mode = query(request, "mode", "production")
         if mode not in ("production", "test"):
             return failure("Invalid mode")
