@@ -1,4 +1,4 @@
-/* Shared palette for the five public portfolio pages. */
+/* Shared palette for the public portfolio pages. */
 html.portfolio-document,
 body.portfolio-site {
     color-scheme: dark;
@@ -52,3 +52,8 @@ body.portfolio-site ::selection { color:#fff;background:#3d507d; }
 html.portfolio-document { scrollbar-color:#51617f var(--bg-soft); }
 html.portfolio-document::-webkit-scrollbar-thumb { background:#51617f;border-color:var(--bg-soft); }
 html.portfolio-document::-webkit-scrollbar-thumb:hover { background:#7184a6; }
+
+@media (min-width:721px) and (max-width:900px) {
+    body.portfolio-site .nav-container { padding-inline:20px; }
+    body.portfolio-site .nav-link { padding-inline:8px; }
+}

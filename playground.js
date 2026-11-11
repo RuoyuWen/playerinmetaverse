@@ -26,7 +26,7 @@
         meet: { color: '#a47432', label: 'The person behind it', title: 'A researcher. Always a player.', description: 'I’m Ruoyu Wen. My path connects communication and information science, game design, and HCI research. I bring the curiosity of a player into the systems I design and the questions I ask.', href: 'about.html', works: [
             ['Education', 'China → Sweden → New Zealand', 'education.html'],
             ['Research & practice', 'Game design, human–agent interaction, and VR', 'experience.html'],
-            ['Curriculum vitae', 'Read my CV', 'Ruoyu_Wen_CV.pdf']
+            ['Curriculum vitae', 'Read my CV', 'cv.html']
         ] }
     };
     const order = Object.keys(topics);
