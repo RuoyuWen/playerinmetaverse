@@ -14,6 +14,8 @@ All 60 original slots had been claimed, and 14 claimants had not finished (S04, 
 
 Round 2 (2026-11-11 16:26 NZDT): five schedules were still not completed by anyone (S11, S30, S44, S46, S50). S75–S79 reuse these schedules. Allocation now skips any extra slot whose schedule has already been completed by anyone (the original holder or any earlier extra slot), and hands out the schedule with the least best progress first.
 
+Round 3 (2026-11-11 20:18 NZDT): every other schedule had been completed and checked against the assignment table; S80 reuses the S46 schedule, which S46 (5/12), S72 and S78 (0/12) had not finished.
+
 ## Group recruitment
 
 Share `https://playerinmetaverse.tech/2d-sketch-sam/join.html`. Page previews and GET requests do not allocate slots. Only an explicit confirmed button click POSTs a browser-generated 192-bit recovery token. An IndexedDB read/write transaction creates one token across simultaneous tabs; a single atomic SQL statement reserves one unused participant. The server stores only its SHA256. Repeated requests and returning browsers recover the same task, even when capacity is full. Already-started production tasks are excluded from allocation. Claim records are never auto-recycled. The original 60 schedules and SAM scales stay unchanged.
