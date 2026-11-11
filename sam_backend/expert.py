@@ -128,7 +128,9 @@ class ExpertStudy:
         if body.get("protocol") != expected or body.get("audio_version") != "none" or type(body.get("audio_ms")) is not int or body["audio_ms"] != 0:
             return failure("问卷版本已更新，请刷新后重试。")
         numeric = [*INTENDED, "confidence"] + ([] if second else ATMOSPHERE)
-        if any(type(body.get(k)) is not int or not 1 <= body[k] <= (7 if k == "confidence" else 9) for k in numeric):
+        if self.condition == "2D" and not second:
+            numeric.append("atmosphere_confidence")
+        if any(type(body.get(k)) is not int or not 1 <= body[k] <= (7 if k.endswith("confidence") else 9) for k in numeric):
             return failure("请完整填写 SAM（1–9）和 Confidence（1–7）。")
         if type(body.get("view_ms")) is not int or not 0 <= body["view_ms"] <= 604800000:
             return failure("Invalid viewing duration")
@@ -138,7 +140,7 @@ class ExpertStudy:
         else:
             if body.get("question_order") != question_order(rater, profile):
                 return failure("题目顺序不匹配，请刷新。")
-            if any(not isinstance(body.get(k), str) or not body[k].strip() or len(body[k]) > 2000 or "\x00" in body[k] for k in TEXT_FIELDS):
+            if self.condition != "2D" and any(not isinstance(body.get(k), str) or not body[k].strip() or len(body[k]) > 2000 or "\x00" in body[k] for k in TEXT_FIELDS):
                 return failure("请回答两道文字题（每题最多 2000 字）；无法判断时可直接说明。")
         await self.study.lock(f"sam:expert:{int(second)}:{mode}:{rater}")
         baseline = None
@@ -148,7 +150,7 @@ class ExpertStudy:
                 return failure("请先完成新版第一阶段的全部 24 张评价。", 403)
             baseline = next(row for row in original if row["profile"] == profile)
         existing = await self.rows(second, mode, rater)
-        answer_fields = numeric + ([] if second else [*TEXT_FIELDS, "question_order"])
+        answer_fields = numeric + ([] if second else [*(TEXT_FIELDS if self.condition != "2D" else []), "question_order"])
         same = lambda row: all(row[k] == body[k] for k in answer_fields)
         previous = next((row for row in existing if row["profile"] == profile), None)
         if previous:
@@ -173,12 +175,16 @@ class ExpertStudy:
         from .api import csv_response, failure
         if layout not in ("long", "wide"):
             return failure("Invalid layout")
-        baseline_fields = [*ATMOSPHERE, *INTENDED, "confidence", *TEXT_FIELDS, "question_order", "protocol", "submitted_at_utc", "view_ms", self.hash_column]
+        baseline_fields = [*ATMOSPHERE, *INTENDED, "confidence", *(TEXT_FIELDS if self.condition != "2D" else []), "question_order", "protocol", "submitted_at_utc", "view_ms", self.hash_column]
+        if self.condition == "2D":
+            baseline_fields.append("atmosphere_confidence")
         fields = ["condition", "trial_index", *INTENDED, "confidence", "view_ms", "submitted_at_utc", "protocol", self.hash_column]
         if second:
             fields += ["explanation_version", "explanation_text", "explanation_sha256", *("baseline_" + k for k in baseline_fields)]
         else:
-            fields += [*ATMOSPHERE, *TEXT_FIELDS, "question_order"]
+            fields += [*ATMOSPHERE, *(TEXT_FIELDS if self.condition != "2D" else []), "question_order"]
+            if self.condition == "2D":
+                fields.append("atmosphere_confidence")
         expanded = []
         for item in data:
             row = {k: v for k, v in item.items() if k != "baseline"}
@@ -198,7 +204,7 @@ class ExpertStudy:
 
 
 INSTRUMENT_2D = 'expert-2d-dual-v1'
-PROTOCOL_2D = '2d-expert-atmosphere-intention-v1'
+PROTOCOL_2D = '2d-expert-atmosphere-intention-v2'
 REASSESS_PROTOCOL_2D = '2d-expert-intention-explanations-v1'
 EXPLANATION_VERSION_2D = 'creator-explanations-20261111-2d-v1'
 STAGE2_PROFILES_2D = ['P1','P2','P3','P5','P6','P7','P8','P12','P22','P23','P24']

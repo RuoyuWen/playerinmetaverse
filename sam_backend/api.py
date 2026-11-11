@@ -202,7 +202,7 @@ class Study:
             from .expert import PROTOCOL_2D as expert_protocol
             return reply({"ok": True, "service": "Sketch SAM", "protocol": SKETCH_PROTOCOL,
                           "cohort_protocol": COHORT_PROTOCOL, "stage2_protocol": STAGE2_PROTOCOL,
-                          "audio_version": "none", "storage": "postgresql", "revision": "20261111-expert-2d-v1",
+                          "audio_version": "none", "storage": "postgresql", "revision": "20261112-expert-confidence-v2",
                           "expert_protocol": expert_protocol, "expert_condition": "2D", "expert_stage2_total": 11})
         family = "cohort" if path.startswith("/api/cohort/") else "sketch"
         endpoint = path.removeprefix("/api/cohort" if family == "cohort" else "/api")

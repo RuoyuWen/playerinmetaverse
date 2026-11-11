@@ -4,6 +4,7 @@ import csv
 import io
 import os
 import unittest
+from pathlib import Path
 
 from psycopg.types.json import Jsonb
 import test_expert_sam as sketch
@@ -39,6 +40,10 @@ class Expert2DTests(unittest.IsolatedAsyncioTestCase):
         body.update(condition="2D", protocol=REASSESS_PROTOCOL_2D if second else PROTOCOL_2D)
         if second:
             body["explanation_version"] = EXPLANATION_VERSION_2D
+        else:
+            body["atmosphere_confidence"] = 5
+            body.pop("visual_elements")
+            body.pop("personal_meaning")
         return body
 
     async def test_72_2d_ratings_33_reassessments_exact_contexts_hashes_and_exports(self):
@@ -69,6 +74,8 @@ class Expert2DTests(unittest.IsolatedAsyncioTestCase):
                 self.assertEqual(context["explanation"], self.explanations["explanations"][profile])
                 self.assertEqual(context["baseline"]["image_sha256"], self.catalog["media_hashes"][profile]["2D"])
                 self.assertNotIn("sketch_sha256", context["baseline"])
+                self.assertIsNone(context["baseline"]["visual_elements"])
+                self.assertIsNone(context["baseline"]["personal_meaning"])
                 body = self.answer(rater, profile, second=True)
                 body.update(explanation_text="Forged", baseline={"intended_valence": 1})
                 self.assertEqual((await self.expert("/api/submit", rater, body, second=True)).status_code, 200)
@@ -96,11 +103,18 @@ class Expert2DTests(unittest.IsolatedAsyncioTestCase):
                 self.assertNotIn(prefix + "sketch_sha256", exported[0])
                 if second:
                     self.assertIn(prefix + "baseline_image_sha256", exported[0])
+                    self.assertEqual(exported[0][prefix + "baseline_atmosphere_confidence"], "5")
+                else:
+                    self.assertEqual(exported[0][prefix + "atmosphere_confidence"], "5")
+                self.assertNotIn(prefix + "visual_elements", exported[0])
+                self.assertNotIn(prefix + "personal_meaning", exported[0])
 
     async def test_wrong_condition_version_auth_incomplete_and_missing_config(self):
         profile = sequence("R1")[0]
         body = self.answer("R1", profile)
-        for change in ({"condition": "Sketch"}, {"protocol": "sketch-expert-atmosphere-intention-v1"}):
+        for change in ({"condition": "Sketch"}, {"protocol": "sketch-expert-atmosphere-intention-v1"},
+                       {"atmosphere_confidence": None}, {"atmosphere_confidence": True},
+                       {"atmosphere_confidence": 0}, {"atmosphere_confidence": 8}):
             self.assertEqual((await self.expert("/api/submit", body={**body, **change})).status_code, 400)
         self.assertEqual((await self.expert("/api/submit", "R2", body)).status_code, 403)
         self.assertEqual((await self.expert("/api/session?rater=R2")).status_code, 403)
@@ -108,6 +122,7 @@ class Expert2DTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual((await self.expert("/api/submit", body=body)).status_code, 200)
         self.assertTrue((await self.expert("/api/submit", body=body)).json()["already_saved"])
         self.assertEqual((await self.expert("/api/submit", body={**body, "intended_valence": 2})).status_code, 409)
+        self.assertEqual((await self.expert("/api/submit", body={**body, "atmosphere_confidence": 2})).status_code, 409)
         self.assertEqual((await self.expert("/api/status", mode="test")).json()["counts"]["R1"], 0)
         locked = await self.expert("/api/session?rater=R1", second=True)
         self.assertEqual(locked.status_code, 403)
@@ -118,3 +133,31 @@ class Expert2DTests(unittest.IsolatedAsyncioTestCase):
         # Missing 2D configuration cannot break existing cohort or older expert endpoints.
         self.assertEqual((await self.call("/api/status?instrument=expert-dual-v1")).status_code, 200)
         self.assertEqual((await self.call("/api/cohort/status", "ADMIN")).status_code, 200)
+
+    async def test_upgrade_preserves_old_answers_null_confidence_and_progress(self):
+        # This random local schema deliberately reproduces the earlier table layout.
+        with self.connect() as db:
+            db.execute("ALTER TABLE expert_2d_ratings DROP COLUMN atmosphere_confidence")
+            db.execute("ALTER TABLE expert_2d_ratings ALTER COLUMN visual_elements SET NOT NULL")
+            db.execute("ALTER TABLE expert_2d_ratings ALTER COLUMN personal_meaning SET NOT NULL")
+            profile = sequence("R1")[0]
+            body = self.answer("R1", profile)
+            row = {k: v for k, v in body.items() if k not in ("condition", "audio_ms", "audio_version", "atmosphere_confidence")}
+            row.update(protocol="2d-expert-atmosphere-intention-v1", visual_elements="Historical visual answer",
+                       personal_meaning="Historical meaning answer", trial_index=1, submitted_at_utc="historical",
+                       image_sha256=self.catalog["media_hashes"][profile]["2D"])
+            db.execute("INSERT INTO expert_2d_ratings (" + ",".join(row) + ") VALUES (" + ",".join(["%s"] * len(row)) + ")", tuple(row.values()))
+            before = db.execute("SELECT * FROM expert_2d_ratings").fetchone()
+            db.execute(Path("sam_backend/expert_2d_schema.sql").read_text(encoding="utf-8"))
+            after = db.execute("SELECT * FROM expert_2d_ratings").fetchone()
+            self.assertIsNone(after.pop("atmosphere_confidence"))
+            self.assertEqual(before, after)
+        session = (await self.expert("/api/session?rater=R1")).json()
+        self.assertEqual(session["completed"], [profile])
+        next_profile = sequence("R1")[1]
+        self.assertEqual((await self.expert("/api/submit", body=self.answer("R1", next_profile))).status_code, 200)
+        with self.connect() as db:
+            newest = db.execute("SELECT * FROM expert_2d_ratings WHERE profile=%s", (next_profile,)).fetchone()
+            self.assertEqual(newest["atmosphere_confidence"], 5)
+            self.assertIsNone(newest["visual_elements"])
+            self.assertIsNone(newest["personal_meaning"])

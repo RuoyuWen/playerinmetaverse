@@ -11,8 +11,9 @@ CREATE TABLE IF NOT EXISTS expert_2d_ratings (
  intended_arousal INTEGER NOT NULL CHECK(intended_arousal BETWEEN 1 AND 9),
  intended_dominance INTEGER NOT NULL CHECK(intended_dominance BETWEEN 1 AND 9),
  confidence INTEGER NOT NULL CHECK(confidence BETWEEN 1 AND 7),
- visual_elements TEXT NOT NULL CHECK(length(btrim(visual_elements)) BETWEEN 1 AND 2000),
- personal_meaning TEXT NOT NULL CHECK(length(btrim(personal_meaning)) BETWEEN 1 AND 2000),
+ atmosphere_confidence INTEGER CHECK(atmosphere_confidence BETWEEN 1 AND 7),
+ visual_elements TEXT CHECK(length(btrim(visual_elements)) BETWEEN 1 AND 2000),
+ personal_meaning TEXT CHECK(length(btrim(personal_meaning)) BETWEEN 1 AND 2000),
  question_order TEXT NOT NULL CHECK(question_order IN ('atmosphere_first','intention_first')),
  view_ms INTEGER NOT NULL,
  submitted_at_utc TEXT NOT NULL,
@@ -21,6 +22,14 @@ CREATE TABLE IF NOT EXISTS expert_2d_ratings (
  PRIMARY KEY(mode,rater,profile),
  UNIQUE(mode,rater,trial_index)
 );
+
+-- Historical rows keep NULL: atmosphere confidence was not collected by v1.
+ALTER TABLE expert_2d_ratings ADD COLUMN IF NOT EXISTS atmosphere_confidence INTEGER
+ CHECK(atmosphere_confidence BETWEEN 1 AND 7);
+
+-- Qualitative questions moved to interviews; retain historical responses as-is.
+ALTER TABLE expert_2d_ratings ALTER COLUMN visual_elements DROP NOT NULL;
+ALTER TABLE expert_2d_ratings ALTER COLUMN personal_meaning DROP NOT NULL;
 CREATE TABLE IF NOT EXISTS expert_2d_stage2_ratings (
  mode TEXT NOT NULL CHECK(mode IN ('production','test')),
  rater TEXT NOT NULL CHECK(rater IN ('R1','R2','R3')),
