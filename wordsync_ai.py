@@ -40,7 +40,12 @@ DEFAULT_AI: Dict[str, Any] = {
     "model": MODEL_SUGGESTIONS[0],
     "prompt": DEFAULT_PROMPT,
     "schema": DEFAULT_SCHEMA,
+    # Second, more accurate transcript of what players say (uses the same key and endpoint).
+    "transcribe": False,
+    "transcribeModel": "gpt-4o-transcribe",
 }
+TRANSCRIBE_SUGGESTIONS = ["gpt-4o-transcribe", "gpt-4o-mini-transcribe", "whisper-1"]
+MAX_AUDIO_BYTES = 20 * 1024 * 1024
 TIMEOUT_SECONDS = 60
 MAX_TEXT = 4000
 
@@ -54,14 +59,15 @@ def clean_ai(raw: Any, previous: Optional[Dict[str, Any]] = None) -> Dict[str, A
     keeps the stored key; clearApiKey removes it."""
     raw = raw if isinstance(raw, dict) else {}
     result = {**DEFAULT_AI, **(previous or {})}
-    if isinstance(raw.get("enabled"), bool):
-        result["enabled"] = raw["enabled"]
+    for name in ("enabled", "transcribe"):
+        if isinstance(raw.get(name), bool):
+            result[name] = raw[name]
     key = raw.get("apiKey")
     if isinstance(key, str) and key.strip():
         result["apiKey"] = key.strip()[:400]
     if raw.get("clearApiKey") is True:
         result["apiKey"] = ""
-    for name, limit in (("baseUrl", 300), ("model", 100), ("prompt", 20000)):
+    for name, limit in (("baseUrl", 300), ("model", 100), ("prompt", 20000), ("transcribeModel", 100)):
         value = raw.get(name)
         if isinstance(value, str) and value.strip():
             result[name] = value.strip()[:limit]
@@ -88,6 +94,30 @@ def public_ai(ai: Dict[str, Any]) -> Dict[str, Any]:
     shown["apiKeySet"] = bool(key)
     shown["apiKeyHint"] = f"…{key[-4:]}" if len(key) >= 8 else ""
     return shown
+
+
+def can_transcribe(ai: Dict[str, Any]) -> bool:
+    return bool(ai.get("transcribe") and ai.get("apiKey"))
+
+
+async def transcribe(ai: Dict[str, Any], audio: bytes, content_type: str, lang: str) -> str:
+    """Turn one round's recording into text. The audio is only held in memory for this call."""
+    extension = "mp4" if "mp4" in content_type else "ogg" if "ogg" in content_type else "webm"
+    try:
+        async with httpx.AsyncClient(timeout=120) as client:
+            reply = await client.post(
+                ai["baseUrl"].rstrip("/") + "/audio/transcriptions",
+                headers={"Authorization": f"Bearer {ai['apiKey']}"},
+                data={"model": ai["transcribeModel"], "language": "en" if lang == "en" else "zh", "response_format": "json"},
+                files={"file": (f"round.{extension}", audio, content_type.split(";")[0] or "audio/webm")})
+    except httpx.HTTPError as error:
+        raise AIError(f"连不上转写接口：{type(error).__name__}")
+    if reply.status_code != 200:
+        raise AIError(f"转写接口返回 {reply.status_code}：{reply.text[:300]}")
+    try:
+        return str(reply.json()["text"]).strip()[:MAX_TEXT * 2]
+    except (ValueError, KeyError, TypeError):
+        raise AIError("转写接口的返回格式不对")
 
 
 def is_available(ai: Dict[str, Any]) -> bool:

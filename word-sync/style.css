@@ -186,3 +186,4 @@ button:focus-visible { outline: 3px solid var(--seal-soft); outline-offset: 2px;
 .segment[aria-pressed="true"] { background: var(--seal); color: var(--seal-ink); font-weight: 600; }
 .mono { font: .82rem/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
 .result { margin: 0; padding: 12px 14px; background: var(--paper); border: 1px solid var(--line); border-radius: 10px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.round .said.hq { color: var(--ink); border-left: 2px solid var(--ok); padding-left: 8px; }

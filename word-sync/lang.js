@@ -84,6 +84,7 @@
     '等待对方提交…': 'Waiting for your partner…',
     '本轮已提交': 'Submitted for this round',
     '正在听你说（只保存文字，不保存录音）': 'Listening (text only, no audio is saved)',
+    '正在听你说（录音只用于转写成文字，转写后不保留）': 'Listening (audio is only used to make a transcript and is not kept)',
     '此浏览器不支持语音识别': 'This browser doesn’t support speech recognition',
     '麦克风权限被拒绝，无法转写': 'Microphone is off, so nothing is being transcribed',
     '语音识别未启动': 'Speech recognition is off',

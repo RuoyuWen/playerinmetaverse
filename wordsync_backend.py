@@ -23,7 +23,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, Header, HTTPException, Request
 from pydantic import BaseModel
 
 import wordsync_ai
@@ -81,6 +81,10 @@ class FileStore:
         folder = self.root / "sessions"
         folder.mkdir(parents=True, exist_ok=True)
         (folder / f"{session['id']}.json").write_text(json.dumps(session, ensure_ascii=False), encoding="utf-8")
+
+    def load_session(self, session_id):
+        path = self.root / "sessions" / f"{session_id}.json"
+        return json.loads(path.read_text(encoding="utf-8")) if path.exists() else None
 
     def list_sessions(self):
         folder = self.root / "sessions"
@@ -145,6 +149,11 @@ class PostgresStore:
                 "INSERT INTO wordsync_sessions (id, started_at, data) VALUES (%s, %s, %s::jsonb) "
                 "ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data",
                 (session["id"], session["startedAt"], json.dumps(session)))
+
+    def load_session(self, session_id):
+        with self._connect() as connection:
+            row = connection.execute("SELECT data FROM wordsync_sessions WHERE id = %s", (session_id,)).fetchone()
+            return row[0] if row else None
 
     def list_sessions(self):
         with self._connect() as connection:
@@ -298,6 +307,7 @@ def resolve_round(room):
         "submittedMs": current["submittedMs"], "transcripts": current["transcripts"],
         "livesAfter": room["lives"],
         "durationMs": int((time.time() - room["roundStartedAt"]) * 1000),
+        "transcriptsHq": current.get("transcriptsHq", [None, None]),
     })
     if current.get("aiRaw"):
         room["rounds"][-1]["aiRaw"] = current["aiRaw"]
@@ -327,7 +337,54 @@ def advance(room):
 
 
 def unfinished_round(room):
-    return {"round": room["round"], "prompt": room["prompt"], "transcripts": room["current"]["transcripts"]}
+    return {"round": room["round"], "prompt": room["prompt"], "transcripts": room["current"]["transcripts"],
+            "transcriptsHq": room["current"].get("transcriptsHq", [None, None])}
+
+
+def attach_hq(document, round_number, index, entry) -> bool:
+    """Put a high-accuracy transcript on the right round of a room or a saved session.
+    Works on both because they share the rounds / unfinished-round layout."""
+    current = document.get("current")
+    if current is not None and document.get("phase") in ("think", "input") and document.get("round") == round_number:
+        target = current
+    else:
+        target = next((r for r in document.get("rounds", []) if r["round"] == round_number), None)
+        if target is None:
+            unfinished = document.get("unfinished") or document.get("unfinishedRound")
+            target = unfinished if unfinished and unfinished.get("round") == round_number else None
+    if target is None:
+        return False
+    target.setdefault("transcriptsHq", [None, None])[index] = entry
+    return True
+
+
+async def transcribe_round(room, session_id, round_number, index, audio, content_type):
+    """Transcribe one player's recording of one round and file the text. The audio is never stored."""
+    ai = (await get_settings())["ai"]
+    entry = {"model": ai["transcribeModel"], "text": "", "error": None}
+    try:
+        entry["text"] = await wordsync_ai.transcribe(ai, audio, content_type, room.get("lang", "zh"))
+    except wordsync_ai.AIError as error:
+        entry["error"] = str(error)
+        logger.error("wordsync: transcription failed for %s round %s: %s", session_id, round_number, error)
+    except Exception as error:
+        logger.exception("wordsync: transcription crashed")
+        entry["error"] = f"内部错误：{type(error).__name__}"
+    del audio
+    if rooms.get(room["code"]) is room and room.get("sessionId") == session_id:
+        if attach_hq(room, round_number, index, entry):
+            persist(room)
+        return
+
+    def patch_saved():  # the room has moved on or closed: update the saved record instead
+        document = store().load_session(session_id)
+        if document and attach_hq(document, round_number, index, entry):
+            store().save_session(document)
+
+    try:
+        await asyncio.to_thread(patch_saved)
+    except Exception as error:
+        logger.error("wordsync: could not file transcript for %s: %s", session_id, error)
 
 
 def quit_game(room, index):
@@ -585,7 +642,8 @@ async def health():
 @router.get("/config")
 async def public_config():
     settings = await get_settings()
-    return {**{key: settings[key] for key in GAME_KEYS}, "aiAvailable": wordsync_ai.is_available(settings["ai"])}
+    return {**{key: settings[key] for key in GAME_KEYS}, "aiAvailable": wordsync_ai.is_available(settings["ai"]),
+            "recordAudio": wordsync_ai.can_transcribe(settings["ai"])}
 
 
 class SoloRequest(BaseModel):
@@ -672,6 +730,33 @@ async def ready(request: ReadyRequest):
 async def transcript(request: TranscriptRequest):
     room, index = await find_room(request.code, request.token)
     store_transcript(room, index, request)
+    return {"ok": True}
+
+
+@router.post("/audio")
+async def audio(request: Request, code: str, token: str, round: int):
+    """Receive one player's recording of one round, for the high-accuracy transcript.
+    Replies as soon as the audio is in memory; transcription carries on in the background."""
+    room, index = await find_room(code, token)
+    settings = await get_settings()
+    if not wordsync_ai.can_transcribe(settings["ai"]):
+        raise HTTPException(status_code=409, detail="transcription_off")
+    if not room.get("sessionId") or not 1 <= round <= room.get("round", 0):
+        raise HTTPException(status_code=409, detail="round_over")
+    declared = request.headers.get("content-length", "")
+    if declared.isdigit() and int(declared) > wordsync_ai.MAX_AUDIO_BYTES:
+        raise HTTPException(status_code=413, detail="audio_too_large")
+    data = bytearray()
+    async for chunk in request.stream():
+        data.extend(chunk)
+        if len(data) > wordsync_ai.MAX_AUDIO_BYTES:
+            raise HTTPException(status_code=413, detail="audio_too_large")
+    if len(data) < 200:  # an empty recording: nothing to transcribe
+        return {"ok": True, "skipped": True}
+    task = asyncio.get_running_loop().create_task(transcribe_round(
+        room, room["sessionId"], round, index, bytes(data), request.headers.get("content-type", "audio/webm")))
+    _pending.add(task)
+    task.add_done_callback(_pending.discard)
     return {"ok": True}
 
 
@@ -766,6 +851,7 @@ async def admin_get_settings(x_admin_password: Optional[str] = Header(None)):
     return {"settings": admin_settings_view(await get_settings()), "limits": LIMITS,
             "builtinWordCount": len(builtin_words("zh")), "builtinWordCountEn": len(builtin_words("en")),
             "storage": storage_kind(), "modelSuggestions": wordsync_ai.MODEL_SUGGESTIONS,
+            "transcribeSuggestions": wordsync_ai.TRANSCRIBE_SUGGESTIONS,
             "aiDefaults": {"prompt": wordsync_ai.DEFAULT_PROMPT, "schema": wordsync_ai.DEFAULT_SCHEMA,
                            "baseUrl": wordsync_ai.DEFAULT_BASE_URL}}
 
