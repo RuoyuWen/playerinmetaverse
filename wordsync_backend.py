@@ -32,7 +32,7 @@ router = APIRouter(prefix="/api/wordsync")
 WORDS_FILE = Path(__file__).with_name("wordsync_words.txt")
 DEFAULT_SETTINGS: Dict[str, Any] = {
     "lives": 20,            # 血量：两人共用，每次没对上扣一格
-    "thinkSeconds": 30,     # 思考（think aloud）时长
+    "thinkSeconds": 30,     # 思考（think aloud）倒计时；玩家想好了可以提前提交
     "inputSeconds": 0,      # 输入限时，0 = 不限时
     "noRepeat": True,       # 不允许使用已经出现过的词
     "requireSpeech": True,  # 必须通过语音识别检测才能准备
@@ -83,6 +83,20 @@ class FileStore:
         if path.exists():
             path.unlink()
 
+    def save_room(self, room):
+        folder = self.root / "rooms"
+        folder.mkdir(parents=True, exist_ok=True)
+        (folder / f"{room['code']}.json").write_text(json.dumps(room, ensure_ascii=False), encoding="utf-8")
+
+    def load_room(self, code):
+        path = self.root / "rooms" / f"{code}.json"
+        return json.loads(path.read_text(encoding="utf-8")) if path.exists() else None
+
+    def delete_room(self, code):
+        path = self.root / "rooms" / f"{code}.json"
+        if path.exists():
+            path.unlink()
+
 
 class PostgresStore:
     def __init__(self, dsn: str):
@@ -97,6 +111,8 @@ class PostgresStore:
             connection.execute(
                 "CREATE TABLE IF NOT EXISTS wordsync_sessions "
                 "(id text PRIMARY KEY, started_at text NOT NULL, data jsonb NOT NULL)")
+            connection.execute(
+                "CREATE TABLE IF NOT EXISTS wordsync_rooms (code text PRIMARY KEY, rev bigint NOT NULL, data jsonb NOT NULL)")
             connection.commit()
             self.ready = True
         return connection
@@ -127,6 +143,23 @@ class PostgresStore:
     def delete_session(self, session_id):
         with self._connect() as connection:
             connection.execute("DELETE FROM wordsync_sessions WHERE id = %s", (session_id,))
+
+    def save_room(self, room):
+        # Writes run on worker threads and may land out of order; never let an older snapshot win.
+        with self._connect() as connection:
+            connection.execute(
+                "INSERT INTO wordsync_rooms (code, rev, data) VALUES (%s, %s, %s::jsonb) "
+                "ON CONFLICT (code) DO UPDATE SET rev = EXCLUDED.rev, data = EXCLUDED.data "
+                "WHERE wordsync_rooms.rev < EXCLUDED.rev", (room["code"], room["rev"], json.dumps(room)))
+
+    def load_room(self, code):
+        with self._connect() as connection:
+            row = connection.execute("SELECT data FROM wordsync_rooms WHERE code = %s", (code,)).fetchone()
+            return row[0] if row else None
+
+    def delete_room(self, code):
+        with self._connect() as connection:
+            connection.execute("DELETE FROM wordsync_rooms WHERE code = %s", (code,))
 
 
 def store():
@@ -276,20 +309,49 @@ def session_document(room):
     return json.loads(json.dumps(document))  # snapshot: the room keeps changing while we write
 
 
-def persist(room):
-    if not room.get("sessionId"):
-        return
-    document = session_document(room)
-
-    async def write():
+def background(work, *args):
+    """Run a blocking storage call off the event loop; a storage outage must not stop the game."""
+    async def run():
         try:
-            await asyncio.to_thread(store().save_session, document)
+            await asyncio.to_thread(work, *args)
         except Exception as error:
-            logger.error("wordsync: could not save session %s: %s", document["id"], error)
+            logger.error("wordsync: storage write failed (%s): %s", getattr(work, "__name__", work), error)
 
-    task = asyncio.get_running_loop().create_task(write())
+    task = asyncio.get_running_loop().create_task(run())
     _pending.add(task)
     task.add_done_callback(_pending.discard)
+
+
+def persist(room):
+    """Save the room itself (so a server restart does not end the game) and its session record."""
+    room["rev"] = int(time.time() * 1000)
+    snapshot = json.loads(json.dumps({**room, "used": sorted(room.get("used", ()))}))
+    background(store().save_room, snapshot)
+    if room.get("sessionId"):
+        background(store().save_session, session_document(room))
+
+
+async def load_room(code: str):
+    """The room from memory, or restored from storage after a server restart."""
+    if code in rooms:
+        return rooms[code]
+    try:
+        saved = await asyncio.to_thread(store().load_room, code)
+    except Exception as error:
+        logger.error("wordsync: could not load room %s: %s", code, error)
+        return None
+    if code in rooms:  # another request restored it while we were reading
+        return rooms[code]
+    now = time.time()
+    if not saved or now - saved.get("touched", 0) > ROOM_TTL:
+        return None
+    saved["used"] = set(saved.get("used", ()))
+    saved["touched"] = now
+    for player in saved["players"]:
+        player["lastSeen"] = now  # give everyone a moment to reconnect before showing them offline
+    rooms[code] = saved
+    logger.info("wordsync: restored room %s from storage", code)
+    return saved
 
 
 _pending: set = set()
@@ -301,8 +363,8 @@ def sweep_rooms():
         del rooms[code]
 
 
-def find_room(code: str, token: str):
-    room = rooms.get(code)
+async def find_room(code: str, token: str):
+    room = await load_room(code)
     if not room:
         raise HTTPException(status_code=404, detail="房间不存在或已过期，请重新输入房间号")
     for index, player in enumerate(room["players"]):
@@ -410,7 +472,7 @@ async def join(request: JoinRequest):
     name = request.name.strip()[:MAX_NAME_LENGTH]
     sweep_rooms()
     now = time.time()
-    room = rooms.get(code)
+    room = await load_room(code)
     if room and request.token:
         for index, player in enumerate(room["players"]):
             if hmac.compare_digest(player["token"], request.token):
@@ -432,40 +494,39 @@ async def join(request: JoinRequest):
     player = new_player(name)
     room["players"].append(player)
     room["touched"] = now
+    persist(room)
     return {"token": player["token"], "state": view(room, len(room["players"]) - 1)}
 
 
 @router.get("/state")
 async def state(code: str, token: str):
-    room, index = find_room(code, token)
+    room, index = await find_room(code, token)
     return view(room, index)
 
 
 @router.post("/ready")
 async def ready(request: ReadyRequest):
-    room, index = find_room(request.code, request.token)
+    room, index = await find_room(request.code, request.token)
     if room["phase"] == "lobby":
         room["players"][index]["ready"] = request.ready
         if len(room["players"]) == 2 and all(player["ready"] for player in room["players"]):
             start_game(room, await get_settings())
-            persist(room)
+        persist(room)
     return view(room, index)
 
 
 @router.post("/transcript")
 async def transcript(request: TranscriptRequest):
-    room, index = find_room(request.code, request.token)
+    room, index = await find_room(request.code, request.token)
     store_transcript(room, index, request)
     return {"ok": True}
 
 
 @router.post("/submit")
 async def submit(request: SubmitRequest):
-    room, index = find_room(request.code, request.token)
+    room, index = await find_room(request.code, request.token)
     if request.round != room.get("round") or room["phase"] not in ("think", "input"):
         raise HTTPException(status_code=409, detail="这一轮已经结束了")
-    if room["phase"] == "think":
-        raise HTTPException(status_code=409, detail="思考时间还没结束")
     current = room["current"]
     if current["words"][index] is not None:
         raise HTTPException(status_code=409, detail="你已经提交过这一轮的词了")
@@ -481,29 +542,35 @@ async def submit(request: SubmitRequest):
     current["submittedMs"][index] = int((time.time() - room["roundStartedAt"]) * 1000)
     if all(item is not None for item in current["words"]):
         resolve_round(room)
+    else:
+        persist(room)
     return view(room, index)
 
 
 @router.post("/restart")
 async def restart(request: PlayerRequest):
-    room, index = find_room(request.code, request.token)
+    room, index = await find_room(request.code, request.token)
     if room["phase"] in ("won", "lost"):
         room["phase"] = "lobby"
         room["sessionId"] = None
         for player in room["players"]:
             player["ready"] = False
+        persist(room)
     return view(room, index)
 
 
 @router.post("/leave")
 async def leave(request: PlayerRequest):
-    room, index = find_room(request.code, request.token)
+    room, index = await find_room(request.code, request.token)
     if room["phase"] == "lobby":
         del room["players"][index]
         for player in room["players"]:
             player["ready"] = False
         if not room["players"]:
             rooms.pop(room["code"], None)
+            background(store().delete_room, room["code"])
+        else:
+            persist(room)
     else:
         room["players"][index]["lastSeen"] = 0  # show as offline right away
         persist(room)

@@ -184,13 +184,11 @@
       $('word-error').textContent = '';
       if (playing) {
         renderPrompt();
+        if (!next.me.submitted) setTimeout(() => $('word-input').focus({ preventScroll: true }), 50);
         if (next.round > 1 && previous && previous.round === next.round - 1) toast('没对上，扣一格血');
       }
     }
     if (previous && previous.partner && !next.partner && next.phase === 'lobby') toast('对方离开了房间');
-    if (next.phase === 'input' && (!previous || previous.phase !== 'input') && !next.me.submitted) {
-      setTimeout(() => $('word-input').focus(), 50);
-    }
     if (next.phase !== 'lobby') speechTesting = false;
     syncListening();
     render();
@@ -305,10 +303,10 @@
     const thinking = state.phase === 'think';
     const submitted = state.me.submitted;
     $('think-instruction').textContent = state.round === 1 ? '由这个词想到下一个词，把你的思路说出来' : '猜猜你们会想到哪个共同的词，把思路说出来';
-    $('word-form').hidden = thinking || submitted;
+    $('word-form').hidden = submitted;
     $('wait-panel').hidden = !submitted;
     $('my-word').textContent = state.me.word || '';
-    $('input-instruction').textContent = '输入你想到的词';
+    $('input-instruction').textContent = thinking ? '想好了随时可以提交，不用等倒计时' : '时间到了，请输入你想到的词';
 
     const listening = !submitted && speech.wanted;
     $('mic-dot').classList.toggle('live', listening);
@@ -326,7 +324,7 @@
 
     const partner = state.partner;
     $('partner-line').textContent = !partner ? '' : partner.online === false ? partner.name + ' 掉线了，等待重连…'
-      : partner.submitted ? partner.name + ' 已经提交了' : thinking ? '' : partner.name + ' 还在输入…';
+      : partner.submitted ? partner.name + ' 已经提交了' : thinking ? '' : partner.name + ' 还没提交…';
     renderHistory($('history'), state.history, partner ? partner.name : '对方');
     renderTimer();
   }
@@ -336,7 +334,7 @@
     const thinking = state.phase === 'think';
     const timed = state.phaseEndsAt != null;
     const submitted = state.me.submitted;
-    $('think-panel').hidden = !(thinking || (timed && !submitted));
+    $('think-panel').hidden = submitted || !(thinking || timed);
     if (!timed) return;
     const total = thinking ? state.settings.thinkSeconds : state.settings.inputSeconds;
     const left = Math.max(0, state.phaseEndsAt - serverNow());
