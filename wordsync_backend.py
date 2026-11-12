@@ -29,17 +29,22 @@ from pydantic import BaseModel
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/wordsync")
 
-WORDS_FILE = Path(__file__).with_name("wordsync_words.txt")
+WORDS_FILES = {
+    "zh": Path(__file__).with_name("wordsync_words.txt"),
+    "en": Path(__file__).with_name("wordsync_words_en.txt"),
+}
+LANGUAGES = ("zh", "en")
 DEFAULT_SETTINGS: Dict[str, Any] = {
     "lives": 20,            # 血量：两人共用，每次没对上扣一格
     "thinkSeconds": 30,     # 思考（think aloud）倒计时；玩家想好了可以提前提交
     "inputSeconds": 0,      # 输入限时，0 = 不限时
     "noRepeat": True,       # 不允许使用已经出现过的词
     "requireSpeech": True,  # 必须通过语音识别检测才能准备
-    "customWords": [],      # 自定义起始词库，留空则用内置词库
+    "customWords": [],      # 自定义中文起始词库，留空则用内置词库
+    "customWordsEn": [],    # 自定义英文起始词库，留空则用内置词库
 }
 LIMITS = {"lives": (1, 99), "thinkSeconds": (5, 300), "inputSeconds": (0, 300)}
-MAX_WORD_LENGTH = 12
+MAX_WORD_LENGTH = {"zh": 12, "en": 30}
 MAX_NAME_LENGTH = 12
 MAX_SEGMENTS = 200
 MAX_SEGMENT_LENGTH = 500
@@ -49,7 +54,7 @@ ROOM_TTL = 2 * 3600
 
 rooms: Dict[str, Dict[str, Any]] = {}
 _settings: Optional[Dict[str, Any]] = None
-_builtin_words: Optional[List[str]] = None
+_builtin_words: Dict[str, List[str]] = {}
 
 
 # ---------------------------------------------------------------- storage
@@ -195,13 +200,14 @@ def clean_settings(raw: Any) -> Dict[str, Any]:
     for key in ("noRepeat", "requireSpeech"):
         if isinstance(raw.get(key), bool):
             result[key] = raw[key]
-    words, custom = [], raw.get("customWords")
-    if isinstance(custom, list):
-        for item in custom[:5000]:
-            word = normalize_word(item) if isinstance(item, str) else ""
-            if word and len(word) <= MAX_WORD_LENGTH and word not in words:
-                words.append(word)
-    result["customWords"] = words
+    for key in ("customWords", "customWordsEn"):
+        words, custom = [], raw.get(key)
+        if isinstance(custom, list):
+            for item in custom[:5000]:
+                word = display_word(item) if isinstance(item, str) else ""
+                if word and len(word) <= 30 and word not in words:
+                    words.append(word)
+        result[key] = words
     return result
 
 
@@ -216,15 +222,20 @@ async def get_settings() -> Dict[str, Any]:
     return _settings
 
 
-def builtin_words() -> List[str]:
-    global _builtin_words
-    if _builtin_words is None:
-        lines = WORDS_FILE.read_text(encoding="utf-8").splitlines()
-        _builtin_words = [line.strip() for line in lines if line.strip() and not line.startswith("#")]
-    return _builtin_words
+def builtin_words(lang: str = "zh") -> List[str]:
+    if lang not in _builtin_words:
+        lines = WORDS_FILES[lang].read_text(encoding="utf-8").splitlines()
+        _builtin_words[lang] = [line.strip() for line in lines if line.strip() and not line.startswith("#")]
+    return _builtin_words[lang]
+
+
+def display_word(word: str) -> str:
+    """What players see: trimmed, with runs of whitespace collapsed (English may be two words)."""
+    return re.sub(r"\s+", " ", unicodedata.normalize("NFKC", word or "")).strip()
 
 
 def normalize_word(word: str) -> str:
+    """What is compared: case and spacing do not matter."""
     return re.sub(r"\s+", "", unicodedata.normalize("NFKC", word or "")).lower()
 
 
@@ -248,12 +259,13 @@ def begin_round(room, prompt):
 
 
 def start_game(room, settings):
-    words = settings["customWords"] or builtin_words()
+    lang = room.get("lang", "zh")
+    words = settings["customWordsEn" if lang == "en" else "customWords"] or builtin_words(lang)
     room.update({
         "sessionId": uuid.uuid4().hex, "startedAt": now_iso(), "endedAt": None, "result": None,
         "startedTs": time.time(), "durationMs": None, "quitBy": None, "unfinished": None,
         "playerNames": [player["name"] for player in room["players"]],
-        "settings": {k: v for k, v in settings.items() if k != "customWords"},
+        "settings": {k: v for k, v in settings.items() if not k.startswith("customWords")},
         "lives": settings["lives"], "round": 0, "rounds": [], "startWord": random.choice(words),
     })
     room["used"] = {normalize_word(room["startWord"])}
@@ -311,7 +323,7 @@ def quit_game(room, index):
 
 def session_document(room):
     document = {
-        "id": room["sessionId"], "code": room["code"], "startedAt": room["startedAt"],
+        "id": room["sessionId"], "code": room["code"], "lang": room.get("lang", "zh"), "startedAt": room["startedAt"],
         "endedAt": room["endedAt"], "result": room["result"], "settings": room["settings"],
         "players": room.get("playerNames") or [player["name"] for player in room["players"]],
         "startWord": room["startWord"], "quitBy": room.get("quitBy"),
@@ -383,14 +395,14 @@ def sweep_rooms():
 async def find_room(code: str, token: str):
     room = await load_room(code)
     if not room:
-        raise HTTPException(status_code=404, detail="房间不存在或已过期，请重新输入房间号")
+        raise HTTPException(status_code=404, detail="room_not_found")
     for index, player in enumerate(room["players"]):
         if hmac.compare_digest(player["token"], token) and not player.get("left"):
             now = time.time()
             player["lastSeen"] = room["touched"] = now
             advance(room)
             return room, index
-    raise HTTPException(status_code=403, detail="你不在这个房间里，请重新加入")
+    raise HTTPException(status_code=403, detail="not_in_room")
 
 
 def view(room, index):
@@ -400,7 +412,7 @@ def view(room, index):
     partner = room["players"][other_index] if len(room["players"]) > 1 else None
     playing = room["phase"] in ("think", "input")
     state = {
-        "code": room["code"], "phase": room["phase"], "serverNow": now,
+        "code": room["code"], "lang": room.get("lang", "zh"), "phase": room["phase"], "serverNow": now,
         "me": {"name": me["name"], "ready": me["ready"]},
         "partner": partner and {
             "name": partner["name"], "ready": partner["ready"],
@@ -434,6 +446,7 @@ class JoinRequest(BaseModel):
     code: str
     name: str = ""
     token: Optional[str] = None
+    lang: str = "zh"  # used only when this request creates the room
 
 
 class PlayerRequest(BaseModel):
@@ -478,14 +491,14 @@ async def health():
 @router.get("/config")
 async def public_config():
     settings = await get_settings()
-    return {key: value for key, value in settings.items() if key != "customWords"}
+    return {key: value for key, value in settings.items() if not key.startswith("customWords")}
 
 
 @router.post("/join")
 async def join(request: JoinRequest):
     code = request.code.strip()
     if not re.fullmatch(r"\d{4}", code):
-        raise HTTPException(status_code=400, detail="房间号必须是 4 位数字")
+        raise HTTPException(status_code=400, detail="bad_code")
     name = request.name.strip()[:MAX_NAME_LENGTH]
     sweep_rooms()
     now = time.time()
@@ -501,11 +514,12 @@ async def join(request: JoinRequest):
     if room and all(now - player["lastSeen"] > ABANDONED_AFTER for player in room["players"]):
         room = None  # everyone left long ago: the code is free again
     if room is None:
-        room = rooms[code] = {"code": code, "phase": "lobby", "players": [], "touched": now, "sessionId": None}
+        room = rooms[code] = {"code": code, "phase": "lobby", "players": [], "touched": now, "sessionId": None,
+                              "lang": request.lang if request.lang in LANGUAGES else "zh"}
     if room["phase"] != "lobby" or len(room["players"]) >= 2:
-        raise HTTPException(status_code=409, detail="这个房间已经有两位玩家了，换一个房间号试试")
+        raise HTTPException(status_code=409, detail="room_full")
     taken = {player["name"] for player in room["players"]}
-    name = name or f"玩家{len(room['players']) + 1}"
+    name = name or (f"Player {len(room['players']) + 1}" if room.get("lang") == "en" else f"玩家{len(room['players']) + 1}")
     if name in taken:
         name = f"{name[:MAX_NAME_LENGTH - 1]}2"
     player = new_player(name)
@@ -543,17 +557,19 @@ async def transcript(request: TranscriptRequest):
 async def submit(request: SubmitRequest):
     room, index = await find_room(request.code, request.token)
     if request.round != room.get("round") or room["phase"] not in ("think", "input"):
-        raise HTTPException(status_code=409, detail="这一轮已经结束了")
+        raise HTTPException(status_code=409, detail="round_over")
     current = room["current"]
     if current["words"][index] is not None:
-        raise HTTPException(status_code=409, detail="你已经提交过这一轮的词了")
-    word = re.sub(r"\s+", "", unicodedata.normalize("NFKC", request.word))
+        raise HTTPException(status_code=409, detail="already_submitted")
+    word = display_word(request.word)
+    if room.get("lang", "zh") == "zh":
+        word = word.replace(" ", "")
     if not word:
-        raise HTTPException(status_code=400, detail="请输入一个词")
-    if len(word) > MAX_WORD_LENGTH:
-        raise HTTPException(status_code=400, detail=f"词太长了，最多 {MAX_WORD_LENGTH} 个字")
+        raise HTTPException(status_code=400, detail="empty_word")
+    if len(word) > MAX_WORD_LENGTH[room.get("lang", "zh")]:
+        raise HTTPException(status_code=400, detail="word_too_long")
     if room["settings"]["noRepeat"] and normalize_word(word) in room["used"]:
-        raise HTTPException(status_code=400, detail="这个词已经出现过了，换一个吧")
+        raise HTTPException(status_code=400, detail="word_used")
     store_transcript(room, index, request)
     current["words"][index] = word
     current["submittedMs"][index] = int((time.time() - room["roundStartedAt"]) * 1000)
@@ -622,7 +638,7 @@ def require_admin(password: Optional[str]):
 async def admin_get_settings(x_admin_password: Optional[str] = Header(None)):
     require_admin(x_admin_password)
     return {"settings": await get_settings(), "defaults": DEFAULT_SETTINGS, "limits": LIMITS,
-            "builtinWordCount": len(builtin_words()), "storage": storage_kind()}
+            "builtinWordCount": len(builtin_words("zh")), "builtinWordCountEn": len(builtin_words("en")), "storage": storage_kind()}
 
 
 @router.put("/admin/settings")
