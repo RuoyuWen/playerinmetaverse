@@ -95,13 +95,13 @@
         element('span', 'tag', session.lang === 'en' ? 'English' : '中文'),
         element('span', 'metric', `猜了 ${guesses(session)} 次`),
         element('span', 'metric', `用时 ${clock(duration(session))}`),
-        element('span', 'hint', `房间 ${session.code} · 起始词「${session.startWord}」 · 剩 ${session.livesLeft}/${session.settings.lives} 血 · ${localTime(session.startedAt)}`));
+        element('span', 'hint', `房间 ${session.code} · ${session.startWord ? `起始词「${session.startWord}」` : '不给起始词'} · 剩 ${session.livesLeft}/${session.settings.lives} 血 · ${localTime(session.startedAt)}`));
       const body = element('div', 'session-body');
       const rounds = session.rounds.slice();
       if (session.unfinishedRound) rounds.push(Object.assign({ words: ['', ''], unfinished: true }, session.unfinishedRound));
       for (const round of rounds) {
         const block = element('div', 'round');
-        block.append(element('p', 'hint', `第 ${round.round} 轮 · 看到的词：${round.prompt.join(' / ')}` +
+        block.append(element('p', 'hint', `第 ${round.round} 轮 · 看到的词：${round.prompt.join(' / ') || '（无）'}` +
           (round.unfinished ? ' · 未完成' : round.matched ? ' · 对上了' : ' · 没对上') +
           (round.durationMs != null ? ` · 本轮用时 ${clock(round.durationMs)}` : '')));
         const columns = element('div', 'round-cols');
@@ -153,14 +153,14 @@
   }
 
   function sessionsCsv() {
-    const rows = [['session_id', 'room_code', 'language', 'started_at', 'ended_at', 'result', 'player_1', 'player_2', 'start_word',
+    const rows = [['session_id', 'room_code', 'language', 'started_at', 'ended_at', 'result', 'player_1', 'player_2', 'word_given', 'start_word',
       'guesses', 'duration_seconds', 'lives_total', 'lives_left', 'final_word', 'quit_by', 'think_aloud_player_1', 'think_aloud_player_2']];
     for (const session of sessions) {
       const last = session.rounds[session.rounds.length - 1];
       const all = (index) => session.rounds.map((round) => `[第${round.round}轮] ` + said(round.transcripts[index])).join('\n');
       const ms = duration(session);
       rows.push([session.id, session.code, session.lang || 'zh', session.startedAt, session.endedAt || '', session.result || 'unfinished',
-        session.players[0], session.players[1], session.startWord, guesses(session), ms == null ? '' : (ms / 1000).toFixed(1),
+        session.players[0], session.players[1], session.giveWord === false ? 'no' : 'yes', session.startWord || '', guesses(session), ms == null ? '' : (ms / 1000).toFixed(1),
         session.settings.lives, session.livesLeft, session.result === 'won' && last ? last.words[0] : '', session.quitBy || '', all(0), all(1)]);
     }
     return csv(rows);

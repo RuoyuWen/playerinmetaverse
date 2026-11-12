@@ -266,10 +266,12 @@ def start_game(room, settings):
         "startedTs": time.time(), "durationMs": None, "quitBy": None, "unfinished": None,
         "playerNames": [player["name"] for player in room["players"]],
         "settings": {k: v for k, v in settings.items() if not k.startswith("customWords")},
-        "lives": settings["lives"], "round": 0, "rounds": [], "startWord": random.choice(words),
+        "lives": settings["lives"], "round": 0, "rounds": [],
+        # Without a start word, both players simply think of any word in round one.
+        "startWord": random.choice(words) if room.get("giveWord", True) else None,
     })
-    room["used"] = {normalize_word(room["startWord"])}
-    begin_round(room, [room["startWord"]])
+    room["used"] = {normalize_word(room["startWord"])} if room["startWord"] else set()
+    begin_round(room, [room["startWord"]] if room["startWord"] else [])
 
 
 def resolve_round(room):
@@ -323,7 +325,8 @@ def quit_game(room, index):
 
 def session_document(room):
     document = {
-        "id": room["sessionId"], "code": room["code"], "lang": room.get("lang", "zh"), "startedAt": room["startedAt"],
+        "id": room["sessionId"], "code": room["code"], "lang": room.get("lang", "zh"), "giveWord": room.get("giveWord", True),
+        "startedAt": room["startedAt"],
         "endedAt": room["endedAt"], "result": room["result"], "settings": room["settings"],
         "players": room.get("playerNames") or [player["name"] for player in room["players"]],
         "startWord": room["startWord"], "quitBy": room.get("quitBy"),
@@ -412,7 +415,8 @@ def view(room, index):
     partner = room["players"][other_index] if len(room["players"]) > 1 else None
     playing = room["phase"] in ("think", "input")
     state = {
-        "code": room["code"], "lang": room.get("lang", "zh"), "phase": room["phase"], "serverNow": now,
+        "code": room["code"], "lang": room.get("lang", "zh"), "giveWord": room.get("giveWord", True),
+        "phase": room["phase"], "serverNow": now,
         "me": {"name": me["name"], "ready": me["ready"]},
         "partner": partner and {
             "name": partner["name"], "ready": partner["ready"],
@@ -447,6 +451,7 @@ class JoinRequest(BaseModel):
     name: str = ""
     token: Optional[str] = None
     lang: str = "zh"  # used only when this request creates the room
+    giveWord: bool = True  # likewise: False means round one has no start word
 
 
 class PlayerRequest(BaseModel):
@@ -515,7 +520,8 @@ async def join(request: JoinRequest):
         room = None  # everyone left long ago: the code is free again
     if room is None:
         room = rooms[code] = {"code": code, "phase": "lobby", "players": [], "touched": now, "sessionId": None,
-                              "lang": request.lang if request.lang in LANGUAGES else "zh"}
+                              "lang": request.lang if request.lang in LANGUAGES else "zh",
+                              "giveWord": request.giveWord}
     if room["phase"] != "lobby" or len(room["players"]) >= 2:
         raise HTTPException(status_code=409, detail="room_full")
     taken = {player["name"] for player in room["players"]}
