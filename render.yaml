@@ -18,6 +18,10 @@ services:
         value: auto
       - key: RELAY_API_KEY
         sync: false
+      - key: WORDSYNC_ADMIN_PASSWORD
+        sync: false
+      - key: WORDSYNC_DATABASE_URL
+        sync: false
       - key: RELAY_BASE_URL
         value: https://xuedingmao.top/v1
       - key: RELAY_MODEL

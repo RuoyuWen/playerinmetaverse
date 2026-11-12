@@ -12,6 +12,7 @@ import json
 import httpx
 from pathlib import Path
 from sam_proxy import router as sam_router
+from wordsync_backend import router as wordsync_router
 
 # 配置日志记录
 logging.basicConfig(
@@ -65,6 +66,7 @@ app.add_middleware(
 )
 
 app.include_router(sam_router)
+app.include_router(wordsync_router)
 
 # 基础数据模型
 class ChatRequest(BaseModel):
