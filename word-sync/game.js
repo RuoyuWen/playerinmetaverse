@@ -32,15 +32,29 @@
     chosenLang = localStorage.getItem('wordsync-lang') || (/^zh/i.test(navigator.language || 'zh') ? 'zh' : 'en');
   } catch (error) { /* keep the default */ }
 
+  let chosenGive = true;  // whether a room this player creates gets a start word
+  try { chosenGive = localStorage.getItem('wordsync-give') !== 'no'; } catch (error) { /* keep the default */ }
+
   function useLanguage(lang) {
     window.Lang.set(lang);
-    document.querySelectorAll('.segment').forEach((button) => {
+    document.querySelectorAll('.segment[data-lang]').forEach((button) => {
       button.setAttribute('aria-pressed', String(button.dataset.lang === chosenLang));
+    });
+    document.querySelectorAll('.segment[data-give]').forEach((button) => {
+      button.setAttribute('aria-pressed', String((button.dataset.give === 'yes') === chosenGive));
     });
     $('word-input').maxLength = window.Lang.current === 'en' ? 30 : 12;
   }
 
-  document.querySelectorAll('.segment').forEach((button) => {
+  document.querySelectorAll('.segment[data-give]').forEach((button) => {
+    button.addEventListener('click', () => {
+      chosenGive = button.dataset.give === 'yes';
+      try { localStorage.setItem('wordsync-give', chosenGive ? 'yes' : 'no'); } catch (error) { /* optional */ }
+      useLanguage(chosenLang);
+    });
+  });
+
+  document.querySelectorAll('.segment[data-lang]').forEach((button) => {
     button.addEventListener('click', () => {
       chosenLang = button.dataset.lang;
       try { localStorage.setItem('wordsync-lang', chosenLang); } catch (error) { /* optional */ }
@@ -254,7 +268,9 @@
     const prompt = $('prompt');
     prompt.textContent = '';
     if (state.round === 1) {
-      prompt.append(wordCard(T('起始词'), state.startWord, 'solo'));
+      prompt.append(state.startWord
+        ? wordCard(T('起始词'), state.startWord, 'solo')
+        : wordCard(T('没有起始词'), '?', 'solo blank'));
     } else {
       prompt.append(
         wordCard(T('你上一轮写的'), state.prompt.mine, state.prompt.mine ? '' : 'blank'),
@@ -319,7 +335,7 @@
         lives: config.lives, think: config.thinkSeconds,
         input: config.inputSeconds ? T('，输入限时 {seconds} 秒', { seconds: config.inputSeconds }) : '',
         repeat: config.noRepeat ? T('，不能用出现过的词') : '',
-      });
+      }) + (state.giveWord === false ? ' ' + T('本局不给起始词，第一轮各自随便想一个词。') : '');
     }
   }
 
@@ -335,7 +351,7 @@
 
     const thinking = state.phase === 'think';
     const submitted = state.me.submitted;
-    $('think-instruction').textContent = state.round === 1 ? T('由这个词想到下一个词，把你的思路说出来') : T('猜猜你们会想到哪个共同的词，把思路说出来');
+    $('think-instruction').textContent = state.round === 1 ? T(state.startWord ? '由这个词想到下一个词，把你的思路说出来' : '随便想一个词，把你的思路说出来') : T('猜猜你们会想到哪个共同的词，把思路说出来');
     $('word-form').hidden = submitted;
     $('wait-panel').hidden = !submitted;
     $('my-word-line').textContent = T('你写的是「{word}」', { word: state.me.word || '' });
@@ -408,7 +424,7 @@
     button.textContent = T('正在连接…');
     const slow = setTimeout(() => { button.textContent = T('服务器正在启动，首次可能要等近一分钟…'); }, 4000);
     try {
-      const result = await api('/join', { method: 'POST', body: { code, name, token, lang: chosenLang } });
+      const result = await api('/join', { method: 'POST', body: { code, name, token, lang: chosenLang, giveWord: chosenGive } });
       session = { code, token: result.token };
       saveSession();
       $('join-error').textContent = '';
