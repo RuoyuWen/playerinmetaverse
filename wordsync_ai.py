@@ -43,6 +43,9 @@ DEFAULT_AI: Dict[str, Any] = {
     # Second, more accurate transcript of what players say (uses the same key and endpoint).
     "transcribe": False,
     "transcribeModel": "gpt-4o-transcribe",
+    "transcribeLanguage": "room",  # "room" follows the room's language; "zh" / "en" force one
+    # Passed to the transcription model whenever the transcript should be Chinese.
+    "transcribePrompt": "以下是普通话的口语录音。请一律用简体中文转写，不要翻译成英文，不要使用繁体字。",
 }
 TRANSCRIBE_SUGGESTIONS = ["gpt-4o-transcribe", "gpt-4o-mini-transcribe", "whisper-1"]
 MAX_AUDIO_BYTES = 20 * 1024 * 1024
@@ -59,6 +62,10 @@ def clean_ai(raw: Any, previous: Optional[Dict[str, Any]] = None) -> Dict[str, A
     keeps the stored key; clearApiKey removes it."""
     raw = raw if isinstance(raw, dict) else {}
     result = {**DEFAULT_AI, **(previous or {})}
+    if raw.get("transcribeLanguage") in ("room", "zh", "en"):
+        result["transcribeLanguage"] = raw["transcribeLanguage"]
+    if isinstance(raw.get("transcribePrompt"), str):  # may be emptied on purpose
+        result["transcribePrompt"] = raw["transcribePrompt"].strip()[:1000]
     for name in ("enabled", "transcribe"):
         if isinstance(raw.get(name), bool):
             result[name] = raw[name]
@@ -103,12 +110,17 @@ def can_transcribe(ai: Dict[str, Any]) -> bool:
 async def transcribe(ai: Dict[str, Any], audio: bytes, content_type: str, lang: str) -> str:
     """Turn one round's recording into text. The audio is only held in memory for this call."""
     extension = "mp4" if "mp4" in content_type else "ogg" if "ogg" in content_type else "webm"
+    forced = ai.get("transcribeLanguage", "room")
+    language = forced if forced in ("zh", "en") else ("en" if lang == "en" else "zh")
+    fields = {"model": ai["transcribeModel"], "language": language, "response_format": "json"}
+    if language == "zh" and ai.get("transcribePrompt"):
+        fields["prompt"] = ai["transcribePrompt"]
     try:
         async with httpx.AsyncClient(timeout=120) as client:
             reply = await client.post(
                 ai["baseUrl"].rstrip("/") + "/audio/transcriptions",
                 headers={"Authorization": f"Bearer {ai['apiKey']}"},
-                data={"model": ai["transcribeModel"], "language": "en" if lang == "en" else "zh", "response_format": "json"},
+                data=fields,
                 files={"file": (f"round.{extension}", audio, content_type.split(";")[0] or "audio/webm")})
     except httpx.HTTPError as error:
         raise AIError(f"连不上转写接口：{type(error).__name__}")

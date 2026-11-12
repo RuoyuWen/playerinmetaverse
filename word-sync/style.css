@@ -64,11 +64,11 @@ h2 { font-size: 1rem; }
 }
 .field { display: grid; gap: 6px; font-size: .875rem; color: var(--ink-soft); }
 .field > span.split { display: flex; justify-content: space-between; align-items: baseline; }
-input[type="text"], input[type="number"], input[type="password"], textarea {
+input[type="text"], input[type="number"], input[type="password"], textarea, select {
   width: 100%; padding: 12px 14px; font: inherit; font-size: 1rem; color: var(--ink);
   background: var(--paper); border: 1px solid var(--line); border-radius: 10px; outline: none;
 }
-input:focus, textarea:focus { border-color: var(--seal); box-shadow: 0 0 0 3px var(--seal-soft); }
+input:focus, textarea:focus, select:focus { border-color: var(--seal); box-shadow: 0 0 0 3px var(--seal-soft); }
 .code-input { font: 700 1.9rem/1.2 var(--serif); letter-spacing: .5em; text-align: center; padding-left: .5em; font-variant-numeric: tabular-nums; }
 
 button { font: inherit; cursor: pointer; }
