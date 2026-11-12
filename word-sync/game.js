@@ -4,6 +4,7 @@
   const API = (window.WORDSYNC_CONFIG.BACKEND_URL || '') + '/api/wordsync';
   const POLL_MS = 800;
   const $ = (id) => document.getElementById(id);
+  const T = (source, values) => window.Lang.tr(source, values);
 
   let session = null;      // { code, token }
   let state = null;        // latest server state
@@ -24,6 +25,30 @@
   let speechTesting = false;
   let heard = '';
 
+  // ------------------------------------------------------------ language
+
+  let chosenLang = 'zh';  // what this player picked on the join screen
+  try {
+    chosenLang = localStorage.getItem('wordsync-lang') || (/^zh/i.test(navigator.language || 'zh') ? 'zh' : 'en');
+  } catch (error) { /* keep the default */ }
+
+  function useLanguage(lang) {
+    window.Lang.set(lang);
+    document.querySelectorAll('.segment').forEach((button) => {
+      button.setAttribute('aria-pressed', String(button.dataset.lang === chosenLang));
+    });
+    $('word-input').maxLength = window.Lang.current === 'en' ? 30 : 12;
+  }
+
+  document.querySelectorAll('.segment').forEach((button) => {
+    button.addEventListener('click', () => {
+      chosenLang = button.dataset.lang;
+      try { localStorage.setItem('wordsync-lang', chosenLang); } catch (error) { /* optional */ }
+      $('join-error').textContent = '';
+      useLanguage(chosenLang);
+    });
+  });
+
   // ------------------------------------------------------------ helpers
 
   async function api(path, options = {}) {
@@ -37,7 +62,7 @@
     let data = null;
     try { data = await response.json(); } catch (error) { /* non-JSON error page */ }
     if (!response.ok) {
-      const failure = new Error((data && typeof data.detail === 'string' && data.detail) || '服务器开小差了，请稍后再试');
+      const failure = new Error(window.Lang.error(data && data.detail));
       failure.status = response.status;
       throw failure;
     }
@@ -82,7 +107,7 @@
     },
     spawn() {
       const recognizer = new Recognition();
-      recognizer.lang = 'zh-CN';
+      recognizer.lang = window.Lang.current === 'en' ? 'en-US' : 'zh-CN';
       recognizer.continuous = true;
       recognizer.interimResults = true;
       recognizer.onresult = (event) => {
@@ -175,6 +200,10 @@
     const previous = state;
     clockOffset = next.serverNow - Date.now() / 1000;
     state = next;
+    if (next.lang !== window.Lang.current) {  // the room's language wins over the one picked on the join screen
+      useLanguage(next.lang);
+      roundKey = '';  // redraw the word cards in the new language
+    }
     const playing = next.phase === 'think' || next.phase === 'input';
     const key = playing ? next.sessionId + ':' + next.round : '';
     if (key !== roundKey) {
@@ -185,10 +214,10 @@
       if (playing) {
         renderPrompt();
         if (!next.me.submitted) setTimeout(() => $('word-input').focus({ preventScroll: true }), 50);
-        if (next.round > 1 && previous && previous.round === next.round - 1) toast('没对上，扣一格血');
+        if (next.round > 1 && previous && previous.round === next.round - 1) toast(T('没对上，扣一格血'));
       }
     }
-    if (previous && previous.partner && !next.partner && next.phase === 'lobby') toast('对方离开了房间');
+    if (previous && previous.partner && !next.partner && next.phase === 'lobby') toast(T('对方离开了房间'));
     if (next.phase !== 'lobby') speechTesting = false;
     syncListening();
     render();
@@ -196,6 +225,7 @@
 
   function leaveLocally(message) {
     session = null; state = null; roundKey = '';
+    useLanguage(chosenLang);
     saveSession();
     clearTimeout(pollTimer);
     speechTesting = false;
@@ -215,7 +245,7 @@
     label.textContent = who;
     const text = document.createElement('p');
     text.className = 'word';
-    text.textContent = word || '（没写）';
+    text.textContent = word || T('（没写）');
     card.append(label, text);
     return card;
   }
@@ -224,11 +254,11 @@
     const prompt = $('prompt');
     prompt.textContent = '';
     if (state.round === 1) {
-      prompt.append(wordCard('起始词', state.startWord, 'solo'));
+      prompt.append(wordCard(T('起始词'), state.startWord, 'solo'));
     } else {
       prompt.append(
-        wordCard('你上一轮写的', state.prompt.mine, state.prompt.mine ? '' : 'blank'),
-        wordCard((state.partner ? state.partner.name : '对方') + ' 写的', state.prompt.theirs, state.prompt.theirs ? '' : 'blank'));
+        wordCard(T('你上一轮写的'), state.prompt.mine, state.prompt.mine ? '' : 'blank'),
+        wordCard(T('{name} 写的', { name: state.partner ? state.partner.name : T('对方') }), state.prompt.theirs, state.prompt.theirs ? '' : 'blank'));
     }
   }
 
@@ -239,14 +269,14 @@
       if (round.matched) item.className = 'matched';
       const number = document.createElement('span');
       number.className = 'n';
-      number.textContent = '第' + round.round + '轮';
+      number.textContent = T('第{n}轮', { n: round.round });
       item.append(number);
-      for (const [who, word] of [['你', round.mine], [partnerName, round.theirs]]) {
+      for (const [who, word] of [[T('你'), round.mine], [partnerName, round.theirs]]) {
         const cell = document.createElement('span');
         cell.className = 'w';
         const small = document.createElement('small');
         small.textContent = who;
-        cell.append(small, word || '（没写）');
+        cell.append(small, word || T('（没写）'));
         item.append(cell);
       }
       list.append(item);
@@ -255,44 +285,47 @@
 
   function renderLobby() {
     $('lobby-code').textContent = state.code;
-    const seats = [[$('seat-me'), state.me, '（你）'], [$('seat-partner'), state.partner, '']];
+    const seats = [[$('seat-me'), state.me, T('（你）')], [$('seat-partner'), state.partner, '']];
     for (const [seat, player, suffix] of seats) {
       seat.className = 'seat' + (player ? (player.ready ? ' ready' : '') : ' empty');
-      seat.querySelector('.seat-name').textContent = player ? player.name + suffix : '等待同伴加入…';
-      seat.querySelector('.seat-status').textContent = !player ? '把房间号发给对方'
-        : player.online === false ? '掉线了' : player.ready ? '已准备' : '未准备';
+      seat.querySelector('.seat-name').textContent = player ? player.name + suffix : T('等待同伴加入…');
+      seat.querySelector('.seat-status').textContent = !player ? T('把房间号发给对方')
+        : player.online === false ? T('掉线了') : player.ready ? T('已准备') : T('未准备');
     }
 
     const messages = {
-      idle: '点击“开始检测”，允许使用麦克风，然后随便说一句话。',
-      testing: '正在听…请对着麦克风说一句话。',
-      ok: '语音识别正常。',
-      denied: '麦克风权限被拒绝了。请在浏览器地址栏里允许使用麦克风，然后刷新页面。',
-      error: '语音识别服务连不上。请检查麦克风和网络，或换用 Chrome / Edge / Safari。',
-      unsupported: '这个浏览器不支持语音识别，请换用 Chrome、Edge 或 Safari。',
+      idle: T('点击“开始检测”，允许使用麦克风，然后随便说一句话。'),
+      testing: T('正在听…请对着麦克风说一句话。'),
+      ok: T('语音识别正常。'),
+      denied: T('麦克风权限被拒绝了。请在浏览器地址栏里允许使用麦克风，然后刷新页面。'),
+      error: T('语音识别服务连不上。请检查麦克风和网络，或换用 Chrome / Edge / Safari。'),
+      unsupported: T('这个浏览器不支持语音识别，请换用 Chrome、Edge 或 Safari。'),
     };
     const status = speechTesting && speechStatus !== 'denied' && speechStatus !== 'error' && speechStatus !== 'ok' ? 'testing' : speechStatus;
     $('speech-status').textContent = messages[status];
     $('speech-heard').hidden = !heard;
-    $('speech-heard').textContent = heard ? '听到：' + heard : '';
+    $('speech-heard').textContent = heard ? T('听到：{text}', { text: heard }) : '';
     $('speech-test').hidden = speechStatus === 'unsupported';
-    $('speech-test').textContent = speechTesting ? '停止检测' : speechStatus === 'ok' ? '再测一次' : '开始检测';
+    $('speech-test').textContent = speechTesting ? T('停止检测') : speechStatus === 'ok' ? T('再测一次') : T('开始检测');
 
     const needSpeech = !config || config.requireSpeech;
     const ready = state.me.ready;
     const button = $('ready-button');
     button.disabled = !ready && needSpeech && speechStatus !== 'ok';
-    button.textContent = ready ? '已准备 · 点击取消' : needSpeech && speechStatus !== 'ok' ? '先完成语音识别检测' : '准备';
+    button.textContent = ready ? T('已准备 · 点击取消') : needSpeech && speechStatus !== 'ok' ? T('先完成语音识别检测') : T('准备');
     button.classList.toggle('is-ready', ready);
     if (config) {
-      $('lobby-rules').textContent = `本局规则：${config.lives} 格血，每轮思考 ${config.thinkSeconds} 秒` +
-        (config.inputSeconds ? `，输入限时 ${config.inputSeconds} 秒` : '') + (config.noRepeat ? '，不能用出现过的词' : '') + '。两人都准备后自动开始。';
+      $('lobby-rules').textContent = T('本局规则：{lives} 格血，每轮思考 {think} 秒{input}{repeat}。两人都准备后自动开始。', {
+        lives: config.lives, think: config.thinkSeconds,
+        input: config.inputSeconds ? T('，输入限时 {seconds} 秒', { seconds: config.inputSeconds }) : '',
+        repeat: config.noRepeat ? T('，不能用出现过的词') : '',
+      });
     }
   }
 
   function renderGame() {
-    $('round-label').textContent = '第 ' + state.round + ' 轮';
-    $('lives-label').textContent = '剩余 ' + state.lives + ' / ' + state.maxLives + ' 格血';
+    $('round-label').textContent = T('第 {n} 轮', { n: state.round });
+    $('lives-label').textContent = T('剩余 {lives} / {max} 格血', { lives: state.lives, max: state.maxLives });
     const hearts = $('hearts');
     if (hearts.children.length !== state.maxLives) {
       hearts.textContent = '';
@@ -302,16 +335,16 @@
 
     const thinking = state.phase === 'think';
     const submitted = state.me.submitted;
-    $('think-instruction').textContent = state.round === 1 ? '由这个词想到下一个词，把你的思路说出来' : '猜猜你们会想到哪个共同的词，把思路说出来';
+    $('think-instruction').textContent = state.round === 1 ? T('由这个词想到下一个词，把你的思路说出来') : T('猜猜你们会想到哪个共同的词，把思路说出来');
     $('word-form').hidden = submitted;
     $('wait-panel').hidden = !submitted;
-    $('my-word').textContent = state.me.word || '';
-    $('input-instruction').textContent = thinking ? '想好了随时可以提交，不用等倒计时' : '时间到了，请输入你想到的词';
+    $('my-word-line').textContent = T('你写的是「{word}」', { word: state.me.word || '' });
+    $('input-instruction').textContent = thinking ? T('想好了随时可以提交，不用等倒计时') : T('时间到了，请输入你想到的词');
 
     const listening = !submitted && speech.wanted;
     $('mic-dot').classList.toggle('live', listening);
-    $('mic-label').textContent = submitted ? '本轮已提交' : listening ? '正在听你说（只保存文字，不保存录音）'
-      : speechStatus === 'unsupported' ? '此浏览器不支持语音识别' : speechStatus === 'denied' ? '麦克风权限被拒绝，无法转写' : '语音识别未启动';
+    $('mic-label').textContent = submitted ? T('本轮已提交') : listening ? T('正在听你说（只保存文字，不保存录音）')
+      : speechStatus === 'unsupported' ? T('此浏览器不支持语音识别') : speechStatus === 'denied' ? T('麦克风权限被拒绝，无法转写') : T('语音识别未启动');
     const text = $('transcript-text');
     text.textContent = segments.map((segment) => segment.text).join(' ');
     if (interim) {
@@ -323,9 +356,9 @@
     text.scrollTop = text.scrollHeight;
 
     const partner = state.partner;
-    $('partner-line').textContent = !partner ? '' : partner.online === false ? partner.name + ' 掉线了，等待重连…'
-      : partner.submitted ? partner.name + ' 已经提交了' : thinking ? '' : partner.name + ' 还没提交…';
-    renderHistory($('history'), state.history, partner ? partner.name : '对方');
+    $('partner-line').textContent = !partner ? '' : partner.online === false ? T('{name} 掉线了，等待重连…', { name: partner.name })
+      : partner.submitted ? T('{name} 已经提交了', { name: partner.name }) : thinking ? '' : T('{name} 还没提交…', { name: partner.name });
+    renderHistory($('history'), state.history, partner ? partner.name : T('对方'));
     renderTimer();
   }
 
@@ -341,7 +374,7 @@
     $('timer-number').textContent = Math.ceil(left);
     $('timer-number').parentElement.classList.toggle('urgent', left <= 5);
     $('timer-fill').style.transform = 'scaleX(' + Math.min(1, left / total) + ')';
-    if (!thinking) $('think-instruction').textContent = '时间到之前提交你的词';
+    if (!thinking) $('think-instruction').textContent = T('时间到之前提交你的词');
     if (left <= 0 && !timeUpPolled) { timeUpPolled = true; poll(); }
   }
 
@@ -350,14 +383,14 @@
     const quit = state.phase === 'quit';
     const last = state.history[state.history.length - 1];
     $('end-seal').classList.toggle('lost', !won);
-    $('end-seal').textContent = won ? '灵犀' : quit ? '散场' : '可惜';
-    $('end-title').textContent = won ? '心有灵犀！' : quit ? '对局已结束' : '血量耗尽';
+    $('end-seal').textContent = won ? T('灵犀') : quit ? T('散场') : T('可惜');
+    $('end-title').textContent = won ? T('心有灵犀！') : quit ? T('对局已结束') : T('血量耗尽');
     $('end-detail').textContent = won
-      ? `你们在第 ${last.round} 轮同时想到了「${last.mine}」，还剩 ${state.lives} 格血。`
-      : quit ? `${state.quitBy || '对方'} 退出了房间，本局提前结束。`
-      : `${state.maxLives} 格血用完了，这次没能想到一起。`;
-    $('again-button').textContent = state.partner && state.partner.left ? '回到房间等新同伴' : '再来一局';
-    renderHistory($('end-history'), state.history, state.partner ? state.partner.name : '对方');
+      ? T('你们在第 {round} 轮同时想到了「{word}」，还剩 {lives} 格血。', { round: last.round, word: last.mine, lives: state.lives })
+      : quit ? T('{name} 退出了房间，本局提前结束。', { name: state.quitBy || T('对方') })
+      : T('{max} 格血用完了，这次没能想到一起。', { max: state.maxLives });
+    $('again-button').textContent = state.partner && state.partner.left ? T('回到房间等新同伴') : T('再来一局');
+    renderHistory($('end-history'), state.history, state.partner ? state.partner.name : T('对方'));
   }
 
   function render() {
@@ -372,10 +405,10 @@
   async function join(code, name, token) {
     const button = $('join-button');
     button.disabled = true;
-    button.textContent = '正在连接…';
-    const slow = setTimeout(() => { button.textContent = '正在唤醒服务器，首次可能要等近一分钟…'; }, 4000);
+    button.textContent = T('正在连接…');
+    const slow = setTimeout(() => { button.textContent = T('服务器正在启动，首次可能要等近一分钟…'); }, 4000);
     try {
-      const result = await api('/join', { method: 'POST', body: { code, name, token } });
+      const result = await api('/join', { method: 'POST', body: { code, name, token, lang: chosenLang } });
       session = { code, token: result.token };
       saveSession();
       $('join-error').textContent = '';
@@ -385,19 +418,19 @@
     } catch (error) {
       session = null;
       saveSession();
-      $('join-error').textContent = error.status ? error.message : '连不上服务器，请检查网络后重试';
+      $('join-error').textContent = error.status ? error.message : T('连不上服务器，请检查网络后重试');
       show('join');
     } finally {
       clearTimeout(slow);
       button.disabled = false;
-      button.textContent = '进入房间';
+      button.textContent = T('进入房间');
     }
   }
 
   $('join-form').addEventListener('submit', (event) => {
     event.preventDefault();
     const code = $('code-input').value.trim();
-    if (!/^\d{4}$/.test(code)) { $('join-error').textContent = '房间号必须是 4 位数字'; return; }
+    if (!/^\d{4}$/.test(code)) { $('join-error').textContent = T('房间号必须是 4 位数字'); return; }
     const name = $('name-input').value.trim();
     try { localStorage.setItem('wordsync-name', name); } catch (error) { /* optional */ }
     join(code, name, null);
@@ -431,7 +464,7 @@
   $('leave-button').addEventListener('click', leave);
   $('exit-button').addEventListener('click', leave);
   $('quit-button').addEventListener('click', async () => {
-    if (!confirm('退出后本局会立刻结束，对方也会看到对局结束。确定退出吗？')) return;
+    if (!confirm(T('退出后本局会立刻结束，对方也会看到对局结束。确定退出吗？'))) return;
     await flushTranscript(); // save what was said so far before the round is closed
     leave();
   });
@@ -440,13 +473,13 @@
     event.preventDefault();
     if (event.isComposing) return;
     const word = $('word-input').value.trim();
-    if (!word) { $('word-error').textContent = '请输入一个词'; return; }
+    if (!word) { $('word-error').textContent = T('请输入一个词'); return; }
     const button = event.target.querySelector('button');
     button.disabled = true;
     try {
       apply(await api('/submit', { method: 'POST', body: { ...session, round: state.round, word, segments: currentSegments() } }));
     } catch (error) {
-      $('word-error').textContent = error.status ? error.message : '提交失败，请重试';
+      $('word-error').textContent = error.status ? error.message : T('提交失败，请重试');
       if (error.status === 409) poll();
     } finally {
       button.disabled = false;
@@ -464,6 +497,7 @@
 
   // ------------------------------------------------------------ boot
 
+  useLanguage(chosenLang);
   try { $('name-input').value = localStorage.getItem('wordsync-name') || ''; } catch (error) { /* optional */ }
   let saved = null;
   try { saved = JSON.parse(sessionStorage.getItem('wordsync-session')); } catch (error) { /* start fresh */ }

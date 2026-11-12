@@ -36,6 +36,8 @@
     $('noRepeat').checked = settings.noRepeat;
     $('requireSpeech').checked = settings.requireSpeech;
     $('customWords').value = settings.customWords.join('\n');
+    $('customWordsEn').value = (settings.customWordsEn || []).join('\n');
+    if (data.builtinWordCountEn) $('builtin-count-en').textContent = data.builtinWordCountEn;
     if (data.builtinWordCount) $('builtin-count').textContent = data.builtinWordCount;
     if (data.storage) {
       $('storage-note').textContent = data.storage === 'postgres'
@@ -90,6 +92,7 @@
       summary.append(
         element('b', '', session.players.join(' × ')),
         element('span', 'tag ' + (session.result || ''), label),
+        element('span', 'tag', session.lang === 'en' ? 'English' : '中文'),
         element('span', 'metric', `猜了 ${guesses(session)} 次`),
         element('span', 'metric', `用时 ${clock(duration(session))}`),
         element('span', 'hint', `房间 ${session.code} · 起始词「${session.startWord}」 · 剩 ${session.livesLeft}/${session.settings.lives} 血 · ${localTime(session.startedAt)}`));
@@ -150,13 +153,13 @@
   }
 
   function sessionsCsv() {
-    const rows = [['session_id', 'room_code', 'started_at', 'ended_at', 'result', 'player_1', 'player_2', 'start_word',
+    const rows = [['session_id', 'room_code', 'language', 'started_at', 'ended_at', 'result', 'player_1', 'player_2', 'start_word',
       'guesses', 'duration_seconds', 'lives_total', 'lives_left', 'final_word', 'quit_by', 'think_aloud_player_1', 'think_aloud_player_2']];
     for (const session of sessions) {
       const last = session.rounds[session.rounds.length - 1];
       const all = (index) => session.rounds.map((round) => `[第${round.round}轮] ` + said(round.transcripts[index])).join('\n');
       const ms = duration(session);
-      rows.push([session.id, session.code, session.startedAt, session.endedAt || '', session.result || 'unfinished',
+      rows.push([session.id, session.code, session.lang || 'zh', session.startedAt, session.endedAt || '', session.result || 'unfinished',
         session.players[0], session.players[1], session.startWord, guesses(session), ms == null ? '' : (ms / 1000).toFixed(1),
         session.settings.lives, session.livesLeft, session.result === 'won' && last ? last.words[0] : '', session.quitBy || '', all(0), all(1)]);
     }
@@ -199,6 +202,7 @@
       lives: Number($('lives').value), thinkSeconds: Number($('thinkSeconds').value), inputSeconds: Number($('inputSeconds').value),
       noRepeat: $('noRepeat').checked, requireSpeech: $('requireSpeech').checked,
       customWords: $('customWords').value.split(/[\s,，、;；]+/).filter(Boolean),
+      customWordsEn: $('customWordsEn').value.split(/[\n,;]+/).map((word) => word.trim()).filter(Boolean),
     };
     try {
       fillSettings(await api('/settings', { method: 'PUT', body }));

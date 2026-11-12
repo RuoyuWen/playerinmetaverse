@@ -395,14 +395,14 @@ def sweep_rooms():
 async def find_room(code: str, token: str):
     room = await load_room(code)
     if not room:
-        raise HTTPException(status_code=404, detail="房间不存在或已过期，请重新输入房间号")
+        raise HTTPException(status_code=404, detail="room_not_found")
     for index, player in enumerate(room["players"]):
         if hmac.compare_digest(player["token"], token) and not player.get("left"):
             now = time.time()
             player["lastSeen"] = room["touched"] = now
             advance(room)
             return room, index
-    raise HTTPException(status_code=403, detail="你不在这个房间里，请重新加入")
+    raise HTTPException(status_code=403, detail="not_in_room")
 
 
 def view(room, index):
@@ -498,7 +498,7 @@ async def public_config():
 async def join(request: JoinRequest):
     code = request.code.strip()
     if not re.fullmatch(r"\d{4}", code):
-        raise HTTPException(status_code=400, detail="房间号必须是 4 位数字")
+        raise HTTPException(status_code=400, detail="bad_code")
     name = request.name.strip()[:MAX_NAME_LENGTH]
     sweep_rooms()
     now = time.time()
@@ -517,7 +517,7 @@ async def join(request: JoinRequest):
         room = rooms[code] = {"code": code, "phase": "lobby", "players": [], "touched": now, "sessionId": None,
                               "lang": request.lang if request.lang in LANGUAGES else "zh"}
     if room["phase"] != "lobby" or len(room["players"]) >= 2:
-        raise HTTPException(status_code=409, detail="这个房间已经有两位玩家了，换一个房间号试试")
+        raise HTTPException(status_code=409, detail="room_full")
     taken = {player["name"] for player in room["players"]}
     name = name or (f"Player {len(room['players']) + 1}" if room.get("lang") == "en" else f"玩家{len(room['players']) + 1}")
     if name in taken:
@@ -557,19 +557,19 @@ async def transcript(request: TranscriptRequest):
 async def submit(request: SubmitRequest):
     room, index = await find_room(request.code, request.token)
     if request.round != room.get("round") or room["phase"] not in ("think", "input"):
-        raise HTTPException(status_code=409, detail="这一轮已经结束了")
+        raise HTTPException(status_code=409, detail="round_over")
     current = room["current"]
     if current["words"][index] is not None:
-        raise HTTPException(status_code=409, detail="你已经提交过这一轮的词了")
+        raise HTTPException(status_code=409, detail="already_submitted")
     word = display_word(request.word)
     if room.get("lang", "zh") == "zh":
         word = word.replace(" ", "")
     if not word:
-        raise HTTPException(status_code=400, detail="请输入一个词")
+        raise HTTPException(status_code=400, detail="empty_word")
     if len(word) > MAX_WORD_LENGTH[room.get("lang", "zh")]:
-        raise HTTPException(status_code=400, detail="词太长了")
+        raise HTTPException(status_code=400, detail="word_too_long")
     if room["settings"]["noRepeat"] and normalize_word(word) in room["used"]:
-        raise HTTPException(status_code=400, detail="这个词已经出现过了，换一个吧")
+        raise HTTPException(status_code=400, detail="word_used")
     store_transcript(room, index, request)
     current["words"][index] = word
     current["submittedMs"][index] = int((time.time() - room["roundStartedAt"]) * 1000)
