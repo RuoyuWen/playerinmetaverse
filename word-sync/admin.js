@@ -40,6 +40,13 @@
       list.textContent = '';
       for (const model of data.modelSuggestions) list.append(Object.assign(document.createElement('option'), { value: model }));
     }
+    if (data.transcribeSuggestions) {
+      const list = $('ai-transcribe-models');
+      list.textContent = '';
+      for (const model of data.transcribeSuggestions) list.append(Object.assign(document.createElement('option'), { value: model }));
+    }
+    $('ai-transcribe').checked = !!ai.transcribe;
+    $('ai-transcribe-model').value = ai.transcribeModel || '';
     $('ai-enabled').checked = ai.enabled;
     $('ai-key').value = '';
     $('ai-clear-key').checked = false;
@@ -97,6 +104,8 @@
   }
 
   const said = (segments) => (segments || []).map((segment) => segment.text).join(' ');
+  const hq = (round, index) => (round.transcriptsHq && round.transcriptsHq[index]) || null;
+  const hqText = (round, index) => (hq(round, index) ? hq(round, index).text || '' : '');
   const localTime = (iso) => (iso ? new Date(iso).toLocaleString('zh-CN', { hour12: false }) : '');
 
   function renderSessions() {
@@ -135,6 +144,8 @@
             element('p', 'hint', name),
             element('p', 'word', round.unfinished ? '—' : round.words[index] || '（没写）'),
             element('p', 'said', said(round.transcripts[index]) || '（没有转写文字）'));
+          const precise = hq(round, index);
+          if (precise) column.append(element('p', 'said hq', precise.error ? `高精度转写失败：${precise.error}` : `高精度（${precise.model}）：${precise.text || '（没有识别到内容）'}`));
           columns.append(column);
         });
         block.append(columns);
@@ -178,27 +189,28 @@
 
   function sessionsCsv() {
     const rows = [['session_id', 'room_code', 'language', 'started_at', 'ended_at', 'result', 'player_1', 'player_2', 'opponent', 'ai_model', 'word_given', 'start_word',
-      'guesses', 'duration_seconds', 'lives_total', 'lives_left', 'final_word', 'quit_by', 'think_aloud_player_1', 'think_aloud_player_2']];
+      'guesses', 'duration_seconds', 'lives_total', 'lives_left', 'final_word', 'quit_by', 'think_aloud_player_1', 'think_aloud_player_2', 'think_aloud_hq_player_1', 'think_aloud_hq_player_2']];
     for (const session of sessions) {
       const last = session.rounds[session.rounds.length - 1];
       const all = (index) => session.rounds.map((round) => `[第${round.round}轮] ` + said(round.transcripts[index])).join('\n');
+      const allHq = (index) => session.rounds.map((round) => `[第${round.round}轮] ` + hqText(round, index)).join('\n');
       const ms = duration(session);
       rows.push([session.id, session.code, session.lang || 'zh', session.startedAt, session.endedAt || '', session.result || 'unfinished',
         session.players[0], session.players[1], session.opponent || 'human', session.aiModel || '', session.giveWord === false ? 'no' : 'yes', session.startWord || '', guesses(session), ms == null ? '' : (ms / 1000).toFixed(1),
-        session.settings.lives, session.livesLeft, session.result === 'won' && last ? last.words[0] : '', session.quitBy || '', all(0), all(1)]);
+        session.settings.lives, session.livesLeft, session.result === 'won' && last ? last.words[0] : '', session.quitBy || '', all(0), all(1), allHq(0), allHq(1)]);
     }
     return csv(rows);
   }
 
   function toCsv() {
     const rows = [['session_id', 'room_code', 'started_at', 'result', 'start_word', 'round', 'player_index', 'player', 'saw',
-      'word', 'matched', 'submitted_ms', 'round_duration_ms', 'lives_after', 'think_aloud']];
+      'word', 'matched', 'submitted_ms', 'round_duration_ms', 'lives_after', 'think_aloud', 'think_aloud_hq']];
     for (const session of sessions) {
       for (const round of session.rounds) {
         session.players.forEach((name, index) => rows.push([session.id, session.code, session.startedAt, session.result || '',
           session.startWord, round.round, index + 1, name, round.prompt.join(' / '), round.words[index], round.matched,
           round.submittedMs[index] == null ? '' : round.submittedMs[index],
-          round.durationMs == null ? '' : round.durationMs, round.livesAfter, said(round.transcripts[index])]));
+          round.durationMs == null ? '' : round.durationMs, round.livesAfter, said(round.transcripts[index]), hqText(round, index)]));
       }
     }
     return csv(rows);
@@ -242,6 +254,7 @@
     const ai = {
       enabled: $('ai-enabled').checked, model: $('ai-model').value, baseUrl: $('ai-base').value,
       prompt: $('ai-prompt').value, schema, apiKey: $('ai-key').value, clearApiKey: $('ai-clear-key').checked,
+      transcribe: $('ai-transcribe').checked, transcribeModel: $('ai-transcribe-model').value,
     };
     try {
       fillAi(await api('/settings', { method: 'PUT', body: { ai } }));

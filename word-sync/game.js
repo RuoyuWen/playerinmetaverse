@@ -198,11 +198,58 @@
     return list;
   }
 
+  // A recording of each round, sent to the server for a second, more accurate transcript.
+  // Only used when the researcher has switched that on; the server keeps the text, not the audio.
+  const recorder = {
+    stream: null, active: null, starting: false,
+    wanted() { return !!(config && config.recordAudio && window.MediaRecorder && navigator.mediaDevices); },
+    async start(meta) {
+      if (!this.wanted() || this.active || this.starting) return;
+      this.starting = true;
+      try {
+        if (!this.stream) this.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const media = new MediaRecorder(this.stream, { audioBitsPerSecond: 24000 });
+        const chunks = [];
+        media.ondataavailable = (event) => { if (event.data.size) chunks.push(event.data); };
+        media.start();
+        this.active = { media, chunks, meta };
+      } catch (error) { /* no microphone: the browser transcript still works */ }
+      this.starting = false;
+    },
+    /** Stop and upload. Resolves once the upload has been attempted. */
+    stop() {
+      const current = this.active;
+      if (!current) return Promise.resolve();
+      this.active = null;
+      return new Promise((resolve) => {
+        current.media.onstop = async () => {
+          try {
+            const blob = new Blob(current.chunks, { type: current.media.mimeType || 'audio/webm' });
+            if (blob.size > 200) {
+              await fetch(API + '/audio?' + new URLSearchParams(current.meta), {
+                method: 'POST', headers: { 'Content-Type': blob.type }, body: blob,
+              });
+            }
+          } catch (error) { /* the browser transcript is still saved */ }
+          resolve();
+        };
+        try { current.media.stop(); } catch (error) { resolve(); }
+      });
+    },
+    release() {
+      if (this.stream) this.stream.getTracks().forEach((track) => track.stop());
+      this.stream = null;
+    },
+  };
+
   function syncListening() {
     const playing = state && (state.phase === 'think' || state.phase === 'input') && !state.me.submitted;
     const allowed = speechStatus !== 'denied' && speechStatus !== 'unsupported';
     if ((playing || speechTesting) && allowed) speech.start();
     else speech.stop();
+    // One recording per round: close it when the player submits or the round moves on.
+    if (recorder.active && (!playing || recorder.active.meta.round !== state.round)) recorder.stop();
+    if (playing) recorder.start({ code: session.code, token: session.token, round: state.round });
   }
 
   async function flushTranscript() {
@@ -268,6 +315,8 @@
     clearTimeout(pollTimer);
     speechTesting = false;
     speech.stop();
+    recorder.stop();
+    recorder.release();
     $('net-banner').hidden = true;
     $('join-error').textContent = message || '';
     show('join');
@@ -386,7 +435,7 @@
 
     const listening = !submitted && speech.wanted;
     $('mic-dot').classList.toggle('live', listening);
-    $('mic-label').textContent = submitted ? T('本轮已提交') : listening ? T('正在听你说（只保存文字，不保存录音）')
+    $('mic-label').textContent = submitted ? T('本轮已提交') : listening ? T(recorder.active ? '正在听你说（录音只用于转写成文字，转写后不保留）' : '正在听你说（只保存文字，不保存录音）')
       : speechStatus === 'unsupported' ? T('此浏览器不支持语音识别') : speechStatus === 'denied' ? T('麦克风权限被拒绝，无法转写') : T('语音识别未启动');
     const text = $('transcript-text');
     text.textContent = segments.map((segment) => segment.text).join(' ');
@@ -513,6 +562,7 @@
   $('quit-button').addEventListener('click', async () => {
     if (!confirm(T('退出后本局会立刻结束，对方也会看到对局结束。确定退出吗？'))) return;
     await flushTranscript(); // save what was said so far before the round is closed
+    await recorder.stop();
     leave();
   });
 

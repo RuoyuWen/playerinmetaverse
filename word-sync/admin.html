@@ -74,6 +74,12 @@
             <input id="ai-base" type="text" required></label>
         </div>
         <label class="check"><input id="ai-clear-key" type="checkbox">删除已保存的 API key</label>
+        <div class="grid-2">
+          <label class="check"><input id="ai-transcribe" type="checkbox">开启高精度转写（和浏览器转写同时记录）</label>
+          <label class="field"><span>转写模型</span>
+            <input id="ai-transcribe-model" type="text" list="ai-transcribe-models" required><datalist id="ai-transcribe-models"></datalist></label>
+        </div>
+        <p class="hint">开启后，玩家每一轮的录音会上传到后端，用上面的 API key 调用转写模型，得到文字后立即丢弃音频，不写入磁盘或数据库。浏览器的实时转写照常保留，两份文字都会显示在对局记录里。它和“和 AI 玩”互相独立，可以只开其中一个。</p>
         <label class="field"><span>提示词（system prompt）</span>
           <textarea id="ai-prompt" rows="8" required></textarea></label>
         <label class="field"><span>回复的 JSON Schema（properties 里必须有 think 和 response）</span>
