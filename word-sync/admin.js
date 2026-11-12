@@ -30,8 +30,29 @@
     return node;
   }
 
-  function fillSettings(data) {
+  let aiDefaults = null;
+
+  function fillAi(data) {
+    const ai = data.settings.ai;
+    if (data.aiDefaults) aiDefaults = data.aiDefaults;
+    if (data.modelSuggestions) {
+      const list = $('ai-models');
+      list.textContent = '';
+      for (const model of data.modelSuggestions) list.append(Object.assign(document.createElement('option'), { value: model }));
+    }
+    $('ai-enabled').checked = ai.enabled;
+    $('ai-key').value = '';
+    $('ai-clear-key').checked = false;
+    $('ai-key-state').textContent = ai.apiKeySet ? `（已保存 ${ai.apiKeyHint}）` : '（还没有保存）';
+    $('ai-model').value = ai.model;
+    $('ai-base').value = ai.baseUrl;
+    $('ai-prompt').value = ai.prompt;
+    $('ai-schema').value = JSON.stringify(ai.schema, null, 2);
+  }
+
+  function fillSettings(data, keepAiForm) {
     const settings = data.settings;
+    if (!keepAiForm) fillAi(data);  // saving the game rules must not wipe unsaved AI edits
     for (const key of ['lives', 'thinkSeconds', 'inputSeconds']) $(key).value = settings[key];
     $('noRepeat').checked = settings.noRepeat;
     $('requireSpeech').checked = settings.requireSpeech;
@@ -88,15 +109,17 @@
       const details = element('details', 'session');
       const summary = element('summary');
       const label = session.result === 'won' ? '获胜' : session.result === 'lost' ? '失败'
-        : session.result === 'quit' ? `${session.quitBy || '有人'} 中途退出` : '未完成';
+        : session.result === 'ai_error' ? 'AI 出错' : session.result === 'quit' ? `${session.quitBy || '有人'} 中途退出` : '未完成';
       summary.append(
         element('b', '', session.players.join(' × ')),
         element('span', 'tag ' + (session.result || ''), label),
         element('span', 'tag', session.lang === 'en' ? 'English' : '中文'),
+        ...(session.opponent === 'ai' ? [element('span', 'tag', 'AI · ' + (session.aiModel || ''))] : []),
         element('span', 'metric', `猜了 ${guesses(session)} 次`),
         element('span', 'metric', `用时 ${clock(duration(session))}`),
         element('span', 'hint', `房间 ${session.code} · ${session.startWord ? `起始词「${session.startWord}」` : '不给起始词'} · 剩 ${session.livesLeft}/${session.settings.lives} 血 · ${localTime(session.startedAt)}`));
       const body = element('div', 'session-body');
+      if (session.aiError) body.append(element('p', 'error', 'AI 出错：' + session.aiError));
       const rounds = session.rounds.slice();
       if (session.unfinishedRound) rounds.push(Object.assign({ words: ['', ''], unfinished: true }, session.unfinishedRound));
       for (const round of rounds) {
@@ -153,14 +176,14 @@
   }
 
   function sessionsCsv() {
-    const rows = [['session_id', 'room_code', 'language', 'started_at', 'ended_at', 'result', 'player_1', 'player_2', 'word_given', 'start_word',
+    const rows = [['session_id', 'room_code', 'language', 'started_at', 'ended_at', 'result', 'player_1', 'player_2', 'opponent', 'ai_model', 'word_given', 'start_word',
       'guesses', 'duration_seconds', 'lives_total', 'lives_left', 'final_word', 'quit_by', 'think_aloud_player_1', 'think_aloud_player_2']];
     for (const session of sessions) {
       const last = session.rounds[session.rounds.length - 1];
       const all = (index) => session.rounds.map((round) => `[第${round.round}轮] ` + said(round.transcripts[index])).join('\n');
       const ms = duration(session);
       rows.push([session.id, session.code, session.lang || 'zh', session.startedAt, session.endedAt || '', session.result || 'unfinished',
-        session.players[0], session.players[1], session.giveWord === false ? 'no' : 'yes', session.startWord || '', guesses(session), ms == null ? '' : (ms / 1000).toFixed(1),
+        session.players[0], session.players[1], session.opponent || 'human', session.aiModel || '', session.giveWord === false ? 'no' : 'yes', session.startWord || '', guesses(session), ms == null ? '' : (ms / 1000).toFixed(1),
         session.settings.lives, session.livesLeft, session.result === 'won' && last ? last.words[0] : '', session.quitBy || '', all(0), all(1)]);
     }
     return csv(rows);
@@ -205,9 +228,43 @@
       customWordsEn: $('customWordsEn').value.split(/[\n,;]+/).map((word) => word.trim()).filter(Boolean),
     };
     try {
-      fillSettings(await api('/settings', { method: 'PUT', body }));
+      fillSettings(await api('/settings', { method: 'PUT', body }), true);
       $('settings-note').textContent = '已保存 ' + new Date().toLocaleTimeString('zh-CN', { hour12: false });
     } catch (error) { $('settings-note').textContent = '保存失败：' + error.message; }
+  });
+
+  $('ai-form').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    let schema;
+    try { schema = JSON.parse($('ai-schema').value); }
+    catch (error) { $('ai-note').textContent = '保存失败：JSON Schema 不是合法的 JSON'; return; }
+    const ai = {
+      enabled: $('ai-enabled').checked, model: $('ai-model').value, baseUrl: $('ai-base').value,
+      prompt: $('ai-prompt').value, schema, apiKey: $('ai-key').value, clearApiKey: $('ai-clear-key').checked,
+    };
+    try {
+      fillAi(await api('/settings', { method: 'PUT', body: { ai } }));
+      $('ai-note').textContent = '已保存 ' + new Date().toLocaleTimeString('zh-CN', { hour12: false });
+    } catch (error) { $('ai-note').textContent = '保存失败：' + error.message; }
+  });
+
+  $('ai-reset').addEventListener('click', () => {
+    if (!aiDefaults) return;
+    $('ai-prompt').value = aiDefaults.prompt;
+    $('ai-schema').value = JSON.stringify(aiDefaults.schema, null, 2);
+    $('ai-note').textContent = '已填入默认内容，点“保存 AI 设置”后生效';
+  });
+
+  $('ai-test').addEventListener('click', async () => {
+    const box = $('ai-result');
+    box.hidden = false;
+    box.textContent = '正在用已保存的设置调用模型…（改动要先保存才会生效）';
+    try {
+      const result = await api('/ai-test', { method: 'POST' });
+      box.textContent = result.ok
+        ? `调用成功（${result.latencyMs} 毫秒）\n\nthink：${result.think}\nresponse：${result.response}\n\n发给模型的局面：\n${JSON.stringify(result.sent, null, 2)}\n\n模型原始回复：\n${result.raw}`
+        : `调用失败：${result.error}`;
+    } catch (error) { box.textContent = '调用失败：' + error.message; }
   });
 
   $('refresh').addEventListener('click', () => loadSessions().catch((error) => alert(error.message)));

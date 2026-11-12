@@ -32,6 +32,21 @@
     chosenLang = localStorage.getItem('wordsync-lang') || (/^zh/i.test(navigator.language || 'zh') ? 'zh' : 'en');
   } catch (error) { /* keep the default */ }
 
+  let chosenOpponent = 'human';  // 'ai' plays against the model instead of entering a room code
+  let aiAvailable = false;
+
+  function showOpponent() {
+    if (!aiAvailable) chosenOpponent = 'human';
+    const ai = chosenOpponent === 'ai';
+    $('opponent-field').hidden = !aiAvailable;
+    document.querySelectorAll('.segment[data-opponent]').forEach((button) => {
+      button.setAttribute('aria-pressed', String(button.dataset.opponent === chosenOpponent));
+    });
+    $('code-field').hidden = ai;
+    $('join-hint').textContent = T(ai ? '和 AI 一起玩，不需要房间号。' : '和同伴输入相同的房间号就能匹配到一起。');
+    if (!$('join-button').disabled) $('join-button').textContent = T(ai ? '开始和 AI 对局' : '进入房间');
+  }
+
   let chosenGive = true;  // whether a room this player creates gets a start word
   try { chosenGive = localStorage.getItem('wordsync-give') !== 'no'; } catch (error) { /* keep the default */ }
 
@@ -44,7 +59,16 @@
       button.setAttribute('aria-pressed', String((button.dataset.give === 'yes') === chosenGive));
     });
     $('word-input').maxLength = window.Lang.current === 'en' ? 30 : 12;
+    showOpponent();
   }
+
+  document.querySelectorAll('.segment[data-opponent]').forEach((button) => {
+    button.addEventListener('click', () => {
+      chosenOpponent = button.dataset.opponent;
+      $('join-error').textContent = '';
+      showOpponent();
+    });
+  });
 
   document.querySelectorAll('.segment[data-give]').forEach((button) => {
     button.addEventListener('click', () => {
@@ -300,7 +324,10 @@
   }
 
   function renderLobby() {
-    $('lobby-code').textContent = state.code;
+    $('lobby-eyebrow').textContent = state.ai ? '' : T('房间号');
+    $('lobby-code').hidden = state.ai;
+    $('lobby-code').textContent = state.ai ? '' : state.code;
+    $('lobby-share').textContent = T(state.ai ? '与 AI 对局' : '把这个号码告诉同伴');
     const seats = [[$('seat-me'), state.me, T('（你）')], [$('seat-partner'), state.partner, '']];
     for (const [seat, player, suffix] of seats) {
       seat.className = 'seat' + (player ? (player.ready ? ' ready' : '') : ' empty');
@@ -403,6 +430,7 @@
     $('end-title').textContent = won ? T('心有灵犀！') : quit ? T('对局已结束') : T('血量耗尽');
     $('end-detail').textContent = won
       ? T('你们在第 {round} 轮同时想到了「{word}」，还剩 {lives} 格血。', { round: last.round, word: last.mine, lives: state.lives })
+      : state.aiFailed ? T('AI 没能给出回复，本局提前结束。')
       : quit ? T('{name} 退出了房间，本局提前结束。', { name: state.quitBy || T('对方') })
       : T('{max} 格血用完了，这次没能想到一起。', { max: state.maxLives });
     $('again-button').textContent = state.partner && state.partner.left ? T('回到房间等新同伴') : T('再来一局');
@@ -424,8 +452,10 @@
     button.textContent = T('正在连接…');
     const slow = setTimeout(() => { button.textContent = T('服务器正在启动，首次可能要等近一分钟…'); }, 4000);
     try {
-      const result = await api('/join', { method: 'POST', body: { code, name, token, lang: chosenLang, giveWord: chosenGive } });
-      session = { code, token: result.token };
+      const result = code === null
+        ? await api('/solo', { method: 'POST', body: { name, lang: chosenLang, giveWord: chosenGive } })
+        : await api('/join', { method: 'POST', body: { code, name, token, lang: chosenLang, giveWord: chosenGive } });
+      session = { code: code === null ? result.code : code, token: result.token };
       saveSession();
       $('join-error').textContent = '';
       api('/config').then((value) => { config = value; render(); }).catch(() => {});
@@ -439,16 +469,17 @@
     } finally {
       clearTimeout(slow);
       button.disabled = false;
-      button.textContent = T('进入房间');
+      showOpponent();
     }
   }
 
   $('join-form').addEventListener('submit', (event) => {
     event.preventDefault();
-    const code = $('code-input').value.trim();
-    if (!/^\d{4}$/.test(code)) { $('join-error').textContent = T('房间号必须是 4 位数字'); return; }
     const name = $('name-input').value.trim();
     try { localStorage.setItem('wordsync-name', name); } catch (error) { /* optional */ }
+    if (chosenOpponent === 'ai') { join(null, name, null); return; }
+    const code = $('code-input').value.trim();
+    if (!/^\d{4}$/.test(code)) { $('join-error').textContent = T('房间号必须是 4 位数字'); return; }
     join(code, name, null);
   });
 
@@ -514,6 +545,7 @@
   // ------------------------------------------------------------ boot
 
   useLanguage(chosenLang);
+  api('/config').then((value) => { config = value; aiAvailable = !!value.aiAvailable; showOpponent(); }).catch(() => {});
   try { $('name-input').value = localStorage.getItem('wordsync-name') || ''; } catch (error) { /* optional */ }
   let saved = null;
   try { saved = JSON.parse(sessionStorage.getItem('wordsync-session')); } catch (error) { /* start fresh */ }
