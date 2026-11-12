@@ -24,6 +24,13 @@
           <span data-tr="你的名字">你的名字</span>
           <input id="name-input" type="text" maxlength="12" placeholder="怎么称呼你" data-tr-placeholder="怎么称呼你">
         </label>
+        <div class="field" id="opponent-field" hidden>
+          <span data-tr="和谁玩">和谁玩</span>
+          <div class="segmented" role="group">
+            <button type="button" class="segment" data-opponent="human" data-tr="和朋友玩">和朋友玩</button>
+            <button type="button" class="segment" data-opponent="ai" data-tr="和 AI 玩">和 AI 玩</button>
+          </div>
+        </div>
         <div class="field">
           <span data-tr="游戏语言">游戏语言</span>
           <div class="segmented" role="group">
@@ -39,13 +46,13 @@
           </div>
           <span class="hint" data-tr="语言和起始词由先进入房间的人决定，后进来的人自动跟随。">语言和起始词由先进入房间的人决定，后进来的人自动跟随。</span>
         </div>
-        <label class="field">
+        <label class="field" id="code-field">
           <span class="split"><span data-tr="四位房间号">四位房间号</span> <button type="button" id="random-code" class="link" data-tr="随机一个">随机一个</button></span>
-          <input id="code-input" class="code-input" type="text" inputmode="numeric" pattern="\d{4}" maxlength="4" placeholder="0000" required>
+          <input id="code-input" class="code-input" type="text" inputmode="numeric" pattern="\d{4}" maxlength="4" placeholder="0000">
         </label>
         <p id="join-error" class="error" role="alert"></p>
         <button id="join-button" class="primary" type="submit" data-tr="进入房间">进入房间</button>
-        <p class="hint" data-tr="和同伴输入相同的房间号就能匹配到一起。">和同伴输入相同的房间号就能匹配到一起。</p>
+        <p class="hint" id="join-hint" data-tr="和同伴输入相同的房间号就能匹配到一起。">和同伴输入相同的房间号就能匹配到一起。</p>
       </form>
       <ol class="rules">
         <li data-tr="开局会出现一个随机词，两人各自由它联想下一个词；选“不给词”时，第一轮两人各自随便想一个词。">开局会出现一个随机词，两人各自由它联想下一个词；选“不给词”时，第一轮两人各自随便想一个词。</li>
@@ -58,9 +65,9 @@
     <!-- 房间 -->
     <section id="screen-lobby" class="screen" hidden>
       <header class="lobby-head">
-        <p class="eyebrow" data-tr="房间号">房间号</p>
+        <p class="eyebrow" id="lobby-eyebrow" data-tr="房间号">房间号</p>
         <p id="lobby-code" class="big-code">0000</p>
-        <p class="hint" data-tr="把这个号码告诉同伴">把这个号码告诉同伴</p>
+        <p class="hint" id="lobby-share" data-tr="把这个号码告诉同伴">把这个号码告诉同伴</p>
       </header>
       <div class="seats">
         <div class="seat" id="seat-me"><p class="seat-name"></p><p class="seat-status"></p></div>

@@ -26,6 +26,8 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Header, HTTPException
 from pydantic import BaseModel
 
+import wordsync_ai
+
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/wordsync")
 
@@ -42,7 +44,11 @@ DEFAULT_SETTINGS: Dict[str, Any] = {
     "requireSpeech": True,  # 必须通过语音识别检测才能准备
     "customWords": [],      # 自定义中文起始词库，留空则用内置词库
     "customWordsEn": [],    # 自定义英文起始词库，留空则用内置词库
+    "ai": wordsync_ai.DEFAULT_AI,  # AI 对手：接口、模型、提示词、回复的 JSON Schema（含 API key，绝不下发给玩家）
 }
+# The only settings players may see, and the only ones copied into a room.
+GAME_KEYS = ("lives", "thinkSeconds", "inputSeconds", "noRepeat", "requireSpeech")
+AI_ATTEMPTS = 2
 LIMITS = {"lives": (1, 99), "thinkSeconds": (5, 300), "inputSeconds": (0, 300)}
 MAX_WORD_LENGTH = {"zh": 12, "en": 30}
 MAX_NAME_LENGTH = 12
@@ -189,9 +195,10 @@ def storage_kind():
 
 # ---------------------------------------------------------------- settings and words
 
-def clean_settings(raw: Any) -> Dict[str, Any]:
+def clean_settings(raw: Any, previous: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """Validate settings. `previous` supplies what an update leaves out, such as the stored API key."""
     raw = raw if isinstance(raw, dict) else {}
-    result = dict(DEFAULT_SETTINGS)
+    result = {**DEFAULT_SETTINGS, **(previous or {})}
     for key, (low, high) in LIMITS.items():
         try:
             result[key] = max(low, min(high, int(raw.get(key, result[key]))))
@@ -201,6 +208,8 @@ def clean_settings(raw: Any) -> Dict[str, Any]:
         if isinstance(raw.get(key), bool):
             result[key] = raw[key]
     for key in ("customWords", "customWordsEn"):
+        if key not in raw:
+            continue
         words, custom = [], raw.get(key)
         if isinstance(custom, list):
             for item in custom[:5000]:
@@ -208,6 +217,8 @@ def clean_settings(raw: Any) -> Dict[str, Any]:
                 if word and len(word) <= 30 and word not in words:
                     words.append(word)
         result[key] = words
+    previous_ai = (previous or {}).get("ai")
+    result["ai"] = wordsync_ai.clean_ai(raw["ai"], previous_ai) if "ai" in raw else (previous_ai or dict(wordsync_ai.DEFAULT_AI))
     return result
 
 
@@ -256,6 +267,7 @@ def begin_round(room, prompt):
     room["roundStartedAt"] = time.time()
     room["phaseEndsAt"] = room["roundStartedAt"] + room["settings"]["thinkSeconds"]
     room["current"] = {"words": [None, None], "submittedMs": [None, None], "transcripts": [[], []]}
+    schedule_ai(room)
 
 
 def start_game(room, settings):
@@ -265,7 +277,8 @@ def start_game(room, settings):
         "sessionId": uuid.uuid4().hex, "startedAt": now_iso(), "endedAt": None, "result": None,
         "startedTs": time.time(), "durationMs": None, "quitBy": None, "unfinished": None,
         "playerNames": [player["name"] for player in room["players"]],
-        "settings": {k: v for k, v in settings.items() if not k.startswith("customWords")},
+        "settings": {key: settings[key] for key in GAME_KEYS},
+        "aiModel": settings["ai"]["model"] if room.get("ai") else None, "aiError": None,
         "lives": settings["lives"], "round": 0, "rounds": [],
         # Without a start word, both players simply think of any word in round one.
         "startWord": random.choice(words) if room.get("giveWord", True) else None,
@@ -286,6 +299,8 @@ def resolve_round(room):
         "livesAfter": room["lives"],
         "durationMs": int((time.time() - room["roundStartedAt"]) * 1000),
     })
+    if current.get("aiRaw"):
+        room["rounds"][-1]["aiRaw"] = current["aiRaw"]
     room["used"].update(normalize_word(word) for word in words if word)
     if matched or room["lives"] <= 0:
         room["phase"] = "won" if matched else "lost"
@@ -323,6 +338,69 @@ def quit_game(room, index):
     room["phaseEndsAt"] = None
 
 
+def schedule_ai(room):
+    """Start the AI's turn for the current round, unless it has already answered."""
+    if room.get("ai") and room["phase"] in ("think", "input") and room["current"]["words"][1] is None:
+        task = asyncio.get_running_loop().create_task(ai_turn(room, room["sessionId"], room["round"]))
+        _pending.add(task)
+        task.add_done_callback(_pending.discard)
+
+
+async def ai_turn(room, session_id, round_number):
+    """Ask the model for this round's word. It is asked at the start of the round, so it
+    cannot see what the human is about to write."""
+    word = answer = None
+    try:
+        settings = await get_settings()
+        lang = room.get("lang", "zh")
+        history = [{"round": r["round"], "your_word": r["words"][1], "partner_word": r["words"][0]} for r in room["rounds"]]
+        context = wordsync_ai.round_context(
+            lang, room["startWord"], history, sorted(room["used"]), round_number, room["lives"])
+        note = failure = ""
+        for _ in range(AI_ATTEMPTS):
+            try:
+                answer = await wordsync_ai.ask(settings["ai"], context, note)
+            except wordsync_ai.AIError as error:
+                failure = str(error)
+                continue
+            candidate = display_word(answer["response"])
+            if lang == "zh":
+                candidate = candidate.replace(" ", "")
+            if len(candidate) > MAX_WORD_LENGTH[lang]:
+                failure = f"模型给的词太长：{candidate[:40]}"
+                note = "Your last reply was too long. Reply with one short word only."
+            elif room["settings"]["noRepeat"] and normalize_word(candidate) in room["used"]:
+                failure = f"模型重复了已经出现过的词：{candidate}"
+                note = f'The word "{candidate}" has already been used. Choose a different word.'
+            else:
+                word = candidate
+                break
+    except Exception as error:  # never let a background task die silently
+        logger.exception("wordsync: AI turn crashed")
+        failure = f"内部错误：{type(error).__name__}"
+    # The game may have moved on (quit, restarted, timed out) while the model was thinking.
+    if (rooms.get(room["code"]) is not room or room.get("sessionId") != session_id
+            or room.get("round") != round_number or room["phase"] not in ("think", "input")):
+        return
+    if word is None:
+        quit_game(room, 1)
+        room["result"] = "ai_error"
+        room["aiError"] = failure or "模型没有给出可用的回复"
+        logger.error("wordsync: AI turn failed in room %s: %s", room["code"], room["aiError"])
+        persist(room)
+        return
+    current = room["current"]
+    elapsed = int((time.time() - room["roundStartedAt"]) * 1000)
+    current["words"][1] = word
+    current["submittedMs"][1] = elapsed
+    current["transcripts"][1] = [{"t": elapsed, "text": answer["think"]}] if answer["think"] else []
+    current["aiRaw"] = answer["raw"]
+    if current["words"][0] is not None:
+        resolve_round(room)
+    else:
+        persist(room)
+
+
 def session_document(room):
     document = {
         "id": room["sessionId"], "code": room["code"], "lang": room.get("lang", "zh"), "giveWord": room.get("giveWord", True),
@@ -333,6 +411,7 @@ def session_document(room):
         "livesLeft": room["lives"], "rounds": room["rounds"],
         # 研究者面板用的汇总：猜测次数 = 已完成的轮数，用时 = 开局到结束（毫秒）
         "guesses": len(room["rounds"]), "durationMs": room["durationMs"],
+        "opponent": "ai" if room.get("ai") else "human", "aiModel": room.get("aiModel"), "aiError": room.get("aiError"),
     }
     if room["phase"] in ("think", "input"):  # keep think-aloud text of an unfinished round too
         document["unfinishedRound"] = unfinished_round(room)
@@ -383,6 +462,7 @@ async def load_room(code: str):
         player["lastSeen"] = now  # give everyone a moment to reconnect before showing them offline
     rooms[code] = saved
     logger.info("wordsync: restored room %s from storage", code)
+    schedule_ai(saved)
     return saved
 
 
@@ -416,11 +496,12 @@ def view(room, index):
     playing = room["phase"] in ("think", "input")
     state = {
         "code": room["code"], "lang": room.get("lang", "zh"), "giveWord": room.get("giveWord", True),
-        "phase": room["phase"], "serverNow": now,
+        "ai": bool(room.get("ai")), "phase": room["phase"], "serverNow": now,
         "me": {"name": me["name"], "ready": me["ready"]},
         "partner": partner and {
             "name": partner["name"], "ready": partner["ready"],
-            "online": now - partner["lastSeen"] < OFFLINE_AFTER, "left": bool(partner.get("left")),
+            "online": bool(partner.get("ai")) or now - partner["lastSeen"] < OFFLINE_AFTER,
+            "left": bool(partner.get("left")),
         },
     }
     if room.get("sessionId"):
@@ -429,6 +510,7 @@ def view(room, index):
             "maxLives": room["settings"]["lives"], "settings": room["settings"],
             "startWord": room["startWord"], "phaseEndsAt": room["phaseEndsAt"],
             "roundStartedAt": room["roundStartedAt"], "quitBy": room.get("quitBy"),
+            "aiFailed": bool(room.get("aiError")),
             "history": [
                 {"round": r["round"], "mine": r["words"][index], "theirs": r["words"][other_index],
                  "matched": r["matched"]} for r in room["rounds"]],
@@ -496,13 +578,38 @@ async def health():
 @router.get("/config")
 async def public_config():
     settings = await get_settings()
-    return {key: value for key, value in settings.items() if not key.startswith("customWords")}
+    return {**{key: settings[key] for key in GAME_KEYS}, "aiAvailable": wordsync_ai.is_available(settings["ai"])}
+
+
+class SoloRequest(BaseModel):
+    name: str = ""
+    lang: str = "zh"
+    giveWord: bool = True
+
+
+@router.post("/solo")
+async def solo(request: SoloRequest):
+    """Create a room whose second player is the AI."""
+    settings = await get_settings()
+    if not wordsync_ai.is_available(settings["ai"]):
+        raise HTTPException(status_code=503, detail="ai_unavailable")
+    sweep_rooms()
+    lang = request.lang if request.lang in LANGUAGES else "zh"
+    human = new_player(request.name.strip()[:MAX_NAME_LENGTH] or ("Player" if lang == "en" else "玩家"))
+    bot = new_player("AI")
+    bot.update({"ai": True, "ready": True})
+    code = "ai-" + secrets.token_hex(6)  # not a four-digit code, so nobody else can join it
+    room = rooms[code] = {"code": code, "phase": "lobby", "players": [human, bot], "touched": time.time(),
+                          "sessionId": None, "lang": lang, "giveWord": request.giveWord, "ai": True}
+    persist(room)
+    return {"token": human["token"], "code": code, "state": view(room, 0)}
 
 
 @router.post("/join")
 async def join(request: JoinRequest):
     code = request.code.strip()
-    if not re.fullmatch(r"\d{4}", code):
+    digits = bool(re.fullmatch(r"\d{4}", code))
+    if not digits and not (request.token and re.fullmatch(r"ai-[0-9a-f]{12}", code)):
         raise HTTPException(status_code=400, detail="bad_code")
     name = request.name.strip()[:MAX_NAME_LENGTH]
     sweep_rooms()
@@ -516,6 +623,8 @@ async def join(request: JoinRequest):
                 player["lastSeen"] = room["touched"] = now
                 advance(room)
                 return {"token": player["token"], "state": view(room, index)}
+    if not digits:
+        raise HTTPException(status_code=404, detail="room_not_found")
     if room and all(now - player["lastSeen"] > ABANDONED_AFTER for player in room["players"]):
         room = None  # everyone left long ago: the code is free again
     if room is None:
@@ -595,7 +704,7 @@ async def restart(request: PlayerRequest):
         room["sessionId"] = None
         room["players"] = [player for player in room["players"] if not player.get("left")]
         for player in room["players"]:
-            player["ready"] = False
+            player["ready"] = bool(player.get("ai"))
         index = room["players"].index(me)
         persist(room)
     return view(room, index)
@@ -607,8 +716,8 @@ async def leave(request: PlayerRequest):
     if room["phase"] == "lobby":
         del room["players"][index]
         for player in room["players"]:
-            player["ready"] = False
-        if not room["players"]:
+            player["ready"] = bool(player.get("ai"))
+        if all(player.get("ai") for player in room["players"]):
             rooms.pop(room["code"], None)
             background(store().delete_room, room["code"])
         else:
@@ -619,7 +728,7 @@ async def leave(request: PlayerRequest):
         # Keep the seat until the next game so round history still lines up for the other player.
         room["players"][index]["left"] = True
         room["players"][index]["lastSeen"] = 0
-        if all(player.get("left") for player in room["players"]):
+        if all(player.get("left") or player.get("ai") for player in room["players"]):
             rooms.pop(room["code"], None)
             background(store().save_session, session_document(room))
             background(store().delete_room, room["code"])
@@ -640,25 +749,48 @@ def require_admin(password: Optional[str]):
         raise HTTPException(status_code=401, detail="密码不正确")
 
 
+def admin_settings_view(settings):
+    return {**settings, "ai": wordsync_ai.public_ai(settings["ai"])}
+
+
 @router.get("/admin/settings")
 async def admin_get_settings(x_admin_password: Optional[str] = Header(None)):
     require_admin(x_admin_password)
-    return {"settings": await get_settings(), "defaults": DEFAULT_SETTINGS, "limits": LIMITS,
-            "builtinWordCount": len(builtin_words("zh")), "builtinWordCountEn": len(builtin_words("en")), "storage": storage_kind()}
+    return {"settings": admin_settings_view(await get_settings()), "limits": LIMITS,
+            "builtinWordCount": len(builtin_words("zh")), "builtinWordCountEn": len(builtin_words("en")),
+            "storage": storage_kind(), "modelSuggestions": wordsync_ai.MODEL_SUGGESTIONS,
+            "aiDefaults": {"prompt": wordsync_ai.DEFAULT_PROMPT, "schema": wordsync_ai.DEFAULT_SCHEMA,
+                           "baseUrl": wordsync_ai.DEFAULT_BASE_URL}}
 
 
 @router.put("/admin/settings")
 async def admin_put_settings(payload: Dict[str, Any], x_admin_password: Optional[str] = Header(None)):
     global _settings
     require_admin(x_admin_password)
-    cleaned = clean_settings(payload)
+    try:
+        cleaned = clean_settings(payload, await get_settings())
+    except wordsync_ai.AIError as error:
+        raise HTTPException(status_code=400, detail=str(error))
     try:
         await asyncio.to_thread(store().save_settings, cleaned)
     except Exception as error:
         logger.error("wordsync: could not save settings: %s", error)
         raise HTTPException(status_code=500, detail="设置保存失败，请稍后重试")
     _settings = cleaned
-    return {"settings": cleaned}
+    return {"settings": admin_settings_view(cleaned)}
+
+
+@router.post("/admin/ai-test")
+async def admin_ai_test(x_admin_password: Optional[str] = Header(None)):
+    """Make one real call with the saved AI settings, so the key, model and prompt can be checked."""
+    require_admin(x_admin_password)
+    ai = (await get_settings())["ai"]
+    context = wordsync_ai.round_context("zh", "苹果", [], ["苹果"], 1, 20)
+    try:
+        answer = await wordsync_ai.ask(ai, context)
+    except wordsync_ai.AIError as error:
+        return {"ok": False, "error": str(error), "sent": context}
+    return {"ok": True, "sent": context, **answer}
 
 
 @router.get("/admin/sessions")

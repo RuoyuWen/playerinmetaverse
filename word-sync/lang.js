@@ -10,6 +10,15 @@
     '你的名字': 'Your name',
     '怎么称呼你': 'What should we call you?',
     '游戏语言': 'Game language',
+    '和谁玩': 'Play with',
+    '和朋友玩': 'A friend',
+    '和 AI 玩': 'The AI',
+    '开始和 AI 对局': 'Start a game with the AI',
+    '和 AI 一起玩，不需要房间号。': 'You’ll play with the AI. No room code needed.',
+    '与 AI 对局': 'Playing with the AI',
+    'AI 已经就位，你准备好就开始。': 'The AI is ready. The game starts when you are.',
+    'AI 没能给出回复，本局提前结束。': 'The AI couldn’t reply, so the game ended early.',
+    'AI 对手暂时不可用': 'The AI opponent isn’t available right now',
     '给一个词': 'Give a word',
     '不给词': 'No word',
     '语言和起始词由先进入房间的人决定，后进来的人自动跟随。': 'Whoever enters the room first sets the language and start word; the second player follows.',
@@ -125,6 +134,7 @@
     empty_word: '请输入一个词',
     word_too_long: '词太长了',
     word_used: '这个词已经出现过了，换一个吧',
+    ai_unavailable: 'AI 对手暂时不可用',
   };
 
   const Lang = {
