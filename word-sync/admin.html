@@ -84,7 +84,7 @@
           <textarea id="ai-prompt" rows="8" required></textarea></label>
         <label class="field"><span>回复的 JSON Schema（properties 里必须有 think 和 response）</span>
           <textarea id="ai-schema" rows="12" spellcheck="false" class="mono" required></textarea></label>
-        <p class="hint">每轮服务器会把当前局面作为一条 JSON 消息发给模型，包含：language、round、lives_left、start_word、previous_rounds（每轮的 your_word 和 partner_word）、words_already_used。模型看不到玩家本轮还没提交的词。选“不给词”时，第一轮还会附带一个每局随机的 inspiration_word，让 AI 从它联想开局，避免每局都写同一个词。</p>
+        <p class="hint">每轮服务器会把当前局面作为一条 JSON 消息发给模型，包含：language、round、lives_left、start_word、previous_rounds（每轮的 your_word 和 partner_word）、words_already_used。模型看不到玩家本轮还没提交的词。选“不给词”时，第一轮不调用模型：AI 的第一个词由服务器从词库里随机抽取，从第二轮开始才调用模型，这时它能看到上一轮自己的词和玩家的词。</p>
         <div class="toolbar">
           <button class="primary" type="submit">保存 AI 设置</button>
           <button id="ai-test" class="secondary" type="button">测试调用</button>
