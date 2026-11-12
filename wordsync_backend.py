@@ -32,7 +32,7 @@ router = APIRouter(prefix="/api/wordsync")
 WORDS_FILE = Path(__file__).with_name("wordsync_words.txt")
 DEFAULT_SETTINGS: Dict[str, Any] = {
     "lives": 20,            # 血量：两人共用，每次没对上扣一格
-    "thinkSeconds": 30,     # 思考（think aloud）时长
+    "thinkSeconds": 30,     # 思考（think aloud）倒计时；玩家想好了可以提前提交
     "inputSeconds": 0,      # 输入限时，0 = 不限时
     "noRepeat": True,       # 不允许使用已经出现过的词
     "requireSpeech": True,  # 必须通过语音识别检测才能准备
@@ -464,8 +464,6 @@ async def submit(request: SubmitRequest):
     room, index = find_room(request.code, request.token)
     if request.round != room.get("round") or room["phase"] not in ("think", "input"):
         raise HTTPException(status_code=409, detail="这一轮已经结束了")
-    if room["phase"] == "think":
-        raise HTTPException(status_code=409, detail="思考时间还没结束")
     current = room["current"]
     if current["words"][index] is not None:
         raise HTTPException(status_code=409, detail="你已经提交过这一轮的词了")
