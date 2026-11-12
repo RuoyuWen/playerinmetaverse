@@ -301,6 +301,8 @@ def resolve_round(room):
     })
     if current.get("aiRaw"):
         room["rounds"][-1]["aiRaw"] = current["aiRaw"]
+    if current.get("aiInspiration"):
+        room["rounds"][-1]["aiInspiration"] = current["aiInspiration"]
     room["used"].update(normalize_word(word) for word in words if word)
     if matched or room["lives"] <= 0:
         room["phase"] = "won" if matched else "lost"
@@ -354,8 +356,11 @@ async def ai_turn(room, session_id, round_number):
         settings = await get_settings()
         lang = room.get("lang", "zh")
         history = [{"round": r["round"], "your_word": r["words"][1], "partner_word": r["words"][0]} for r in room["rounds"]]
+        inspiration = None
+        if not room["startWord"] and not history:  # no start word: vary the AI's opening move
+            inspiration = random.choice(settings["customWordsEn" if lang == "en" else "customWords"] or builtin_words(lang))
         context = wordsync_ai.round_context(
-            lang, room["startWord"], history, sorted(room["used"]), round_number, room["lives"])
+            lang, room["startWord"], history, sorted(room["used"]), round_number, room["lives"], inspiration)
         note = failure = ""
         for _ in range(AI_ATTEMPTS):
             try:
@@ -395,6 +400,8 @@ async def ai_turn(room, session_id, round_number):
     current["submittedMs"][1] = elapsed
     current["transcripts"][1] = [{"t": elapsed, "text": answer["think"]}] if answer["think"] else []
     current["aiRaw"] = answer["raw"]
+    if inspiration:
+        current["aiInspiration"] = inspiration
     if current["words"][0] is not None:
         resolve_round(room)
     else:
