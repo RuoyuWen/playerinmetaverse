@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>心有灵犀 · 双人猜词</title>
+  <meta name="description" content="两个人输入同一个四位房间号，边想边说，看看多少轮能想到同一个词。">
+  <meta name="robots" content="noindex">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="net-banner" class="net-banner" hidden>连接中断，正在重连…</div>
+
+  <main class="page">
+    <!-- 加入 -->
+    <section id="screen-join" class="screen">
+      <header class="masthead">
+        <p class="seal" aria-hidden="true">灵犀</p>
+        <h1>心有灵犀</h1>
+        <p class="lede">两个人，从同一个词出发，边想边说，直到想到同一个词。</p>
+      </header>
+      <form id="join-form" class="card" autocomplete="off">
+        <label class="field">
+          <span>你的名字</span>
+          <input id="name-input" type="text" maxlength="12" placeholder="怎么称呼你">
+        </label>
+        <label class="field">
+          <span class="split">四位房间号 <button type="button" id="random-code" class="link">随机一个</button></span>
+          <input id="code-input" class="code-input" type="text" inputmode="numeric" pattern="\d{4}" maxlength="4" placeholder="0000" required>
+        </label>
+        <p id="join-error" class="error" role="alert"></p>
+        <button id="join-button" class="primary" type="submit">进入房间</button>
+        <p class="hint">和同伴输入相同的房间号就能匹配到一起。</p>
+      </form>
+      <ol class="rules">
+        <li>开局会出现一个随机词，两人各自由它联想下一个词。</li>
+        <li>思考时请把想法<strong>说出来</strong>，系统会把语音转成文字保存（不保存录音）。</li>
+        <li>时间到后各自输入一个词，然后互相看到对方的词，再继续联想。</li>
+        <li>没对上扣一格血；血扣完之前两人输入了同一个词，就算获胜。</li>
+      </ol>
+    </section>
+
+    <!-- 房间 -->
+    <section id="screen-lobby" class="screen" hidden>
+      <header class="lobby-head">
+        <p class="eyebrow">房间号</p>
+        <p id="lobby-code" class="big-code">0000</p>
+        <p class="hint">把这个号码告诉同伴</p>
+      </header>
+      <div class="seats">
+        <div class="seat" id="seat-me"><p class="seat-name"></p><p class="seat-status"></p></div>
+        <div class="seat" id="seat-partner"><p class="seat-name"></p><p class="seat-status"></p></div>
+      </div>
+      <div class="card">
+        <h2>语音识别检测</h2>
+        <p id="speech-status" class="hint"></p>
+        <p id="speech-heard" class="heard" hidden></p>
+        <button id="speech-test" class="secondary" type="button">开始检测</button>
+      </div>
+      <p id="lobby-rules" class="hint center"></p>
+      <button id="ready-button" class="primary" type="button">准备</button>
+      <button id="leave-button" class="link center" type="button">离开房间</button>
+    </section>
+
+    <!-- 对局 -->
+    <section id="screen-game" class="screen" hidden>
+      <header class="hud">
+        <div class="hud-row">
+          <p id="round-label" class="eyebrow">第 1 轮</p>
+          <p id="lives-label" class="eyebrow"></p>
+        </div>
+        <div id="hearts" class="hearts" aria-hidden="true"></div>
+      </header>
+
+      <div id="prompt" class="prompt"></div>
+
+      <div id="think-panel" class="panel">
+        <div class="timer"><span id="timer-number">30</span><span class="timer-unit">秒</span></div>
+        <div class="timer-bar"><i id="timer-fill"></i></div>
+        <p id="think-instruction" class="instruction">想想下一个词，把你的思路说出来</p>
+      </div>
+
+      <form id="word-form" class="panel" hidden autocomplete="off">
+        <p id="input-instruction" class="instruction">输入你想到的词</p>
+        <div class="word-row">
+          <input id="word-input" type="text" maxlength="12" placeholder="一个词" enterkeyhint="send">
+          <button class="primary" type="submit">提交</button>
+        </div>
+        <p id="word-error" class="error" role="alert"></p>
+      </form>
+
+      <div id="wait-panel" class="panel" hidden>
+        <p class="instruction">你写的是「<span id="my-word"></span>」</p>
+        <p class="hint">等待对方提交…</p>
+      </div>
+
+      <div class="transcript">
+        <p class="transcript-head"><i id="mic-dot" class="mic-dot"></i><span id="mic-label">正在听你说</span></p>
+        <p id="transcript-text" class="transcript-text"></p>
+      </div>
+
+      <p id="partner-line" class="hint center"></p>
+      <ol id="history" class="history"></ol>
+    </section>
+
+    <!-- 结束 -->
+    <section id="screen-end" class="screen" hidden>
+      <header class="masthead">
+        <p id="end-seal" class="seal" aria-hidden="true">灵犀</p>
+        <h1 id="end-title"></h1>
+        <p id="end-detail" class="lede"></p>
+      </header>
+      <ol id="end-history" class="history"></ol>
+      <button id="again-button" class="primary" type="button">再来一局</button>
+      <button id="exit-button" class="link center" type="button">离开房间</button>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" hidden></div>
+
+  <script src="config.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
