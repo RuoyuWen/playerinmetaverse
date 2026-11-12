@@ -47,6 +47,8 @@
     }
     $('ai-transcribe').checked = !!ai.transcribe;
     $('ai-transcribe-model').value = ai.transcribeModel || '';
+    $('ai-transcribe-language').value = ai.transcribeLanguage || 'room';
+    $('ai-transcribe-prompt').value = ai.transcribePrompt || '';
     $('ai-enabled').checked = ai.enabled;
     $('ai-key').value = '';
     $('ai-clear-key').checked = false;
@@ -256,6 +258,7 @@
       enabled: $('ai-enabled').checked, model: $('ai-model').value, baseUrl: $('ai-base').value,
       prompt: $('ai-prompt').value, schema, apiKey: $('ai-key').value, clearApiKey: $('ai-clear-key').checked,
       transcribe: $('ai-transcribe').checked, transcribeModel: $('ai-transcribe-model').value,
+      transcribeLanguage: $('ai-transcribe-language').value, transcribePrompt: $('ai-transcribe-prompt').value,
     };
     try {
       fillAi(await api('/settings', { method: 'PUT', body: { ai } }));
