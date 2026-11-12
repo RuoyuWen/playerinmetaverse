@@ -218,6 +218,7 @@ def start_game(room, settings):
     words = settings["customWords"] or builtin_words()
     room.update({
         "sessionId": uuid.uuid4().hex, "startedAt": now_iso(), "endedAt": None, "result": None,
+        "startedTs": time.time(), "durationMs": None,
         "settings": {k: v for k, v in settings.items() if k != "customWords"},
         "lives": settings["lives"], "round": 0, "rounds": [], "startWord": random.choice(words),
     })
@@ -235,12 +236,14 @@ def resolve_round(room):
         "round": room["round"], "prompt": room["prompt"], "words": words, "matched": matched,
         "submittedMs": current["submittedMs"], "transcripts": current["transcripts"],
         "livesAfter": room["lives"],
+        "durationMs": int((time.time() - room["roundStartedAt"]) * 1000),
     })
     room["used"].update(normalize_word(word) for word in words if word)
     if matched or room["lives"] <= 0:
         room["phase"] = "won" if matched else "lost"
         room["result"] = room["phase"]
         room["endedAt"] = now_iso()
+        room["durationMs"] = int((time.time() - room["startedTs"]) * 1000)
         room["phaseEndsAt"] = None
     else:
         begin_round(room, words)
@@ -264,6 +267,8 @@ def session_document(room):
         "endedAt": room["endedAt"], "result": room["result"], "settings": room["settings"],
         "players": [player["name"] for player in room["players"]], "startWord": room["startWord"],
         "livesLeft": room["lives"], "rounds": room["rounds"],
+        # 研究者面板用的汇总：猜测次数 = 已完成的轮数，用时 = 开局到结束（毫秒）
+        "guesses": len(room["rounds"]), "durationMs": room["durationMs"],
     }
     if room["phase"] in ("think", "input"):  # keep think-aloud text of an unfinished round too
         document["unfinishedRound"] = {

@@ -44,6 +44,35 @@
     }
   }
 
+  const duration = (session) => (session.durationMs != null ? session.durationMs
+    : session.endedAt ? new Date(session.endedAt) - new Date(session.startedAt) : null);
+  const guesses = (session) => (session.guesses != null ? session.guesses : session.rounds.length);
+  function clock(ms) {
+    if (ms == null) return '—';
+    const seconds = Math.round(ms / 1000);
+    return Math.floor(seconds / 60) + ' 分 ' + String(seconds % 60).padStart(2, '0') + ' 秒';
+  }
+
+  function renderStats() {
+    const done = sessions.filter((session) => session.result);
+    const won = done.filter((session) => session.result === 'won');
+    const mean = (list) => (list.length ? list.reduce((sum, value) => sum + value, 0) / list.length : null);
+    const tiles = [
+      ['已完成对局', done.length],
+      ['获胜', done.length ? `${won.length}（${Math.round(won.length / done.length * 100)}%）` : '—'],
+      ['平均猜测次数', done.length ? mean(done.map(guesses)).toFixed(1) : '—'],
+      ['获胜局平均猜测次数', won.length ? mean(won.map(guesses)).toFixed(1) : '—'],
+      ['平均用时', clock(mean(done.map(duration).filter((value) => value != null)))],
+    ];
+    const root = $('stats');
+    root.textContent = '';
+    for (const [label, value] of tiles) {
+      const tile = element('div', 'stat');
+      tile.append(element('p', 'hint', label), element('p', 'stat-value', value));
+      root.append(tile);
+    }
+  }
+
   const said = (segments) => (segments || []).map((segment) => segment.text).join(' ');
   const localTime = (iso) => (iso ? new Date(iso).toLocaleString('zh-CN', { hour12: false }) : '');
 
@@ -51,6 +80,7 @@
     const root = $('sessions');
     root.textContent = '';
     $('session-count').textContent = `（${sessions.length} 局）`;
+    renderStats();
     if (!sessions.length) root.append(element('p', 'hint', '还没有对局记录。'));
     for (const session of sessions) {
       const details = element('details', 'session');
@@ -59,14 +89,17 @@
       summary.append(
         element('b', '', session.players.join(' × ')),
         element('span', 'tag ' + (session.result || ''), label),
-        element('span', 'hint', `房间 ${session.code} · 起始词「${session.startWord}」 · ${session.rounds.length} 轮 · 剩 ${session.livesLeft}/${session.settings.lives} 血 · ${localTime(session.startedAt)}`));
+        element('span', 'metric', `猜了 ${guesses(session)} 次`),
+        element('span', 'metric', `用时 ${clock(duration(session))}`),
+        element('span', 'hint', `房间 ${session.code} · 起始词「${session.startWord}」 · 剩 ${session.livesLeft}/${session.settings.lives} 血 · ${localTime(session.startedAt)}`));
       const body = element('div', 'session-body');
       const rounds = session.rounds.slice();
       if (session.unfinishedRound) rounds.push(Object.assign({ words: ['', ''], unfinished: true }, session.unfinishedRound));
       for (const round of rounds) {
         const block = element('div', 'round');
         block.append(element('p', 'hint', `第 ${round.round} 轮 · 看到的词：${round.prompt.join(' / ')}` +
-          (round.unfinished ? ' · 未完成' : round.matched ? ' · 对上了' : ' · 没对上')));
+          (round.unfinished ? ' · 未完成' : round.matched ? ' · 对上了' : ' · 没对上') +
+          (round.durationMs != null ? ` · 本轮用时 ${clock(round.durationMs)}` : '')));
         const columns = element('div', 'round-cols');
         session.players.forEach((name, index) => {
           const column = element('div');
@@ -105,23 +138,42 @@
     setTimeout(() => URL.revokeObjectURL(link.href), 1000);
   }
 
-  function toCsv() {
-    const rows = [['session_id', 'room_code', 'started_at', 'result', 'start_word', 'round', 'player_index', 'player', 'saw',
-      'word', 'matched', 'submitted_ms', 'lives_after', 'think_aloud']];
-    for (const session of sessions) {
-      for (const round of session.rounds) {
-        session.players.forEach((name, index) => rows.push([session.id, session.code, session.startedAt, session.result || '',
-          session.startWord, round.round, index + 1, name, round.prompt.join(' / '), round.words[index], round.matched,
-          round.submittedMs[index] == null ? '' : round.submittedMs[index], round.livesAfter, said(round.transcripts[index])]));
-      }
-    }
-    // A leading apostrophe keeps spreadsheet apps from treating player text as a formula.
+  // A leading apostrophe keeps spreadsheet apps from treating player text as a formula.
+  function csv(rows) {
     const cell = (value) => {
       let text = String(value == null ? '' : value);
       if (/^[=+\-@\t\r]/.test(text)) text = "'" + text;
       return '"' + text.replace(/"/g, '""') + '"';
     };
     return '﻿' + rows.map((row) => row.map(cell).join(',')).join('\r\n');
+  }
+
+  function sessionsCsv() {
+    const rows = [['session_id', 'room_code', 'started_at', 'ended_at', 'result', 'player_1', 'player_2', 'start_word',
+      'guesses', 'duration_seconds', 'lives_total', 'lives_left', 'final_word', 'think_aloud_player_1', 'think_aloud_player_2']];
+    for (const session of sessions) {
+      const last = session.rounds[session.rounds.length - 1];
+      const all = (index) => session.rounds.map((round) => `[第${round.round}轮] ` + said(round.transcripts[index])).join('\n');
+      const ms = duration(session);
+      rows.push([session.id, session.code, session.startedAt, session.endedAt || '', session.result || 'unfinished',
+        session.players[0], session.players[1], session.startWord, guesses(session), ms == null ? '' : (ms / 1000).toFixed(1),
+        session.settings.lives, session.livesLeft, session.result === 'won' && last ? last.words[0] : '', all(0), all(1)]);
+    }
+    return csv(rows);
+  }
+
+  function toCsv() {
+    const rows = [['session_id', 'room_code', 'started_at', 'result', 'start_word', 'round', 'player_index', 'player', 'saw',
+      'word', 'matched', 'submitted_ms', 'round_duration_ms', 'lives_after', 'think_aloud']];
+    for (const session of sessions) {
+      for (const round of session.rounds) {
+        session.players.forEach((name, index) => rows.push([session.id, session.code, session.startedAt, session.result || '',
+          session.startWord, round.round, index + 1, name, round.prompt.join(' / '), round.words[index], round.matched,
+          round.submittedMs[index] == null ? '' : round.submittedMs[index],
+          round.durationMs == null ? '' : round.durationMs, round.livesAfter, said(round.transcripts[index])]));
+      }
+    }
+    return csv(rows);
   }
 
   async function enter() {
@@ -155,6 +207,7 @@
 
   $('refresh').addEventListener('click', () => loadSessions().catch((error) => alert(error.message)));
   $('export-json').addEventListener('click', () => download('wordsync-sessions.json', JSON.stringify(sessions, null, 2), 'application/json'));
+  $('export-sessions-csv').addEventListener('click', () => download('wordsync-sessions.csv', sessionsCsv(), 'text/csv'));
   $('export-csv').addEventListener('click', () => download('wordsync-rounds.csv', toCsv(), 'text/csv'));
   $('logout').addEventListener('click', () => {
     try { sessionStorage.removeItem('wordsync-admin'); } catch (error) { /* optional */ }

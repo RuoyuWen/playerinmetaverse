@@ -174,3 +174,7 @@ button:focus-visible { outline: 3px solid var(--seal-soft); outline-offset: 2px;
 .round-cols > div { min-width: 0; }
 .round .said { color: var(--ink-soft); font-size: .85rem; overflow-wrap: anywhere; white-space: pre-wrap; }
 .round .word { font: 700 1.1rem var(--serif); }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+.stat { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+.stat-value { font: 700 1.5rem/1.3 var(--serif); font-variant-numeric: tabular-nums; }
+.metric { font-size: .85rem; font-weight: 600; font-variant-numeric: tabular-nums; }
