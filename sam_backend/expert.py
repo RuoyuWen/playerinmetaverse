@@ -32,6 +32,7 @@ class ExpertStudy:
     protocol = PROTOCOL
     reassess_protocol = REASSESS_PROTOCOL
     stage2_profiles = STAGE2_PROFILES
+    stage2_index_profiles = STAGE2_PROFILES
     explanation_version = EXPLANATION_VERSION
     tables = TABLES
     condition = 'Sketch'
@@ -159,7 +160,8 @@ class ExpertStudy:
         done = {row["profile"] for row in existing}
         if profile != next((p for p in order if p not in done), None):
             return failure("进度已更新，请返回首页继续。", 409)
-        row = {"mode": mode, "rater": rater, "profile": profile, "trial_index": order.index(profile) + 1,
+        index_order = [p for p in sequence(rater) if not second or p in self.stage2_index_profiles]
+        row = {"mode": mode, "rater": rater, "profile": profile, "trial_index": index_order.index(profile) + 1,
                **{k: body[k] for k in answer_fields}, "view_ms": body["view_ms"], "submitted_at_utc": now(),
                "protocol": expected, self.hash_column: self.image_hash(profile)}
         if second:
@@ -206,8 +208,13 @@ class ExpertStudy:
 INSTRUMENT_2D = 'expert-2d-dual-v1'
 PROTOCOL_2D = '2d-expert-atmosphere-intention-v2'
 REASSESS_PROTOCOL_2D = '2d-expert-intention-explanations-v1'
-EXPLANATION_VERSION_2D = 'creator-explanations-20261111-2d-v1'
-STAGE2_PROFILES_2D = ['P1','P2','P3','P5','P6','P7','P8','P12','P22','P23','P24']
+# v2 (2026-11-12): explanations rewritten from interview transcripts using only the creators' own words.
+# P6, P7 and P8 were withdrawn because their interviews contain no usable creator statements.
+EXPLANATION_VERSION_2D = 'creator-explanations-20261112-2d-v2'
+STAGE2_PROFILES_2D = ['P1','P2','P3','P5','P12','P22','P23','P24']
+# Original 11-work list: stored trial_index keeps this numbering so earlier rows (kept but hidden) never collide.
+STAGE2_INDEX_PROFILES_2D = ['P1','P2','P3','P5','P6','P7','P8','P12','P22','P23','P24']
+EXPLANATION_SETTING_2D = 'expert_2d_explanations_v2'
 
 
 class Expert2DStudy(ExpertStudy):
@@ -215,6 +222,7 @@ class Expert2DStudy(ExpertStudy):
     protocol = PROTOCOL_2D
     reassess_protocol = REASSESS_PROTOCOL_2D
     stage2_profiles = STAGE2_PROFILES_2D
+    stage2_index_profiles = STAGE2_INDEX_PROFILES_2D
     explanation_version = EXPLANATION_VERSION_2D
     tables = {False: 'expert_2d_ratings', True: 'expert_2d_stage2_ratings'}
     condition = '2D'
@@ -222,12 +230,17 @@ class Expert2DStudy(ExpertStudy):
 
     def __init__(self, study):
         super().__init__(study)
-        document = study.expert_2d_explanations
+        document = study.settings_documents.get(EXPLANATION_SETTING_2D)
         if (not isinstance(document, dict) or document.get('version') != self.explanation_version
                 or set(document.get('explanations', {})) != set(self.stage2_profiles)
                 or any(not isinstance(t, str) or not t.strip() for t in document['explanations'].values())):
             raise ValueError('2D expert explanation configuration missing or mismatched')
         self.creator_text = document['explanations']
+
+    async def rows(self, second, mode, identity=None):
+        # Withdrawn works stay in the database but are excluded from progress, results and exports.
+        data = await super().rows(second, mode, identity)
+        return [row for row in data if row['profile'] in self.stage2_profiles] if second else data
 
     def image_hash(self, profile):
         return self.study.catalog['media_hashes'][profile]['2D']

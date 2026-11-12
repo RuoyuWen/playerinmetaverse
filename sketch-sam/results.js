@@ -53,7 +53,7 @@
         const total = document.createElement('td'); total.textContent = `${count} / 3`; tr.appendChild(total); $('rows').appendChild(tr);
       }
       const silent=data.rows.filter(r=>!r.audio_version||r.audio_version==='none').length;
-      $('status').textContent = second?`${mode==='test'?'测试':'正式'}第二阶段：${data.rows.length} / 21 份已保存。第一阶段评分与复评分分别保留。`:`${mode === 'test' ? '测试' : '正式'}第一阶段：${data.rows.length} / 72 份已保存；其中仅图片 ${silent} 份，有声版 ${data.rows.length-silent} 份。CSV 已分别标记，请勿直接混合分析。`;
+      $('status').textContent = second?`${mode==='test'?'测试':'正式'}第二阶段：${data.rows.length} / ${total*3} 份已保存。第一阶段评分与复评分分别保留。`:`${mode === 'test' ? '测试' : '正式'}第一阶段：${data.rows.length} / 72 份已保存；其中仅图片 ${silent} 份，有声版 ${data.rows.length-silent} 份。CSV 已分别标记，请勿直接混合分析。`;
           if(expert())$('status').textContent=`${mode==='test'?'测试':'正式'} ${condition()} 第 ${stage()} 阶段：${data.rows.length} / ${total*3} 份已保存。其他版本记录单独保留。`;
     } catch (error) { $('status').textContent = error.message; $('status').classList.add('error'); }
     finally { loading = false; $('refresh').disabled = false; $('mode').disabled = false; $('stage').disabled = false; $('instrument').disabled=false; }

@@ -2,7 +2,7 @@
   'use strict';
   const $ = id => document.getElementById(id);
   const cfg=window.StudyConfig||{},stage2=cfg.stage2===true;
-  let total=stage2?11:24;
+  let total=stage2?8:24;
   const audioVersion='none';
   const intendedKeys=['intended_valence','intended_arousal','intended_dominance'];
   const atmosphereKeys=['atmosphere_valence','atmosphere_arousal','atmosphere_dominance'];
@@ -46,7 +46,7 @@
   const homeGuide=document.createElement('section');homeGuide.className='home-guide';homeGuide.setAttribute('aria-labelledby','homeGuideTitle');
   homeGuide.innerHTML='<h2 id="homeGuideTitle">每张图片：两组情绪与信心评价</h2><p>分别判断场景本身传达的情绪氛围，以及创作者希望表达的情绪。两组问题分步显示，请根据当前问题独立作答。每组均填写愉悦度、唤醒度、控制感（1–9），以及对本组判断的信心（1–7）。</p><p>两组信心分别作答，没有预设答案。每张提交后保存，可暂停续填。</p>';
   $('raterGrid').before(homeGuide);
-  if(stage2)homeGuide.innerHTML='<h2>阅读解释后，重新判断创作者意图</h2><p>本阶段包含 11 份作品。阅读创作者解释，回顾你本人第一阶段对创作者意图的评分，然后重新填写 愉悦度、唤醒度、控制感（1–9）和判断信心（1–7）。</p><p>四项均需重新选择，可以保持或调整原判断。新评分单独保存。</p>';
+  if(stage2)homeGuide.innerHTML='<h2>阅读解释后，重新判断创作者意图</h2><p>本阶段包含 8 份作品。阅读创作者解释，回顾你本人第一阶段对创作者意图的评分，然后重新填写 愉悦度、唤醒度、控制感（1–9）和判断信心（1–7）。</p><p>四项均需重新选择，可以保持或调整原判断。新评分单独保存。</p>';
   document.querySelector('.rating-instruction').textContent=stage2?'阅读解释后，重新判断创作者希望表达的情绪。四项均需重新选择。':'请分别完成两组情绪评分和各自的判断信心。';
   async function api(url, options) {
     url+=(url.includes('?')?'&':'?')+'instrument=expert-2d-dual-v1';
@@ -138,7 +138,7 @@
           button.querySelector('.card-action').textContent='完成第一阶段后解锁';
         }
         if(stage2Entry&&done===24){
-          if(!stage2Entry.childElementCount){const title=document.createElement('h2');title.textContent='第二阶段评价';const note=document.createElement('p');note.textContent='阅读 11 位创作者的解释，并回顾你第一阶段的评分，然后再次评价。';stage2Entry.append(title,note);}
+          if(!stage2Entry.childElementCount){const title=document.createElement('h2');title.textContent='第二阶段评价';const note=document.createElement('p');note.textContent='阅读 8 位创作者的解释，并回顾你第一阶段的评分，然后再次评价。';stage2Entry.append(title,note);}
           const link=document.createElement('a');link.className='primary';link.href=secondStageUrl(rater);link.textContent=`${rater} · 进入第二阶段评价 →`;stage2Entry.append(link);stage2Entry.classList.remove('hidden');
         }
         button.addEventListener('click', () => select(rater)); $('raterGrid').appendChild(button);

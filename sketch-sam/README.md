@@ -40,3 +40,11 @@ All 24 local 2D image hashes were compared with the private media catalog. Brows
 ## Chinese-first presentation and confidence update — 2026-11-12
 
 The 2D first-stage protocol is v2; second-stage scoring, stimuli, explanation text, question-order balance and invitations are unchanged. Each first-stage group requires its own confidence before moving on. Historical rows retain NULL for uncollected atmosphere confidence. Earlier qualitative responses stay in the database, but the current 2D form and CSV export omit those questions/columns. The additive schema migration adds the nullable confidence column and relaxes the old text NOT NULL requirements without changing any stored value. Existing progress continues. Regression checks passed: 23 backend/integration tests and seven transport tests, including historical migration preservation, numeric-only submission, strict confidence bounds, both CSV layouts and all 72 baseline/33 reassessment records in a disposable local database.
+
+## Second stage reduced to eight works — 2026-11-12
+
+Creator explanations were rewritten from the interview transcripts using only the creators' own statements (version `creator-explanations-20261112-2d-v2`, private settings key `expert_2d_explanations_v2`). P6, P7 and P8 were withdrawn because their interviews contain no usable creator statements; the second stage now covers P1, P2, P3, P5, P12, P22, P23 and P24 (8 works; 24 reassessments).
+
+Existing reassessments of P6–P8 (R1) are kept unchanged in `expert_2d_stage2_ratings` but excluded from progress, results and both CSV exports. Stored `trial_index` keeps the original 11-work numbering so retained rows never collide with new ones; numbers can therefore skip. Each row records the explanation version and exact text it was rated with; R1's remaining reassessments used v1 text, later raters see v2.
+
+Deploy order: (1) the owner runs `python -m sam_backend.set_expert_explanations <private-json>` (hidden connection-string prompt; the JSON stays outside this repository); (2) deploy this code. Until step 1 is done, the new code returns 503 for the 2D expert pages; the old code keeps working because the v2 document uses a separate key.

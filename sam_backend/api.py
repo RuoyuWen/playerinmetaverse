@@ -97,9 +97,9 @@ def complete(rows):
 
 
 class Study:
-    def __init__(self, connection, catalog, access, expert_2d_explanations=None):
+    def __init__(self, connection, catalog, access, settings_documents=None):
         self.db, self.catalog, self.access = connection, catalog, access
-        self.expert_2d_explanations = expert_2d_explanations
+        self.settings_documents = settings_documents or {}
 
     def schedule(self, participant):
         return self.catalog["schedules"][schedule_source(participant)]
@@ -199,11 +199,11 @@ class Study:
     async def handle(self, request, raw):
         path = request.url.path
         if path == "/api/sam/health":
-            from .expert import PROTOCOL_2D as expert_protocol
+            from .expert import PROTOCOL_2D as expert_protocol, STAGE2_PROFILES_2D
             return reply({"ok": True, "service": "Sketch SAM", "protocol": SKETCH_PROTOCOL,
                           "cohort_protocol": COHORT_PROTOCOL, "stage2_protocol": STAGE2_PROTOCOL,
-                          "audio_version": "none", "storage": "postgresql", "revision": "20261112-expert-confidence-v2",
-                          "expert_protocol": expert_protocol, "expert_condition": "2D", "expert_stage2_total": 11})
+                          "audio_version": "none", "storage": "postgresql", "revision": "20261112-expert-explanations-v2",
+                          "expert_protocol": expert_protocol, "expert_condition": "2D", "expert_stage2_total": len(STAGE2_PROFILES_2D)})
         family = "cohort" if path.startswith("/api/cohort/") else "sketch"
         endpoint = path.removeprefix("/api/cohort" if family == "cohort" else "/api")
         if family == "cohort" and endpoint == "/join" and request.method == "POST":
@@ -418,7 +418,7 @@ async def _database_request(request: Request, raw: bytes):
                 catalog, access = documents["catalog"], documents["access_hashes"]
                 validate_catalog(catalog)
                 validate_access(access)
-                result = await Study(connection, catalog, access, documents.get("expert_2d_explanations")).handle(request, raw)
+                result = await Study(connection, catalog, access, documents).handle(request, raw)
             # Connection context commits successfully before the response is returned.
             return result
         except (psycopg.OperationalError, psycopg.errors.SerializationFailure, psycopg.errors.DeadlockDetected, PoolTimeout) as error:
