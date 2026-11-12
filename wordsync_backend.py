@@ -311,8 +311,8 @@ def resolve_round(room):
     })
     if current.get("aiRaw"):
         room["rounds"][-1]["aiRaw"] = current["aiRaw"]
-    if current.get("aiInspiration"):
-        room["rounds"][-1]["aiInspiration"] = current["aiInspiration"]
+    if current.get("aiRandomWord"):
+        room["rounds"][-1]["aiRandomWord"] = True
     room["used"].update(normalize_word(word) for word in words if word)
     if matched or room["lives"] <= 0:
         room["phase"] = "won" if matched else "lost"
@@ -407,19 +407,24 @@ def schedule_ai(room):
 
 async def ai_turn(room, session_id, round_number):
     """Ask the model for this round's word. It is asked at the start of the round, so it
-    cannot see what the human is about to write."""
+    cannot see what the human is about to write.
+
+    In a game without a start word the model is not asked in round one: with nothing to go
+    on it would open with the same word every game. Its first word is drawn at random
+    instead, and the model plays from round two, when there are two words to work from."""
     word = answer = None
+    drawn = False
     try:
         settings = await get_settings()
         lang = room.get("lang", "zh")
         history = [{"round": r["round"], "your_word": r["words"][1], "partner_word": r["words"][0]} for r in room["rounds"]]
-        inspiration = None
-        if not room["startWord"] and not history:  # no start word: vary the AI's opening move
-            inspiration = random.choice(settings["customWordsEn" if lang == "en" else "customWords"] or builtin_words(lang))
         context = wordsync_ai.round_context(
-            lang, room["startWord"], history, sorted(room["used"]), round_number, room["lives"], inspiration)
+            lang, room["startWord"], history, sorted(room["used"]), round_number, room["lives"])
         note = failure = ""
-        for _ in range(AI_ATTEMPTS):
+        if not room["startWord"] and not history:
+            word = random.choice(settings["customWordsEn" if lang == "en" else "customWords"] or builtin_words(lang))
+            drawn = True
+        for _ in range(0 if drawn else AI_ATTEMPTS):
             try:
                 answer = await wordsync_ai.ask(settings["ai"], context, note)
             except wordsync_ai.AIError as error:
@@ -455,10 +460,11 @@ async def ai_turn(room, session_id, round_number):
     elapsed = int((time.time() - room["roundStartedAt"]) * 1000)
     current["words"][1] = word
     current["submittedMs"][1] = elapsed
-    current["transcripts"][1] = [{"t": elapsed, "text": answer["think"]}] if answer["think"] else []
-    current["aiRaw"] = answer["raw"]
-    if inspiration:
-        current["aiInspiration"] = inspiration
+    if drawn:
+        current["aiRandomWord"] = True  # no model call, so no think text for this round
+    else:
+        current["transcripts"][1] = [{"t": elapsed, "text": answer["think"]}] if answer["think"] else []
+        current["aiRaw"] = answer["raw"]
     if current["words"][0] is not None:
         resolve_round(room)
     else:

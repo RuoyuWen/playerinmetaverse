@@ -136,6 +136,7 @@
         block.append(element('p', 'hint', `第 ${round.round} 轮 · 看到的词：${round.prompt.join(' / ') || '（无）'}` +
           (round.unfinished ? ' · 未完成' : round.matched ? ' · 对上了' : ' · 没对上') +
           (round.durationMs != null ? ` · 本轮用时 ${clock(round.durationMs)}` : '') +
+          (round.aiRandomWord ? ' · AI 这一轮的词是随机抽取的（未调用模型）' : '') +
           (round.aiInspiration ? ` · 给 AI 的随机联想词：${round.aiInspiration}` : '')));
         const columns = element('div', 'round-cols');
         session.players.forEach((name, index) => {
