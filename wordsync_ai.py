@@ -95,9 +95,14 @@ def is_available(ai: Dict[str, Any]) -> bool:
 
 
 def round_context(lang: str, start_word: Optional[str], history: List[Dict[str, str]], used: List[str],
-                  round_number: int, lives: int) -> Dict[str, Any]:
-    """The facts the model gets each round. It never includes the partner's current word."""
-    return {
+                  round_number: int, lives: int, inspiration: Optional[str] = None) -> Dict[str, Any]:
+    """The facts the model gets each round. It never includes the partner's current word.
+
+    With no start word and no history, a model given identical input picks the same
+    "most typical" word every game. `inspiration` is a random word, different each game,
+    that gives its first move somewhere different to start from.
+    """
+    context = {
         "language": "English" if lang == "en" else "中文",
         "round": round_number,
         "lives_left": lives,
@@ -105,6 +110,13 @@ def round_context(lang: str, start_word: Optional[str], history: List[Dict[str, 
         "previous_rounds": history,
         "words_already_used": used,
     }
+    if inspiration:
+        context["inspiration_word"] = inspiration
+        context["note"] = (
+            "There is no start word this game. So that you do not open with the same word every game, "
+            "begin from inspiration_word: think about what it brings to mind and play a word it leads you to."
+        )
+    return context
 
 
 async def ask(ai: Dict[str, Any], context: Dict[str, Any], note: str = "") -> Dict[str, Any]:
