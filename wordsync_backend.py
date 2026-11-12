@@ -251,7 +251,8 @@ def start_game(room, settings):
     words = settings["customWords"] or builtin_words()
     room.update({
         "sessionId": uuid.uuid4().hex, "startedAt": now_iso(), "endedAt": None, "result": None,
-        "startedTs": time.time(), "durationMs": None,
+        "startedTs": time.time(), "durationMs": None, "quitBy": None, "unfinished": None,
+        "playerNames": [player["name"] for player in room["players"]],
         "settings": {k: v for k, v in settings.items() if k != "customWords"},
         "lives": settings["lives"], "round": 0, "rounds": [], "startWord": random.choice(words),
     })
@@ -294,18 +295,34 @@ def advance(room):
         resolve_round(room)
 
 
+def unfinished_round(room):
+    return {"round": room["round"], "prompt": room["prompt"], "transcripts": room["current"]["transcripts"]}
+
+
+def quit_game(room, index):
+    """One player leaving ends the game for both, straight away."""
+    room["unfinished"] = unfinished_round(room)
+    room["phase"] = room["result"] = "quit"
+    room["quitBy"] = room["players"][index]["name"]
+    room["endedAt"] = now_iso()
+    room["durationMs"] = int((time.time() - room["startedTs"]) * 1000)
+    room["phaseEndsAt"] = None
+
+
 def session_document(room):
     document = {
         "id": room["sessionId"], "code": room["code"], "startedAt": room["startedAt"],
         "endedAt": room["endedAt"], "result": room["result"], "settings": room["settings"],
-        "players": [player["name"] for player in room["players"]], "startWord": room["startWord"],
+        "players": room.get("playerNames") or [player["name"] for player in room["players"]],
+        "startWord": room["startWord"], "quitBy": room.get("quitBy"),
         "livesLeft": room["lives"], "rounds": room["rounds"],
         # 研究者面板用的汇总：猜测次数 = 已完成的轮数，用时 = 开局到结束（毫秒）
         "guesses": len(room["rounds"]), "durationMs": room["durationMs"],
     }
     if room["phase"] in ("think", "input"):  # keep think-aloud text of an unfinished round too
-        document["unfinishedRound"] = {
-            "round": room["round"], "prompt": room["prompt"], "transcripts": room["current"]["transcripts"]}
+        document["unfinishedRound"] = unfinished_round(room)
+    elif room.get("unfinished"):
+        document["unfinishedRound"] = room["unfinished"]
     return json.loads(json.dumps(document))  # snapshot: the room keeps changing while we write
 
 
@@ -368,7 +385,7 @@ async def find_room(code: str, token: str):
     if not room:
         raise HTTPException(status_code=404, detail="房间不存在或已过期，请重新输入房间号")
     for index, player in enumerate(room["players"]):
-        if hmac.compare_digest(player["token"], token):
+        if hmac.compare_digest(player["token"], token) and not player.get("left"):
             now = time.time()
             player["lastSeen"] = room["touched"] = now
             advance(room)
@@ -387,7 +404,7 @@ def view(room, index):
         "me": {"name": me["name"], "ready": me["ready"]},
         "partner": partner and {
             "name": partner["name"], "ready": partner["ready"],
-            "online": now - partner["lastSeen"] < OFFLINE_AFTER,
+            "online": now - partner["lastSeen"] < OFFLINE_AFTER, "left": bool(partner.get("left")),
         },
     }
     if room.get("sessionId"):
@@ -395,7 +412,7 @@ def view(room, index):
             "sessionId": room["sessionId"], "round": room["round"], "lives": room["lives"],
             "maxLives": room["settings"]["lives"], "settings": room["settings"],
             "startWord": room["startWord"], "phaseEndsAt": room["phaseEndsAt"],
-            "roundStartedAt": room["roundStartedAt"],
+            "roundStartedAt": room["roundStartedAt"], "quitBy": room.get("quitBy"),
             "history": [
                 {"round": r["round"], "mine": r["words"][index], "theirs": r["words"][other_index],
                  "matched": r["matched"]} for r in room["rounds"]],
@@ -475,7 +492,7 @@ async def join(request: JoinRequest):
     room = await load_room(code)
     if room and request.token:
         for index, player in enumerate(room["players"]):
-            if hmac.compare_digest(player["token"], request.token):
+            if hmac.compare_digest(player["token"], request.token) and not player.get("left"):
                 if name:
                     player["name"] = name
                 player["lastSeen"] = room["touched"] = now
@@ -550,11 +567,14 @@ async def submit(request: SubmitRequest):
 @router.post("/restart")
 async def restart(request: PlayerRequest):
     room, index = await find_room(request.code, request.token)
-    if room["phase"] in ("won", "lost"):
+    if room["phase"] in ("won", "lost", "quit"):
+        me = room["players"][index]
         room["phase"] = "lobby"
         room["sessionId"] = None
+        room["players"] = [player for player in room["players"] if not player.get("left")]
         for player in room["players"]:
             player["ready"] = False
+        index = room["players"].index(me)
         persist(room)
     return view(room, index)
 
@@ -572,8 +592,17 @@ async def leave(request: PlayerRequest):
         else:
             persist(room)
     else:
-        room["players"][index]["lastSeen"] = 0  # show as offline right away
-        persist(room)
+        if room["phase"] in ("think", "input"):
+            quit_game(room, index)
+        # Keep the seat until the next game so round history still lines up for the other player.
+        room["players"][index]["left"] = True
+        room["players"][index]["lastSeen"] = 0
+        if all(player.get("left") for player in room["players"]):
+            rooms.pop(room["code"], None)
+            background(store().save_session, session_document(room))
+            background(store().delete_room, room["code"])
+        else:
+            persist(room)
     return {"ok": True}
 
 

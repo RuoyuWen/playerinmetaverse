@@ -347,20 +347,23 @@
 
   function renderEnd() {
     const won = state.phase === 'won';
+    const quit = state.phase === 'quit';
     const last = state.history[state.history.length - 1];
     $('end-seal').classList.toggle('lost', !won);
-    $('end-seal').textContent = won ? '灵犀' : '可惜';
-    $('end-title').textContent = won ? '心有灵犀！' : '血量耗尽';
+    $('end-seal').textContent = won ? '灵犀' : quit ? '散场' : '可惜';
+    $('end-title').textContent = won ? '心有灵犀！' : quit ? '对局已结束' : '血量耗尽';
     $('end-detail').textContent = won
       ? `你们在第 ${last.round} 轮同时想到了「${last.mine}」，还剩 ${state.lives} 格血。`
+      : quit ? `${state.quitBy || '对方'} 退出了房间，本局提前结束。`
       : `${state.maxLives} 格血用完了，这次没能想到一起。`;
+    $('again-button').textContent = state.partner && state.partner.left ? '回到房间等新同伴' : '再来一局';
     renderHistory($('end-history'), state.history, state.partner ? state.partner.name : '对方');
   }
 
   function render() {
     if (!session || !state) return;
     if (state.phase === 'lobby') { show('lobby'); renderLobby(); }
-    else if (state.phase === 'won' || state.phase === 'lost') { show('end'); renderEnd(); }
+    else if (state.phase === 'won' || state.phase === 'lost' || state.phase === 'quit') { show('end'); renderEnd(); }
     else { show('game'); renderGame(); }
   }
 
@@ -427,6 +430,11 @@
   }
   $('leave-button').addEventListener('click', leave);
   $('exit-button').addEventListener('click', leave);
+  $('quit-button').addEventListener('click', async () => {
+    if (!confirm('退出后本局会立刻结束，对方也会看到对局结束。确定退出吗？')) return;
+    await flushTranscript(); // save what was said so far before the round is closed
+    leave();
+  });
 
   $('word-form').addEventListener('submit', async (event) => {
     event.preventDefault();

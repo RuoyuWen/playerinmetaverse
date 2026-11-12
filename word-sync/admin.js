@@ -54,11 +54,11 @@
   }
 
   function renderStats() {
-    const done = sessions.filter((session) => session.result);
+    const done = sessions.filter((session) => session.result === 'won' || session.result === 'lost');
     const won = done.filter((session) => session.result === 'won');
     const mean = (list) => (list.length ? list.reduce((sum, value) => sum + value, 0) / list.length : null);
     const tiles = [
-      ['已完成对局', done.length],
+      ['打完的对局', done.length],
       ['获胜', done.length ? `${won.length}（${Math.round(won.length / done.length * 100)}%）` : '—'],
       ['平均猜测次数', done.length ? mean(done.map(guesses)).toFixed(1) : '—'],
       ['获胜局平均猜测次数', won.length ? mean(won.map(guesses)).toFixed(1) : '—'],
@@ -85,7 +85,8 @@
     for (const session of sessions) {
       const details = element('details', 'session');
       const summary = element('summary');
-      const label = session.result === 'won' ? '获胜' : session.result === 'lost' ? '失败' : '未完成';
+      const label = session.result === 'won' ? '获胜' : session.result === 'lost' ? '失败'
+        : session.result === 'quit' ? `${session.quitBy || '有人'} 中途退出` : '未完成';
       summary.append(
         element('b', '', session.players.join(' × ')),
         element('span', 'tag ' + (session.result || ''), label),
@@ -150,14 +151,14 @@
 
   function sessionsCsv() {
     const rows = [['session_id', 'room_code', 'started_at', 'ended_at', 'result', 'player_1', 'player_2', 'start_word',
-      'guesses', 'duration_seconds', 'lives_total', 'lives_left', 'final_word', 'think_aloud_player_1', 'think_aloud_player_2']];
+      'guesses', 'duration_seconds', 'lives_total', 'lives_left', 'final_word', 'quit_by', 'think_aloud_player_1', 'think_aloud_player_2']];
     for (const session of sessions) {
       const last = session.rounds[session.rounds.length - 1];
       const all = (index) => session.rounds.map((round) => `[第${round.round}轮] ` + said(round.transcripts[index])).join('\n');
       const ms = duration(session);
       rows.push([session.id, session.code, session.startedAt, session.endedAt || '', session.result || 'unfinished',
         session.players[0], session.players[1], session.startWord, guesses(session), ms == null ? '' : (ms / 1000).toFixed(1),
-        session.settings.lives, session.livesLeft, session.result === 'won' && last ? last.words[0] : '', all(0), all(1)]);
+        session.settings.lives, session.livesLeft, session.result === 'won' && last ? last.words[0] : '', session.quitBy || '', all(0), all(1)]);
     }
     return csv(rows);
   }
