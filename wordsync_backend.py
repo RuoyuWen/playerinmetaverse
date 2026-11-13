@@ -398,6 +398,12 @@ def quit_game(room, index):
     room["phaseEndsAt"] = None
 
 
+def may_submit_early(room) -> bool:
+    """Whether a word may be handed in before the think countdown ends. Always true for the
+    first word of a game without a start word: there is nothing yet to think about."""
+    return bool(room["settings"].get("allowEarlySubmit") or (room["round"] == 1 and not room["startWord"]))
+
+
 def schedule_ai(room):
     """Start the AI's turn for the current round, unless it has already answered."""
     if room.get("ai") and room["phase"] in ("think", "input") and room["current"]["words"][1] is None:
@@ -448,7 +454,7 @@ async def ai_turn(room, session_id, round_number):
         failure = f"内部错误：{type(error).__name__}"
     # Like a human player, the AI only hands in its word once the think countdown is over
     # (unless early submission is allowed), however quickly the model answered.
-    if (word is not None and not room["settings"].get("allowEarlySubmit") and room.get("sessionId") == session_id
+    if (word is not None and not may_submit_early(room) and room.get("sessionId") == session_id
             and room.get("round") == round_number and room["phase"] == "think"):
         await asyncio.sleep(max(0.0, room["phaseEndsAt"] - time.time()))
     # The game may have moved on (quit, restarted, timed out) while the model was thinking.
@@ -586,7 +592,7 @@ def view(room, index):
             "maxLives": room["settings"]["lives"], "settings": room["settings"],
             "startWord": room["startWord"], "phaseEndsAt": room["phaseEndsAt"],
             "roundStartedAt": room["roundStartedAt"], "quitBy": room.get("quitBy"),
-            "aiFailed": bool(room.get("aiError")),
+            "aiFailed": bool(room.get("aiError")), "canSubmitEarly": may_submit_early(room),
             "history": [
                 {"round": r["round"], "mine": r["words"][index], "theirs": r["words"][other_index],
                  "matched": r["matched"]} for r in room["rounds"]],
@@ -777,7 +783,7 @@ async def submit(request: SubmitRequest):
     room, index = await find_room(request.code, request.token)
     if request.round != room.get("round") or room["phase"] not in ("think", "input"):
         raise HTTPException(status_code=409, detail="round_over")
-    if room["phase"] == "think" and not room["settings"].get("allowEarlySubmit"):
+    if room["phase"] == "think" and not may_submit_early(room):
         raise HTTPException(status_code=409, detail="too_early")
     current = room["current"]
     if current["words"][index] is not None:

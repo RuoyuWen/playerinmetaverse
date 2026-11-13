@@ -428,7 +428,11 @@
     const thinking = state.phase === 'think';
     const submitted = state.me.submitted;
     $('think-instruction').textContent = state.round === 1 ? T(state.startWord ? '由这个词想到下一个词，把你的思路说出来' : '随便想一个词，把你的思路说出来') : T('猜猜你们会想到哪个共同的词，把思路说出来');
-    const canType = !thinking || !!state.settings.allowEarlySubmit;  // by default the word box opens when the countdown ends
+    const canType = !thinking || !!state.canSubmitEarly;
+    // The first word of a no-start-word game has nothing to think over, so no countdown is shown for it.
+    const untimed = thinking && state.round === 1 && !state.startWord;
+    document.querySelector('#think-panel .timer').hidden = untimed;
+    document.querySelector('#think-panel .timer-bar').hidden = untimed;  // by default the word box opens when the countdown ends
     $('word-form').hidden = submitted || !canType;
     if (canType && !submitted && !typingOpen) setTimeout(() => $('word-input').focus({ preventScroll: true }), 50);
     typingOpen = canType && !submitted;
@@ -436,7 +440,7 @@
     $('wait-hint').textContent = T('倒计时结束后才能输入');
     $('wait-panel').hidden = !submitted;
     $('my-word-line').textContent = T('你写的是「{word}」', { word: state.me.word || '' });
-    $('input-instruction').textContent = thinking ? T('想好了随时可以提交，不用等倒计时') : T('时间到了，请输入你想到的词');
+    $('input-instruction').textContent = thinking ? T(state.round === 1 && !state.startWord ? '直接输入你想到的第一个词' : '想好了随时可以提交，不用等倒计时') : T('时间到了，请输入你想到的词');
 
     const listening = !submitted && speech.wanted;
     $('mic-dot').classList.toggle('live', listening);
