@@ -446,6 +446,11 @@ async def ai_turn(room, session_id, round_number):
     except Exception as error:  # never let a background task die silently
         logger.exception("wordsync: AI turn crashed")
         failure = f"内部错误：{type(error).__name__}"
+    # Like a human player, the AI only hands in its word once the think countdown is over
+    # (unless early submission is allowed), however quickly the model answered.
+    if (word is not None and not room["settings"].get("allowEarlySubmit") and room.get("sessionId") == session_id
+            and room.get("round") == round_number and room["phase"] == "think"):
+        await asyncio.sleep(max(0.0, room["phaseEndsAt"] - time.time()))
     # The game may have moved on (quit, restarted, timed out) while the model was thinking.
     if (rooms.get(room["code"]) is not room or room.get("sessionId") != session_id
             or room.get("round") != round_number or room["phase"] not in ("think", "input")):
