@@ -65,6 +65,7 @@
     for (const key of ['lives', 'thinkSeconds', 'inputSeconds']) $(key).value = settings[key];
     $('noRepeat').checked = settings.noRepeat;
     $('requireSpeech').checked = settings.requireSpeech;
+    $('allowEarlySubmit').checked = !!settings.allowEarlySubmit;
     $('customWords').value = settings.customWords.join('\n');
     $('customWordsEn').value = (settings.customWordsEn || []).join('\n');
     if (data.builtinWordCountEn) $('builtin-count-en').textContent = data.builtinWordCountEn;
@@ -240,6 +241,7 @@
     const body = {
       lives: Number($('lives').value), thinkSeconds: Number($('thinkSeconds').value), inputSeconds: Number($('inputSeconds').value),
       noRepeat: $('noRepeat').checked, requireSpeech: $('requireSpeech').checked,
+      allowEarlySubmit: $('allowEarlySubmit').checked,
       customWords: $('customWords').value.split(/[\s,，、;；]+/).filter(Boolean),
       customWordsEn: $('customWordsEn').value.split(/[\n,;]+/).map((word) => word.trim()).filter(Boolean),
     };
