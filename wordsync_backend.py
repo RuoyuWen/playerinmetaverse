@@ -42,12 +42,13 @@ DEFAULT_SETTINGS: Dict[str, Any] = {
     "inputSeconds": 0,      # 输入限时，0 = 不限时
     "noRepeat": True,       # 不允许使用已经出现过的词
     "requireSpeech": True,  # 必须通过语音识别检测才能准备
+    "allowEarlySubmit": False,  # 是否允许倒计时结束前就提交；默认必须等思考时间结束
     "customWords": [],      # 自定义中文起始词库，留空则用内置词库
     "customWordsEn": [],    # 自定义英文起始词库，留空则用内置词库
     "ai": wordsync_ai.DEFAULT_AI,  # AI 对手：接口、模型、提示词、回复的 JSON Schema（含 API key，绝不下发给玩家）
 }
 # The only settings players may see, and the only ones copied into a room.
-GAME_KEYS = ("lives", "thinkSeconds", "inputSeconds", "noRepeat", "requireSpeech")
+GAME_KEYS = ("lives", "thinkSeconds", "inputSeconds", "noRepeat", "requireSpeech", "allowEarlySubmit")
 AI_ATTEMPTS = 2
 LIMITS = {"lives": (1, 99), "thinkSeconds": (5, 300), "inputSeconds": (0, 300)}
 MAX_WORD_LENGTH = {"zh": 12, "en": 30}
@@ -213,7 +214,7 @@ def clean_settings(raw: Any, previous: Optional[Dict[str, Any]] = None) -> Dict[
             result[key] = max(low, min(high, int(raw.get(key, result[key]))))
         except (TypeError, ValueError):
             pass
-    for key in ("noRepeat", "requireSpeech"):
+    for key in ("noRepeat", "requireSpeech", "allowEarlySubmit"):
         if isinstance(raw.get(key), bool):
             result[key] = raw[key]
     for key in ("customWords", "customWordsEn"):
@@ -771,6 +772,8 @@ async def submit(request: SubmitRequest):
     room, index = await find_room(request.code, request.token)
     if request.round != room.get("round") or room["phase"] not in ("think", "input"):
         raise HTTPException(status_code=409, detail="round_over")
+    if room["phase"] == "think" and not room["settings"].get("allowEarlySubmit"):
+        raise HTTPException(status_code=409, detail="too_early")
     current = room["current"]
     if current["words"][index] is not None:
         raise HTTPException(status_code=409, detail="already_submitted")

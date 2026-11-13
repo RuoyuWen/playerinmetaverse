@@ -31,7 +31,7 @@
     '连不上服务器，请检查网络后重试': 'Can’t reach the server. Check your connection and try again.',
     '开局会出现一个随机词，两人各自由它联想下一个词；选“不给词”时，第一轮两人各自随便想一个词。': 'A random word appears and each of you thinks of a word it leads to. With “No word”, you each simply think of any word in round one.',
     '思考时请把想法说出来，系统会把语音转成文字保存（不保存录音）。': 'Say your thoughts out loud while you think. Your speech is saved as text; no audio is kept.',
-    '想好了就输入一个词提交，不必等倒计时结束；两人都提交后互相看到对方的词，再继续联想。': 'Submit one word whenever you’re ready, without waiting for the countdown. Once you’ve both submitted, you see each other’s words and go again.',
+    '倒计时结束后，各自输入一个词提交；两人都提交后互相看到对方的词，再继续联想。': 'When the countdown ends, each of you submits one word. Once you’ve both submitted, you see each other’s words and go again.',
     '没对上扣一格血；血扣完之前两人输入了同一个词，就算获胜。': 'A mismatch costs one life. Enter the same word before the lives run out and you win.',
 
     '房间号': 'Room code',
@@ -77,6 +77,8 @@
     '猜猜你们会想到哪个共同的词，把思路说出来': 'What word will you both land on? Think out loud.',
     '时间到之前提交你的词': 'Submit your word before time runs out',
     '想好了随时可以提交，不用等倒计时': 'Submit whenever you’re ready, no need to wait',
+    '倒计时结束后才能输入': 'You can enter your word when the countdown ends',
+    '思考时间还没结束': 'The thinking time isn’t over yet',
     '时间到了，请输入你想到的词': 'Time’s up. Enter your word.',
     '一个词': 'One word',
     '提交': 'Submit',
@@ -135,6 +137,7 @@
     empty_word: '请输入一个词',
     word_too_long: '词太长了',
     word_used: '这个词已经出现过了，换一个吧',
+    too_early: '思考时间还没结束',
     ai_unavailable: 'AI 对手暂时不可用',
   };
 

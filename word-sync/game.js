@@ -20,6 +20,7 @@
   let interim = '';
   let sentCount = 0;
   let roundKey = '';
+  let typingOpen = false;  // whether the word box is currently offered, to focus it once when it opens
   let timeUpPolled = false;
   let speechStatus = 'idle'; // idle | testing | ok | denied | error | unsupported
   let speechTesting = false;
@@ -293,12 +294,11 @@
     const key = playing ? next.sessionId + ':' + next.round : '';
     if (key !== roundKey) {
       roundKey = key;
-      segments = []; interim = ''; sentCount = 0; timeUpPolled = false;
+      segments = []; interim = ''; sentCount = 0; timeUpPolled = false; typingOpen = false;
       $('word-input').value = '';
       $('word-error').textContent = '';
       if (playing) {
         renderPrompt();
-        if (!next.me.submitted) setTimeout(() => $('word-input').focus({ preventScroll: true }), 50);
         if (next.round > 1 && previous && previous.round === next.round - 1) toast(T('没对上，扣一格血'));
       }
     }
@@ -428,7 +428,12 @@
     const thinking = state.phase === 'think';
     const submitted = state.me.submitted;
     $('think-instruction').textContent = state.round === 1 ? T(state.startWord ? '由这个词想到下一个词，把你的思路说出来' : '随便想一个词，把你的思路说出来') : T('猜猜你们会想到哪个共同的词，把思路说出来');
-    $('word-form').hidden = submitted;
+    const canType = !thinking || !!state.settings.allowEarlySubmit;  // by default the word box opens when the countdown ends
+    $('word-form').hidden = submitted || !canType;
+    if (canType && !submitted && !typingOpen) setTimeout(() => $('word-input').focus({ preventScroll: true }), 50);
+    typingOpen = canType && !submitted;
+    $('wait-hint').hidden = canType || submitted;
+    $('wait-hint').textContent = T('倒计时结束后才能输入');
     $('wait-panel').hidden = !submitted;
     $('my-word-line').textContent = T('你写的是「{word}」', { word: state.me.word || '' });
     $('input-instruction').textContent = thinking ? T('想好了随时可以提交，不用等倒计时') : T('时间到了，请输入你想到的词');

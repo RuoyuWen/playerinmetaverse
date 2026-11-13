@@ -57,7 +57,7 @@
       <ol class="rules">
         <li data-tr="开局会出现一个随机词，两人各自由它联想下一个词；选“不给词”时，第一轮两人各自随便想一个词。">开局会出现一个随机词，两人各自由它联想下一个词；选“不给词”时，第一轮两人各自随便想一个词。</li>
         <li data-tr="思考时请把想法说出来，系统会把语音转成文字保存（不保存录音）。">思考时请把想法说出来，系统会把语音转成文字保存（不保存录音）。</li>
-        <li data-tr="想好了就输入一个词提交，不必等倒计时结束；两人都提交后互相看到对方的词，再继续联想。">想好了就输入一个词提交，不必等倒计时结束；两人都提交后互相看到对方的词，再继续联想。</li>
+        <li data-tr="倒计时结束后，各自输入一个词提交；两人都提交后互相看到对方的词，再继续联想。">倒计时结束后，各自输入一个词提交；两人都提交后互相看到对方的词，再继续联想。</li>
         <li data-tr="没对上扣一格血；血扣完之前两人输入了同一个词，就算获胜。">没对上扣一格血；血扣完之前两人输入了同一个词，就算获胜。</li>
       </ol>
     </section>
@@ -100,6 +100,7 @@
         <div class="timer"><span id="timer-number">30</span><span class="timer-unit" data-tr="秒">秒</span></div>
         <div class="timer-bar"><i id="timer-fill"></i></div>
         <p id="think-instruction" class="instruction">想想下一个词，把你的思路说出来</p>
+        <p id="wait-hint" class="hint" hidden></p>
       </div>
 
       <form id="word-form" class="panel" hidden autocomplete="off">
