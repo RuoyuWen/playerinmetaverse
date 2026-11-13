@@ -77,6 +77,7 @@
     '猜猜你们会想到哪个共同的词，把思路说出来': 'What word will you both land on? Think out loud.',
     '时间到之前提交你的词': 'Submit your word before time runs out',
     '想好了随时可以提交，不用等倒计时': 'Submit whenever you’re ready, no need to wait',
+    '直接输入你想到的第一个词': 'Enter the first word that comes to mind',
     '倒计时结束后才能输入': 'You can enter your word when the countdown ends',
     '思考时间还没结束': 'The thinking time isn’t over yet',
     '时间到了，请输入你想到的词': 'Time’s up. Enter your word.',
