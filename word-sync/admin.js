@@ -66,6 +66,7 @@
     $('noRepeat').checked = settings.noRepeat;
     $('requireSpeech').checked = settings.requireSpeech;
     $('allowEarlySubmit').checked = !!settings.allowEarlySubmit;
+    $('thoughtButton').checked = !!settings.thoughtButton;
     $('customWords').value = settings.customWords.join('\n');
     $('customWordsEn').value = (settings.customWordsEn || []).join('\n');
     if (data.builtinWordCountEn) $('builtin-count-en').textContent = data.builtinWordCountEn;
@@ -208,12 +209,13 @@
 
   function toCsv() {
     const rows = [['session_id', 'room_code', 'started_at', 'result', 'start_word', 'round', 'player_index', 'player', 'saw',
-      'word', 'matched', 'submitted_ms', 'round_duration_ms', 'lives_after', 'think_aloud', 'think_aloud_hq']];
+      'word', 'matched', 'submitted_ms', 'thought_ms', 'round_duration_ms', 'lives_after', 'think_aloud', 'think_aloud_hq']];
     for (const session of sessions) {
       for (const round of session.rounds) {
         session.players.forEach((name, index) => rows.push([session.id, session.code, session.startedAt, session.result || '',
           session.startWord, round.round, index + 1, name, round.prompt.join(' / '), round.words[index], round.matched,
           round.submittedMs[index] == null ? '' : round.submittedMs[index],
+          round.thoughtMs && round.thoughtMs[index] != null ? round.thoughtMs[index] : '',
           round.durationMs == null ? '' : round.durationMs, round.livesAfter, said(round.transcripts[index]), hqText(round, index)]));
       }
     }
@@ -241,7 +243,7 @@
     const body = {
       lives: Number($('lives').value), thinkSeconds: Number($('thinkSeconds').value), inputSeconds: Number($('inputSeconds').value),
       noRepeat: $('noRepeat').checked, requireSpeech: $('requireSpeech').checked,
-      allowEarlySubmit: $('allowEarlySubmit').checked,
+      allowEarlySubmit: $('allowEarlySubmit').checked, thoughtButton: $('thoughtButton').checked,
       customWords: $('customWords').value.split(/[\s,，、;；]+/).filter(Boolean),
       customWordsEn: $('customWordsEn').value.split(/[\n,;]+/).map((word) => word.trim()).filter(Boolean),
     };

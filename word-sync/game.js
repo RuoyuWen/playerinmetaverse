@@ -437,7 +437,12 @@
     if (canType && !submitted && !typingOpen) setTimeout(() => $('word-input').focus({ preventScroll: true }), 50);
     typingOpen = canType && !submitted;
     $('wait-hint').hidden = canType || submitted;
-    $('wait-hint').textContent = T('倒计时结束后才能输入');
+    const button = $('thought-button');
+    const offerThought = thinking && !canType && !!state.settings.thoughtButton;
+    button.hidden = !offerThought;
+    button.disabled = !!state.me.thought;
+    button.textContent = T(state.me.thought ? '已想到，等对方也想到…' : '想到了');
+    $('wait-hint').textContent = T(offerThought ? '两人都点“想到了”就可以提前开始填词' : '倒计时结束后才能输入');
     $('wait-panel').hidden = !submitted;
     $('my-word-line').textContent = T('你写的是「{word}」', { word: state.me.word || '' });
     $('input-instruction').textContent = thinking ? T(state.round === 1 && !state.startWord ? '直接输入你想到的第一个词' : '想好了随时可以提交，不用等倒计时') : T('时间到了，请输入你想到的词');
@@ -458,7 +463,8 @@
 
     const partner = state.partner;
     $('partner-line').textContent = !partner ? '' : partner.online === false ? T('{name} 掉线了，等待重连…', { name: partner.name })
-      : partner.submitted ? T('{name} 已经提交了', { name: partner.name }) : thinking ? '' : T('{name} 还没提交…', { name: partner.name });
+      : partner.submitted ? T('{name} 已经提交了', { name: partner.name })
+      : thinking ? (partner.thought && state.settings.thoughtButton && !state.canSubmitEarly ? T('{name} 想到了', { name: partner.name }) : '') : T('{name} 还没提交…', { name: partner.name });
     renderHistory($('history'), state.history, partner ? partner.name : T('对方'));
     renderTimer();
   }
@@ -590,6 +596,11 @@
     } finally {
       button.disabled = false;
     }
+  });
+
+  $('thought-button').addEventListener('click', async () => {
+    try { apply(await api('/thought', { method: 'POST', body: { ...session, round: state.round } })); }
+    catch (error) { toast(error.message); }
   });
 
   $('again-button').addEventListener('click', async () => {
