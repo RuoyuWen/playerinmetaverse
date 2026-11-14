@@ -43,12 +43,13 @@ DEFAULT_SETTINGS: Dict[str, Any] = {
     "noRepeat": True,       # 不允许使用已经出现过的词
     "requireSpeech": True,  # 必须通过语音识别检测才能准备
     "allowEarlySubmit": False,  # 是否允许倒计时结束前就提交；默认必须等思考时间结束
+    "thoughtButton": True,      # 倒计时期间显示“想到了”按钮；两人都点了就提前结束倒计时，开始填词
     "customWords": [],      # 自定义中文起始词库，留空则用内置词库
     "customWordsEn": [],    # 自定义英文起始词库，留空则用内置词库
     "ai": wordsync_ai.DEFAULT_AI,  # AI 对手：接口、模型、提示词、回复的 JSON Schema（含 API key，绝不下发给玩家）
 }
 # The only settings players may see, and the only ones copied into a room.
-GAME_KEYS = ("lives", "thinkSeconds", "inputSeconds", "noRepeat", "requireSpeech", "allowEarlySubmit")
+GAME_KEYS = ("lives", "thinkSeconds", "inputSeconds", "noRepeat", "requireSpeech", "allowEarlySubmit", "thoughtButton")
 AI_ATTEMPTS = 2
 LIMITS = {"lives": (1, 99), "thinkSeconds": (5, 300), "inputSeconds": (0, 300)}
 MAX_WORD_LENGTH = {"zh": 12, "en": 30}
@@ -214,7 +215,7 @@ def clean_settings(raw: Any, previous: Optional[Dict[str, Any]] = None) -> Dict[
             result[key] = max(low, min(high, int(raw.get(key, result[key]))))
         except (TypeError, ValueError):
             pass
-    for key in ("noRepeat", "requireSpeech", "allowEarlySubmit"):
+    for key in ("noRepeat", "requireSpeech", "allowEarlySubmit", "thoughtButton"):
         if isinstance(raw.get(key), bool):
             result[key] = raw[key]
     for key in ("customWords", "customWordsEn"):
@@ -276,7 +277,8 @@ def begin_round(room, prompt):
     room["prompt"] = prompt
     room["roundStartedAt"] = time.time()
     room["phaseEndsAt"] = room["roundStartedAt"] + room["settings"]["thinkSeconds"]
-    room["current"] = {"words": [None, None], "submittedMs": [None, None], "transcripts": [[], []]}
+    room["current"] = {"words": [None, None], "submittedMs": [None, None], "transcripts": [[], []],
+                       "thoughtMs": [None, None]}  # when each player pressed "I've got it", if they did
     schedule_ai(room)
 
 
@@ -309,6 +311,7 @@ def resolve_round(room):
         "livesAfter": room["lives"],
         "durationMs": int((time.time() - room["roundStartedAt"]) * 1000),
         "transcriptsHq": current.get("transcriptsHq", [None, None]),
+        "thoughtMs": current.get("thoughtMs", [None, None]),
     })
     if current.get("aiRaw"):
         room["rounds"][-1]["aiRaw"] = current["aiRaw"]
@@ -404,6 +407,20 @@ def may_submit_early(room) -> bool:
     return bool(room["settings"].get("allowEarlySubmit") or (room["round"] == 1 and not room["startWord"]))
 
 
+def mark_thought(room, index):
+    """Record that a player has their word in mind. Once both have, the countdown ends early
+    and the word box opens. Returns whether the countdown was ended."""
+    thought = room["current"].setdefault("thoughtMs", [None, None])
+    if thought[index] is None:
+        thought[index] = int((time.time() - room["roundStartedAt"]) * 1000)
+    if room["phase"] == "think" and room["settings"].get("thoughtButton") and all(item is not None for item in thought):
+        limit = room["settings"]["inputSeconds"]
+        room["phase"] = "input"
+        room["phaseEndsAt"] = time.time() + limit if limit else None
+        return True
+    return False
+
+
 def schedule_ai(room):
     """Start the AI's turn for the current round, unless it has already answered."""
     if room.get("ai") and room["phase"] in ("think", "input") and room["current"]["words"][1] is None:
@@ -456,7 +473,11 @@ async def ai_turn(room, session_id, round_number):
     # (unless early submission is allowed), however quickly the model answered.
     if (word is not None and not may_submit_early(room) and room.get("sessionId") == session_id
             and room.get("round") == round_number and room["phase"] == "think"):
-        await asyncio.sleep(max(0.0, room["phaseEndsAt"] - time.time()))
+        mark_thought(room, 1)  # the AI has its word: with the button on, this can end the countdown
+        persist(room)
+        while (room.get("sessionId") == session_id and room.get("round") == round_number
+               and room["phase"] == "think" and time.time() < room["phaseEndsAt"]):
+            await asyncio.sleep(0.25)
     # The game may have moved on (quit, restarted, timed out) while the model was thinking.
     if (rooms.get(room["code"]) is not room or room.get("sessionId") != session_id
             or room.get("round") != round_number or room["phase"] not in ("think", "input")):
@@ -599,10 +620,13 @@ def view(room, index):
         })
         if playing:
             words = room["current"]["words"]
+            thought = room["current"].get("thoughtMs", [None, None])
+            state["me"]["thought"] = thought[index] is not None
             state["me"]["submitted"] = words[index] is not None
             state["me"]["word"] = words[index]
             if partner:
                 state["partner"]["submitted"] = words[other_index] is not None
+                state["partner"]["thought"] = thought[other_index] is not None
             if room["round"] > 1:  # previous words, from this player's point of view
                 state["prompt"] = {"mine": room["prompt"][index], "theirs": room["prompt"][other_index]}
     return state
@@ -740,6 +764,21 @@ async def ready(request: ReadyRequest):
         room["players"][index]["ready"] = request.ready
         if len(room["players"]) == 2 and all(player["ready"] for player in room["players"]):
             start_game(room, await get_settings())
+        persist(room)
+    return view(room, index)
+
+
+class ThoughtRequest(PlayerRequest):
+    round: int
+
+
+@router.post("/thought")
+async def thought(request: ThoughtRequest):
+    """A player says they have their word. When both have, the countdown ends early."""
+    room, index = await find_room(request.code, request.token)
+    if (request.round == room.get("round") and room["phase"] == "think"
+            and room["settings"].get("thoughtButton")):
+        mark_thought(room, index)
         persist(room)
     return view(room, index)
 
