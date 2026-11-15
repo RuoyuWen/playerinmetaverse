@@ -317,6 +317,8 @@ def resolve_round(room):
     if current.get("aiRaw"):
         room["rounds"][-1]["aiRaw"] = current["aiRaw"]
         room["rounds"][-1]["aiThinkSource"] = current.get("aiThinkSource")
+        if current.get("aiReasoning"):
+            room["rounds"][-1]["aiReasoning"] = current["aiReasoning"]
     if current.get("aiRandomWord"):
         room["rounds"][-1]["aiRandomWord"] = True
     room["used"].update(normalize_word(word) for word in words if word)
@@ -501,6 +503,8 @@ async def ai_turn(room, session_id, round_number):
         current["transcripts"][1] = [{"t": elapsed, "text": answer["think"]}] if answer["think"] else []
         current["aiRaw"] = answer["raw"]
         current["aiThinkSource"] = answer["thinkSource"]  # "reasoning_content" or "json"
+        if answer["reasoning"] and answer["thinkSource"] == "json":
+            current["aiReasoning"] = answer["reasoning"]  # keep the full chain alongside the short think
     if current["words"][0] is not None:
         resolve_round(room)
     else:

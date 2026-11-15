@@ -46,6 +46,10 @@ DEFAULT_AI: Dict[str, Any] = {
     "deepseekKey": "",
     "deepseekBaseUrl": "https://api.deepseek.com",
     "deepseekModel": "deepseek-reasoner",
+    # What is saved as the AI's think text when the reply also carries a separate chain of
+    # thought (reasoning_content): "reasoning" = that full chain, "json" = the short `think`
+    # the model writes in its JSON reply. The other one is kept with the round either way.
+    "thinkSource": "reasoning",
     # Second, more accurate transcript of what players say (uses the same key and endpoint).
     "transcribe": False,
     "transcribeModel": "gpt-4o-transcribe",
@@ -75,6 +79,8 @@ def clean_ai(raw: Any, previous: Optional[Dict[str, Any]] = None) -> Dict[str, A
         result["transcribeLanguage"] = raw["transcribeLanguage"]
     if isinstance(raw.get("transcribePrompt"), str):  # may be emptied on purpose
         result["transcribePrompt"] = raw["transcribePrompt"].strip()[:1000]
+    if raw.get("thinkSource") in ("reasoning", "json"):
+        result["thinkSource"] = raw["thinkSource"]
     for name in ("enabled", "transcribe"):
         if isinstance(raw.get(name), bool):
             result[name] = raw[name]
@@ -233,14 +239,18 @@ async def ask(ai: Dict[str, Any], context: Dict[str, Any], note: str = "") -> Di
     if not isinstance(response, str) or not response.strip():
         raise AIError(f"模型的回复里没有 response 字段：{content[:200]}")
     reasoning = message.get("reasoning_content")
-    think = parsed.get("think")
-    if isinstance(reasoning, str) and reasoning.strip():
+    reasoning = reasoning.strip()[:MAX_THINK] if isinstance(reasoning, str) else ""
+    brief = parsed.get("think")
+    brief = brief.strip()[:MAX_THINK] if isinstance(brief, str) else ""
+    if reasoning and (ai.get("thinkSource", "reasoning") == "reasoning" or not brief):
         think, source = reasoning, "reasoning_content"
     else:
-        source = "json"
+        think, source = brief, "json"
     return {
-        "think": think.strip()[:MAX_THINK] if isinstance(think, str) else "",
+        "think": think,
         "thinkSource": source,
+        "reasoning": reasoning,  # the full chain of thought, when the service returned one
+        "brief": brief,          # the short reason from the JSON reply
         "response": response.strip(),
         "raw": content[:MAX_TEXT],
         "provider": service["provider"],

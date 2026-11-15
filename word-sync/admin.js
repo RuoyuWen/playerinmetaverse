@@ -59,6 +59,7 @@
       for (const model of data.deepseekSuggestions) list.append(Object.assign(document.createElement('option'), { value: model }));
     }
     $('ai-provider').value = ai.provider || 'openai';
+    $('ai-think-source').value = ai.thinkSource || 'reasoning';
     $('ds-key').value = '';
     $('ds-clear-key').checked = false;
     $('ds-key-state').textContent = ai.deepseekKeySet ? `（已保存 ${ai.deepseekKeyHint}）` : '（还没有保存）';
@@ -162,6 +163,11 @@
             element('p', 'said', said(round.transcripts[index]) || '（没有转写文字）'));
           const precise = hq(round, index);
           if (precise) column.append(element('p', 'said hq', precise.error ? `高精度转写失败：${precise.error}` : `高精度（${precise.model}）：${precise.text || '（没有识别到内容）'}`));
+          if (index === 1 && round.aiReasoning) {
+            const chain = element('details', 'chain');
+            chain.append(element('summary', 'hint', `完整思维链（${round.aiReasoning.length} 字）`), element('p', 'said', round.aiReasoning));
+            column.append(chain);
+          }
           columns.append(column);
         });
         block.append(columns);
@@ -272,7 +278,7 @@
     const ai = {
       enabled: $('ai-enabled').checked, model: $('ai-model').value, baseUrl: $('ai-base').value,
       prompt: $('ai-prompt').value, schema, apiKey: $('ai-key').value, clearApiKey: $('ai-clear-key').checked,
-      provider: $('ai-provider').value, deepseekKey: $('ds-key').value, clearDeepseekKey: $('ds-clear-key').checked,
+      provider: $('ai-provider').value, thinkSource: $('ai-think-source').value, deepseekKey: $('ds-key').value, clearDeepseekKey: $('ds-clear-key').checked,
       deepseekModel: $('ds-model').value, deepseekBaseUrl: $('ds-base').value,
       transcribe: $('ai-transcribe').checked, transcribeModel: $('ai-transcribe-model').value,
       transcribeLanguage: $('ai-transcribe-language').value, transcribePrompt: $('ai-transcribe-prompt').value,
@@ -297,7 +303,7 @@
     try {
       const result = await api('/ai-test', { method: 'POST' });
       box.textContent = result.ok
-        ? `调用成功（${result.provider} · ${result.model}，${result.latencyMs} 毫秒）\n\nthink（来自 ${result.thinkSource === 'reasoning_content' ? 'reasoning_content 字段' : 'JSON 里的 think'}）：${result.think}\nresponse：${result.response}\n\n发给模型的局面：\n${JSON.stringify(result.sent, null, 2)}\n\n模型原始回复：\n${result.raw}`
+        ? `调用成功（${result.provider} · ${result.model}，${result.latencyMs} 毫秒）\n\nthink（来自 ${result.thinkSource === 'reasoning_content' ? 'reasoning_content 字段' : 'JSON 里的 think'}）：${result.think}${result.reasoning && result.thinkSource === 'json' ? `\n\n完整思维链（${result.reasoning.length} 字，未作为 think 保存）：\n${result.reasoning}` : ''}\nresponse：${result.response}\n\n发给模型的局面：\n${JSON.stringify(result.sent, null, 2)}\n\n模型原始回复：\n${result.raw}`
         : `调用失败：${result.error}`;
     } catch (error) { box.textContent = '调用失败：' + error.message; }
   });

@@ -70,8 +70,14 @@
         <label class="field"><span>AI 对手使用哪个服务</span>
           <select id="ai-provider">
             <option value="openai">OpenAI（GPT 系列）</option>
-            <option value="deepseek">DeepSeek（推理模型的 reasoning_content 作为 think）</option>
+            <option value="deepseek">DeepSeek（推理模型会单独返回完整思维链 reasoning_content）</option>
           </select></label>
+        <label class="field"><span>AI 的 think 保存哪一份</span>
+          <select id="ai-think-source">
+            <option value="reasoning">完整思维链（reasoning_content，很长）</option>
+            <option value="json">简短理由（模型在 JSON 里写的 think）</option>
+          </select></label>
+        <p class="hint">只对会单独返回 reasoning_content 的模型（如 deepseek-reasoner）有区别；GPT 系列始终是 JSON 里的 think。选“简短理由”时，完整思维链不会丢，仍保存在这一轮的记录里（下方对局记录可展开查看，JSON 导出里是 aiReasoning）。这个选项只改变保存和显示哪一份，模型本身的思考长度和耗时不变。简短理由的长度可以在提示词或 JSON Schema 里规定，例如“think 不超过 50 字”。</p>
         <h2>OpenAI</h2>
         <div class="grid-2">
           <label class="field"><span>API key <span id="ai-key-state" class="hint"></span></span>
