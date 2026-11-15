@@ -290,7 +290,8 @@ def start_game(room, settings):
         "startedTs": time.time(), "durationMs": None, "quitBy": None, "unfinished": None,
         "playerNames": [player["name"] for player in room["players"]],
         "settings": {key: settings[key] for key in GAME_KEYS},
-        "aiModel": settings["ai"]["model"] if room.get("ai") else None, "aiError": None,
+        "aiModel": wordsync_ai.active(settings["ai"])["model"] if room.get("ai") else None,
+        "aiProvider": wordsync_ai.active(settings["ai"])["provider"] if room.get("ai") else None, "aiError": None,
         "lives": settings["lives"], "round": 0, "rounds": [],
         # Without a start word, both players simply think of any word in round one.
         "startWord": random.choice(words) if room.get("giveWord", True) else None,
@@ -315,6 +316,7 @@ def resolve_round(room):
     })
     if current.get("aiRaw"):
         room["rounds"][-1]["aiRaw"] = current["aiRaw"]
+        room["rounds"][-1]["aiThinkSource"] = current.get("aiThinkSource")
     if current.get("aiRandomWord"):
         room["rounds"][-1]["aiRandomWord"] = True
     room["used"].update(normalize_word(word) for word in words if word)
@@ -498,6 +500,7 @@ async def ai_turn(room, session_id, round_number):
     else:
         current["transcripts"][1] = [{"t": elapsed, "text": answer["think"]}] if answer["think"] else []
         current["aiRaw"] = answer["raw"]
+        current["aiThinkSource"] = answer["thinkSource"]  # "reasoning_content" or "json"
     if current["words"][0] is not None:
         resolve_round(room)
     else:
@@ -514,7 +517,8 @@ def session_document(room):
         "livesLeft": room["lives"], "rounds": room["rounds"],
         # 研究者面板用的汇总：猜测次数 = 已完成的轮数，用时 = 开局到结束（毫秒）
         "guesses": len(room["rounds"]), "durationMs": room["durationMs"],
-        "opponent": "ai" if room.get("ai") else "human", "aiModel": room.get("aiModel"), "aiError": room.get("aiError"),
+        "opponent": "ai" if room.get("ai") else "human", "aiModel": room.get("aiModel"),
+        "aiProvider": room.get("aiProvider"), "aiError": room.get("aiError"),
     }
     if room["phase"] in ("think", "input"):  # keep think-aloud text of an unfinished round too
         document["unfinishedRound"] = unfinished_round(room)
@@ -910,6 +914,7 @@ async def admin_get_settings(x_admin_password: Optional[str] = Header(None)):
     return {"settings": admin_settings_view(await get_settings()), "limits": LIMITS,
             "builtinWordCount": len(builtin_words("zh")), "builtinWordCountEn": len(builtin_words("en")),
             "storage": storage_kind(), "modelSuggestions": wordsync_ai.MODEL_SUGGESTIONS,
+            "deepseekSuggestions": wordsync_ai.DEEPSEEK_SUGGESTIONS,
             "transcribeSuggestions": wordsync_ai.TRANSCRIBE_SUGGESTIONS,
             "aiDefaults": {"prompt": wordsync_ai.DEFAULT_PROMPT, "schema": wordsync_ai.DEFAULT_SCHEMA,
                            "baseUrl": wordsync_ai.DEFAULT_BASE_URL}}
