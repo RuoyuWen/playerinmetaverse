@@ -67,6 +67,12 @@
         <h2>AI 对手</h2>
         <p class="hint">开启并填好 API key 后，游戏开始界面会出现“和 AI 玩”。每一轮开始时服务器调用一次模型；模型的回复必须是 JSON，其中 <b>think</b> 会作为 AI 这一轮的文字保存，<b>response</b> 作为 AI 写的词。</p>
         <label class="check"><input id="ai-enabled" type="checkbox">开启“和 AI 玩”</label>
+        <label class="field"><span>AI 对手使用哪个服务</span>
+          <select id="ai-provider">
+            <option value="openai">OpenAI（GPT 系列）</option>
+            <option value="deepseek">DeepSeek（推理模型的 reasoning_content 作为 think）</option>
+          </select></label>
+        <h2>OpenAI</h2>
         <div class="grid-2">
           <label class="field"><span>API key <span id="ai-key-state" class="hint"></span></span>
             <input id="ai-key" type="password" autocomplete="new-password" placeholder="留空 = 不修改已保存的 key"></label>
@@ -75,7 +81,19 @@
           <label class="field"><span>接口地址（OpenAI 兼容）</span>
             <input id="ai-base" type="text" required></label>
         </div>
-        <label class="check"><input id="ai-clear-key" type="checkbox">删除已保存的 API key</label>
+        <label class="check"><input id="ai-clear-key" type="checkbox">删除已保存的 OpenAI API key</label>
+        <h2>DeepSeek</h2>
+        <div class="grid-2">
+          <label class="field"><span>API key <span id="ds-key-state" class="hint"></span></span>
+            <input id="ds-key" type="password" autocomplete="new-password" placeholder="留空 = 不修改已保存的 key"></label>
+          <label class="field"><span>模型</span>
+            <input id="ds-model" type="text" list="ds-models" required><datalist id="ds-models"></datalist></label>
+          <label class="field"><span>接口地址</span>
+            <input id="ds-base" type="text" required></label>
+        </div>
+        <label class="check"><input id="ds-clear-key" type="checkbox">删除已保存的 DeepSeek API key</label>
+        <p class="hint">选 DeepSeek 时：deepseek-reasoner 会在回复里单独返回 reasoning_content，它会被原样保存为 AI 这一轮的 think；回复正文仍按下面的 JSON Schema 解析，取其中的 response 作为词。deepseek-chat 没有 reasoning_content，这时 think 取自 JSON。两个服务的 key 分开保存，切换不会丢；高精度转写始终使用 OpenAI 的 key。</p>
+        <h2>转写与提示词</h2>
         <div class="grid-2">
           <label class="check"><input id="ai-transcribe" type="checkbox">开启高精度转写（和浏览器转写同时记录）</label>
           <label class="field"><span>转写模型</span>

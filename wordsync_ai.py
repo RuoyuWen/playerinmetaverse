@@ -40,6 +40,12 @@ DEFAULT_AI: Dict[str, Any] = {
     "model": MODEL_SUGGESTIONS[0],
     "prompt": DEFAULT_PROMPT,
     "schema": DEFAULT_SCHEMA,
+    # Which service plays the AI opponent. Each keeps its own key, endpoint and model, so
+    # switching back and forth loses nothing (and transcription always uses the OpenAI one).
+    "provider": "openai",
+    "deepseekKey": "",
+    "deepseekBaseUrl": "https://api.deepseek.com",
+    "deepseekModel": "deepseek-reasoner",
     # Second, more accurate transcript of what players say (uses the same key and endpoint).
     "transcribe": False,
     "transcribeModel": "gpt-4o-transcribe",
@@ -47,6 +53,9 @@ DEFAULT_AI: Dict[str, Any] = {
     # Passed to the transcription model whenever the transcript should be Chinese.
     "transcribePrompt": "以下是普通话的口语录音。请一律用简体中文转写，不要翻译成英文，不要使用繁体字。",
 }
+DEEPSEEK_SUGGESTIONS = ["deepseek-reasoner", "deepseek-chat"]
+SECRET_FIELDS = ("apiKey", "deepseekKey")
+MAX_THINK = 30000  # a reasoning model's own account of a turn can be long
 TRANSCRIBE_SUGGESTIONS = ["gpt-4o-transcribe", "gpt-4o-mini-transcribe", "whisper-1"]
 MAX_AUDIO_BYTES = 20 * 1024 * 1024
 TIMEOUT_SECONDS = 60
@@ -69,17 +78,22 @@ def clean_ai(raw: Any, previous: Optional[Dict[str, Any]] = None) -> Dict[str, A
     for name in ("enabled", "transcribe"):
         if isinstance(raw.get(name), bool):
             result[name] = raw[name]
-    key = raw.get("apiKey")
-    if isinstance(key, str) and key.strip():
-        result["apiKey"] = key.strip()[:400]
-    if raw.get("clearApiKey") is True:
-        result["apiKey"] = ""
-    for name, limit in (("baseUrl", 300), ("model", 100), ("prompt", 20000), ("transcribeModel", 100)):
+    if raw.get("provider") in ("openai", "deepseek"):
+        result["provider"] = raw["provider"]
+    for field, clear in (("apiKey", "clearApiKey"), ("deepseekKey", "clearDeepseekKey")):
+        key = raw.get(field)
+        if isinstance(key, str) and key.strip():
+            result[field] = key.strip()[:400]
+        if raw.get(clear) is True:
+            result[field] = ""
+    for name, limit in (("baseUrl", 300), ("model", 100), ("prompt", 20000), ("transcribeModel", 100),
+                        ("deepseekBaseUrl", 300), ("deepseekModel", 100)):
         value = raw.get(name)
         if isinstance(value, str) and value.strip():
             result[name] = value.strip()[:limit]
-    if not result["baseUrl"].startswith("https://") and not result["baseUrl"].startswith("http://"):
-        result["baseUrl"] = DEFAULT_BASE_URL
+    for name in ("baseUrl", "deepseekBaseUrl"):
+        if not result[name].startswith(("https://", "http://")):
+            result[name] = DEFAULT_AI[name]
     schema = raw.get("schema")
     if isinstance(schema, str):
         try:
@@ -95,12 +109,21 @@ def clean_ai(raw: Any, previous: Optional[Dict[str, Any]] = None) -> Dict[str, A
 
 
 def public_ai(ai: Dict[str, Any]) -> Dict[str, Any]:
-    """Settings as the dashboard may see them: the key itself never leaves the server."""
-    shown = {name: value for name, value in ai.items() if name != "apiKey"}
-    key = ai.get("apiKey", "")
-    shown["apiKeySet"] = bool(key)
-    shown["apiKeyHint"] = f"…{key[-4:]}" if len(key) >= 8 else ""
+    """Settings as the dashboard may see them: the keys themselves never leave the server."""
+    shown = {name: value for name, value in ai.items() if name not in SECRET_FIELDS}
+    for field in SECRET_FIELDS:
+        key = ai.get(field, "")
+        shown[field + "Set"] = bool(key)
+        shown[field + "Hint"] = f"…{key[-4:]}" if len(key) >= 8 else ""
     return shown
+
+
+def active(ai: Dict[str, Any]) -> Dict[str, str]:
+    """Key, endpoint and model of whichever service currently plays the AI opponent."""
+    if ai.get("provider") == "deepseek":
+        return {"provider": "deepseek", "key": ai.get("deepseekKey", ""),
+                "baseUrl": ai["deepseekBaseUrl"], "model": ai["deepseekModel"]}
+    return {"provider": "openai", "key": ai.get("apiKey", ""), "baseUrl": ai["baseUrl"], "model": ai["model"]}
 
 
 def can_transcribe(ai: Dict[str, Any]) -> bool:
@@ -133,7 +156,7 @@ async def transcribe(ai: Dict[str, Any], audio: bytes, content_type: str, lang: 
 
 
 def is_available(ai: Dict[str, Any]) -> bool:
-    return bool(ai.get("enabled") and ai.get("apiKey") and ai.get("prompt"))
+    return bool(ai.get("enabled") and active(ai)["key"] and ai.get("prompt"))
 
 
 def round_context(lang: str, start_word: Optional[str], history: List[Dict[str, str]], used: List[str],
@@ -149,49 +172,78 @@ def round_context(lang: str, start_word: Optional[str], history: List[Dict[str, 
     }
 
 
+def _parse_reply(content: str) -> Dict[str, Any]:
+    """The reply as a JSON object, tolerating a code fence or stray text around it."""
+    try:
+        parsed = json.loads(content)
+    except ValueError:
+        start, end = content.find("{"), content.rfind("}")
+        try:
+            parsed = json.loads(content[start:end + 1]) if 0 <= start < end else None
+        except ValueError:
+            parsed = None
+    return parsed if isinstance(parsed, dict) else {}
+
+
 async def ask(ai: Dict[str, Any], context: Dict[str, Any], note: str = "") -> Dict[str, Any]:
-    """One model call. Returns {"think", "response", "raw", "latencyMs"} or raises AIError."""
-    if not ai.get("apiKey"):
+    """One model call. Returns {"think", "response", "raw", "latencyMs", ...} or raises AIError.
+
+    OpenAI-style services are given the JSON schema and return `think` inside the JSON.
+    DeepSeek's reasoning model returns its reasoning in a separate `reasoning_content`
+    field of the message; when that is present it is what gets saved as `think`.
+    """
+    service = active(ai)
+    if not service["key"]:
         raise AIError("还没有填写 API key")
+    system = ai["prompt"]
+    if service["provider"] == "deepseek":
+        # No schema-constrained output there, so the schema travels in the prompt instead.
+        system += "\n\n回复必须是一个 JSON 对象，符合下面的 JSON Schema：\n" + json.dumps(ai["schema"], ensure_ascii=False)
+        response_format: Any = {"type": "json_object"}
+    else:
+        response_format = {"type": "json_schema", "json_schema": {"name": "word_game_turn", "schema": ai["schema"]}}
     messages = [
-        {"role": "system", "content": ai["prompt"]},
+        {"role": "system", "content": system},
         {"role": "user", "content": json.dumps(context, ensure_ascii=False)},
     ]
     if note:
         messages.append({"role": "user", "content": note})
-    body = {
-        "model": ai["model"],
-        "messages": messages,
-        "response_format": {
-            "type": "json_schema",
-            "json_schema": {"name": "word_game_turn", "schema": ai["schema"]},
-        },
-    }
+    body = {"model": service["model"], "messages": messages, "response_format": response_format}
+    url = service["baseUrl"].rstrip("/") + "/chat/completions"
+    headers = {"Authorization": f"Bearer {service['key']}", "Content-Type": "application/json"}
     started = time.time()
     try:
-        async with httpx.AsyncClient(timeout=TIMEOUT_SECONDS) as client:
-            reply = await client.post(
-                ai["baseUrl"].rstrip("/") + "/chat/completions",
-                headers={"Authorization": f"Bearer {ai['apiKey']}", "Content-Type": "application/json"},
-                json=body)
+        async with httpx.AsyncClient(timeout=180 if service["provider"] == "deepseek" else TIMEOUT_SECONDS) as client:
+            reply = await client.post(url, headers=headers, json=body)
+            if (reply.status_code == 400 and service["provider"] == "deepseek" and "response_format" in reply.text):
+                # Some reasoning models refuse JSON mode; ask again without it and parse leniently.
+                del body["response_format"]
+                reply = await client.post(url, headers=headers, json=body)
     except httpx.HTTPError as error:
         raise AIError(f"连不上模型接口：{type(error).__name__}")
     if reply.status_code != 200:
         raise AIError(f"模型接口返回 {reply.status_code}：{reply.text[:300]}")
     try:
-        content = reply.json()["choices"][0]["message"]["content"] or ""
-    except (ValueError, KeyError, IndexError, TypeError):
+        message = reply.json()["choices"][0]["message"]
+        content = message.get("content") or ""
+    except (ValueError, KeyError, IndexError, TypeError, AttributeError):
         raise AIError("模型接口的返回格式不对")
-    try:
-        parsed = json.loads(content)
-    except ValueError:
-        raise AIError(f"模型的回复不是 JSON：{content[:200]}")
-    think, response = (parsed.get("think"), parsed.get("response")) if isinstance(parsed, dict) else (None, None)
+    parsed = _parse_reply(content)
+    response = parsed.get("response")
     if not isinstance(response, str) or not response.strip():
         raise AIError(f"模型的回复里没有 response 字段：{content[:200]}")
+    reasoning = message.get("reasoning_content")
+    think = parsed.get("think")
+    if isinstance(reasoning, str) and reasoning.strip():
+        think, source = reasoning, "reasoning_content"
+    else:
+        source = "json"
     return {
-        "think": think.strip()[:MAX_TEXT] if isinstance(think, str) else "",
+        "think": think.strip()[:MAX_THINK] if isinstance(think, str) else "",
+        "thinkSource": source,
         "response": response.strip(),
         "raw": content[:MAX_TEXT],
+        "provider": service["provider"],
+        "model": service["model"],
         "latencyMs": int((time.time() - started) * 1000),
     }

@@ -53,6 +53,17 @@
     $('ai-key').value = '';
     $('ai-clear-key').checked = false;
     $('ai-key-state').textContent = ai.apiKeySet ? `（已保存 ${ai.apiKeyHint}）` : '（还没有保存）';
+    if (data.deepseekSuggestions) {
+      const list = $('ds-models');
+      list.textContent = '';
+      for (const model of data.deepseekSuggestions) list.append(Object.assign(document.createElement('option'), { value: model }));
+    }
+    $('ai-provider').value = ai.provider || 'openai';
+    $('ds-key').value = '';
+    $('ds-clear-key').checked = false;
+    $('ds-key-state').textContent = ai.deepseekKeySet ? `（已保存 ${ai.deepseekKeyHint}）` : '（还没有保存）';
+    $('ds-model').value = ai.deepseekModel || '';
+    $('ds-base').value = ai.deepseekBaseUrl || '';
     $('ai-model').value = ai.model;
     $('ai-base').value = ai.baseUrl;
     $('ai-prompt').value = ai.prompt;
@@ -261,6 +272,8 @@
     const ai = {
       enabled: $('ai-enabled').checked, model: $('ai-model').value, baseUrl: $('ai-base').value,
       prompt: $('ai-prompt').value, schema, apiKey: $('ai-key').value, clearApiKey: $('ai-clear-key').checked,
+      provider: $('ai-provider').value, deepseekKey: $('ds-key').value, clearDeepseekKey: $('ds-clear-key').checked,
+      deepseekModel: $('ds-model').value, deepseekBaseUrl: $('ds-base').value,
       transcribe: $('ai-transcribe').checked, transcribeModel: $('ai-transcribe-model').value,
       transcribeLanguage: $('ai-transcribe-language').value, transcribePrompt: $('ai-transcribe-prompt').value,
     };
@@ -284,7 +297,7 @@
     try {
       const result = await api('/ai-test', { method: 'POST' });
       box.textContent = result.ok
-        ? `调用成功（${result.latencyMs} 毫秒）\n\nthink：${result.think}\nresponse：${result.response}\n\n发给模型的局面：\n${JSON.stringify(result.sent, null, 2)}\n\n模型原始回复：\n${result.raw}`
+        ? `调用成功（${result.provider} · ${result.model}，${result.latencyMs} 毫秒）\n\nthink（来自 ${result.thinkSource === 'reasoning_content' ? 'reasoning_content 字段' : 'JSON 里的 think'}）：${result.think}\nresponse：${result.response}\n\n发给模型的局面：\n${JSON.stringify(result.sent, null, 2)}\n\n模型原始回复：\n${result.raw}`
         : `调用失败：${result.error}`;
     } catch (error) { box.textContent = '调用失败：' + error.message; }
   });
